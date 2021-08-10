@@ -1,0 +1,69 @@
+from textx import metamodel_from_file
+from world import World
+
+class GameCmd(object):
+    
+    def __init__(self, model) -> None:
+        super().__init__()
+        self._world = World(model)
+
+    def _print_place_description(self):
+        print(self._world.get_player().get_position().describe())
+
+    def _print_inventory(self):
+        print("You're carrying:")
+        if len(self._world.get_player().get_inventory()) == 0:
+            print("\tNothing")
+        else:
+            for item in self._world.get_player().get_inventory():
+                print("\t" + item.pretty_name())
+
+    def _print_place_objects(self):
+        place_objects = self._world.get_player().get_position().get_objects()
+        
+        if len(place_objects) != 0:
+            print("You can see", end=" ")
+            for index, object in enumerate(place_objects):
+                if index == len(place_objects) - 1:
+                    print(f"{object.pretty_name()}.")
+                elif index == len(place_objects) - 2:
+                    print(f"{object.pretty_name()}", end=" ")
+                else:
+                    print(f"{object.pretty_name()},", end=" ")
+
+    def _print_directions(self):
+        print("Directions:", end=" ")
+        for direction in self._world.available_directions():
+            print(f"{direction}", end=" ")
+        print()
+
+    def _print_menu(self):
+        self._print_place_description()
+        self._print_place_objects()
+        self._print_directions()
+
+    def play(self):
+        self._print_menu()
+        while True:
+            try:
+                command = input(">")
+                self._world.execute_command(command)
+                response = self._world.get_response()
+                if response != "":
+                    if response == "INVENTORY":
+                        self._print_inventory()
+                    else:
+                        print(response)
+
+                if self._world.is_console_resetable():
+                    print()
+                    self._print_menu()
+            except Exception as ex:
+                print(ex)
+
+
+if __name__ == '__main__':
+    meta_model = metamodel_from_file('world.tx')
+    model = meta_model.model_from_file('test.wld')
+    game = GameCmd(model)
+    game.play()

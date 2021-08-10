@@ -1,0 +1,93 @@
+place Room1 {
+    """
+        name: Room1
+        description: You are in room One
+    """
+
+    objects {
+        object apple {
+            """
+                name: an apple
+                description: Big green apple
+            """
+            pickable: true
+        }
+    }
+}
+
+place Room2 {
+    """
+        name: Room2
+        description: You are in room Two, entrance to the room Four is blocked by door  
+    """
+
+    objects {}
+
+    blockade {
+        is_door_opened, N
+    }
+}
+
+place Room3 {
+    """
+        name: Room3
+        description: You are in room Three
+    """
+    
+    objects {
+        object chest {
+            """
+                name: small chest
+                description: Small chest for jewelery
+            """
+
+            objects {
+                object gold_key {
+                    """
+                        name: gold key
+                        description: golden key that has cross on it
+                    """
+                    pickable: true
+                }
+            }
+            pickable: false
+        }
+    }
+}
+
+place Room4 {
+    """
+        name: Room4
+        description: You are in room Four
+    """
+
+    objects {}
+}
+
+connections {
+    Room1, N, Room2
+    Room2, W, Room3
+    Room2, N, Room4
+}
+
+flags {
+    flag is_door_unlocked {
+        activated: false
+        false_msg: "You don't have key to unlock it."
+        true_msg: "You have unlocked the door."
+        require: gold_key
+    }
+    flag is_door_opened {
+        activated: false
+        false_msg: "Door blocks your path."
+        true_msg: "You have opened the door."
+        dependencies: {
+            is_door_unlocked: true
+        }
+    }
+}
+
+player {
+    position: Room1
+    inventory {}
+}

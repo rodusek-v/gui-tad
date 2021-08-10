@@ -1,0 +1,106 @@
+World:
+    places += Place
+    connections = Connections
+    flags = Flags
+    player = Player
+;
+
+Place:
+    'place' name = WID '{'
+        description = DescriptionSection
+        contains = Objects
+        (blockade = Blockade)?
+    '}'
+;
+
+Object:
+    'object' name = WID '{'
+        description = DescriptionSection
+        (contains = Objects)?
+        'pickable:' pickable = BOOL
+    '}'
+;
+
+Objects:
+    'objects {'
+        objects *= Object
+    '}'
+;
+
+Flags:
+    'flags {'
+        flags += Flag
+    '}'
+;
+
+Flag:
+    'flag' name = WID '{'
+        'activated:' activated = BOOL
+        ('false_msg:' false_msg = STRING)?
+        ('true_msg:' true_msg = STRING)?
+        ('require:' require = [Object])?
+        (dependencies = Dependencies)?
+    '}'
+;
+
+Dependencies:
+    'dependencies: {'
+        values += Dependence
+    '}'
+;
+
+Dependence:
+    flag = [Flag] ':' value = BOOL
+;
+
+DescriptionSection:
+    '"""'
+        'name:' name = /.*/
+        'description:' description = /.*/
+    '"""'
+;
+
+Blockade:
+    'blockade {'
+        blocks += Block
+    '}'
+;
+
+Block:
+    flag = [Flag] ',' direction = Direction
+;
+
+Connections:
+    'connections {'
+        connections *= Connection
+    '}'
+;
+
+Connection:
+    from_ = [Place] ',' direction = Direction ',' to_ = [Place] 
+;
+
+Player:
+    'player {'
+        'position:' position = [Place]
+        'inventory {'
+            items *= [Object]
+        '}'
+    '}'
+;
+
+Direction:
+    'N' | 'S' | 'E' | 'W'
+;
+
+Keyword:
+    'place' | 'items' | 'item' | 'name' | 
+    'description' | 'pickable' | 'flags' | 'flag' |
+    'activated' | 'false_mgs' | 'true_msg' | 'require' |
+    'dependencies' | 'blockade' | 'connections' |
+    'player' | 'start' | 'inventory'
+;
+
+WID: 
+    !Keyword ID
+;
