@@ -5,13 +5,7 @@ place Room1 {
     """
 
     objects {
-        object apple {
-            """
-                name: an apple
-                description: Big green apple
-            """
-            pickable: true
-        }
+        apple
     }
 }
 
@@ -35,23 +29,7 @@ place Room3 {
     """
     
     objects {
-        object chest {
-            """
-                name: small chest
-                description: Small chest for jewelery
-            """
-
-            objects {
-                object gold_key {
-                    """
-                        name: gold key
-                        description: golden key that has cross on it
-                    """
-                    pickable: true
-                }
-            }
-            pickable: false
-        }
+        chest
     }
 }
 
@@ -62,6 +40,41 @@ place Room4 {
     """
 
     objects {}
+}
+
+object_defs {
+    object apple {
+        """
+            name: an apple
+            description: Big green apple
+        """
+        pickable: true
+    }
+    object chest {
+        """
+            name: small chest
+            description: Small chest for jewelery
+        """
+
+        objects {
+            gold_key
+        }
+        pickable: false
+        commands: {
+            on_command examine {
+                move: gold_key
+                flag: examined_chest
+                message: "You have found golden key."
+            }
+        }
+    }
+    object gold_key {
+        """
+            name: gold key
+            description: golden key that has cross on it
+        """
+        pickable: true
+    }
 }
 
 connections {
@@ -84,6 +97,10 @@ flags {
         dependencies: {
             is_door_unlocked: true
         }
+    }
+    flag examined_chest {
+        activated: false
+        true_msg: "Nothing cathes your eye."
     }
 }
 

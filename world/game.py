@@ -1,3 +1,4 @@
+from os.path import join, dirname
 from textx import metamodel_from_file
 from world import World
 
@@ -27,7 +28,7 @@ class GameCmd(object):
                 if index == len(place_objects) - 1:
                     print(f"{object.pretty_name()}.")
                 elif index == len(place_objects) - 2:
-                    print(f"{object.pretty_name()}", end=" ")
+                    print(f"{object.pretty_name()} and", end=" ")
                 else:
                     print(f"{object.pretty_name()},", end=" ")
 
@@ -63,7 +64,8 @@ class GameCmd(object):
 
 
 if __name__ == '__main__':
-    meta_model = metamodel_from_file('world.tx')
-    model = meta_model.model_from_file('test.wld')
+    this_folder = dirname(__file__)
+    meta_model = metamodel_from_file(join(this_folder, 'world.tx'))
+    model = meta_model.model_from_file(join(this_folder, 'test.wld'))
     game = GameCmd(model)
     game.play()

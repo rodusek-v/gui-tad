@@ -1,5 +1,6 @@
 World:
     places += Place
+    objects = ObjectDefs
     connections = Connections
     flags = Flags
     player = Player
@@ -8,22 +9,29 @@ World:
 Place:
     'place' name = WID '{'
         description = DescriptionSection
-        contains = Objects
+        contains = ObjectsSection
         (blockade = Blockade)?
     '}'
+;
+
+ObjectDefs:
+    'object_defs {'
+        objects *= Object
+    '}' 
 ;
 
 Object:
     'object' name = WID '{'
         description = DescriptionSection
-        (contains = Objects)?
+        (contains = ObjectsSection)?
         'pickable:' pickable = BOOL
+        (commands = CommandSection)?
     '}'
 ;
 
-Objects:
+ObjectsSection:
     'objects {'
-        objects *= Object
+        objects *= [Object]
     '}'
 ;
 
@@ -41,6 +49,33 @@ Flag:
         ('require:' require = [Object])?
         (dependencies = Dependencies)?
     '}'
+;
+
+CommandSection:
+    'commands: {'
+        commands += Command
+    '}'
+;
+
+Command:
+    'on_command' name = WID '{'
+        routines += Routines
+        ('flag:' flag = [Flag])?
+        'message:' message = STRING
+    '}' 
+;
+
+Routines:
+    CRUDRoutine
+;
+
+CRUDRoutine:
+    type = CRUD ':' item = [Object] 
+    (', destination:' place = [Place])? 
+;
+
+CRUD:
+    'create' | 'delete' | 'move'
 ;
 
 Dependencies:
