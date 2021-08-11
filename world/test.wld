@@ -60,13 +60,6 @@ object_defs {
             gold_key
         }
         pickable: false
-        commands: {
-            on_command examine {
-                move: gold_key
-                flag: examined_chest
-                message: "You have found golden key."
-            }
-        }
     }
     object gold_key {
         """
@@ -83,20 +76,43 @@ connections {
     Room2, N, Room4
 }
 
+command_defs {
+    command examine {
+        on chest {
+            message: "You have found golden key."
+            flag: examined_chest
+            is_present: [chest]
+            move: gold_key
+        }
+    }
+    command open {
+        on door {
+            message: "Door is already unlocked."
+            flag: is_door_opened
+            at: Room2
+        }
+    }
+    command unlock {
+        on door {
+            message: "Door is already open."
+            flag: is_door_unlocked
+            is_carried: [gold_key]
+            at: Room2
+        }
+    }
+}
+
 flags {
     flag is_door_unlocked {
         activated: false
-        false_msg: "You don't have key to unlock it."
         true_msg: "You have unlocked the door."
-        require: gold_key
+        false_msg: "You don't have key to unlock it."
     }
     flag is_door_opened {
         activated: false
-        false_msg: "Door blocks your path."
         true_msg: "You have opened the door."
-        dependencies: {
-            is_door_unlocked: true
-        }
+        false_msg: "It's locked."
+        dependencies: is_door_unlocked
     }
     flag examined_chest {
         activated: false

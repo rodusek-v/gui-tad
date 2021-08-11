@@ -2,6 +2,7 @@ World:
     places += Place
     objects = ObjectDefs
     connections = Connections
+    commands = CommandDefs
     flags = Flags
     player = Player
 ;
@@ -20,12 +21,17 @@ ObjectDefs:
     '}' 
 ;
 
+CommandDefs:
+    'command_defs {'
+        commands *= Command
+    '}'
+;
+
 Object:
     'object' name = WID '{'
         description = DescriptionSection
         (contains = ObjectsSection)?
         'pickable:' pickable = BOOL
-        (commands = CommandSection)?
     '}'
 ;
 
@@ -44,48 +50,67 @@ Flags:
 Flag:
     'flag' name = WID '{'
         'activated:' activated = BOOL
-        ('false_msg:' false_msg = STRING)?
-        ('true_msg:' true_msg = STRING)?
-        ('require:' require = [Object])?
-        (dependencies = Dependencies)?
+        (true_prop = TrueMsgProp)?
+        (false_prop = FalseMsgProp)?
+        (depend_on_prop = DependOnProp)?
     '}'
 ;
 
-CommandSection:
-    'commands: {'
-        commands += Command
-    '}'
+TrueMsgProp:
+    'true_msg:' message = STRING
+;
+
+FalseMsgProp:
+    'false_msg:' message = STRING
+;
+
+DependOnProp:
+    'dependencies:' dependencies += [Flag]
 ;
 
 Command:
-    'on_command' name = WID '{'
-        routines += Routines
-        ('flag:' flag = [Flag])?
-        'message:' message = STRING
+    'command' names += WID '{'
+        operations += Operation
     '}' 
 ;
 
-Routines:
-    CRUDRoutine
+Operation:
+    'on' (object = WID)? '{'
+        'message:' message = STRING
+        (flag_prop = FlagProp)?
+        (require_prop = RequireProp)*
+        (located_prop = LocatedProp)?
+        (crud_prop = CRUDProp)?
+    '}'
 ;
 
-CRUDRoutine:
+FlagProp:
+    'flag:' flag = [Flag]
+;
+
+RequireProp:
+    RequirePlaceProp | RequireInventoryProp
+;
+
+RequirePlaceProp:
+    'is_present:' '[' require += [Object] ']'
+;
+
+RequireInventoryProp:
+    'is_carried:' '[' require += [Object] ']'
+;
+
+LocatedProp:
+    'at:' located = [Place]
+;
+
+CRUDProp:
     type = CRUD ':' item = [Object] 
     (', destination:' place = [Place])? 
 ;
 
 CRUD:
     'create' | 'delete' | 'move'
-;
-
-Dependencies:
-    'dependencies: {'
-        values += Dependence
-    '}'
-;
-
-Dependence:
-    flag = [Flag] ':' value = BOOL
 ;
 
 DescriptionSection:

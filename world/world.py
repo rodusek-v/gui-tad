@@ -50,6 +50,9 @@ class CommonModel(object):
     def get_objects(self):
         return self._objects
 
+    def get_object_by_name(self, name):
+        return next(o for o in self._objects if o.name() == name)
+
     def remove_object(self, object):
         if self._model.contains:
             self._model.contains.objects.remove(object.get_model())
@@ -83,15 +86,6 @@ class Object(CommonModel):
 
     def __init__(self, model) -> None:
         super().__init__(model)
-        if self._model.commands:
-            self._commands = {}
-            for command in self._model.commands.commands:
-                self._commands[command.name.strip().upper()] = command
-        else:
-            self._commands = None
-
-    def get_commands(self):
-        return self._commands
 
     def is_pickable(self):
         return self._model.pickable
@@ -134,6 +128,7 @@ class World(object):
         self._response = ""
         self._reset_console = False
         self.__load_connections(model.connections.connections)
+        self.__load_commands(model.commands.commands)
     
     def __load_connections(self, connections):
         self._connections = {}
@@ -152,6 +147,20 @@ class World(object):
             self._connections.setdefault(from_, []).append(from_conn)
             self._connections.setdefault(to_, []).append(to_conn)
 
+    def __load_commands(self, commands):
+        self._commands = {}
+        for command in commands:
+            temp = {}
+            for operation in command.operations:
+                if operation.object:
+                    temp[operation.object.strip().upper()] = operation
+                else:
+                    temp["None"] = operation
+
+            for predicate in command.names:
+                key = predicate.strip().upper()
+                self._commands[key] = temp
+
     def __check_block(self, blocks, direction):
         return direction not in blocks or blocks[direction].flag.activated
 
@@ -161,6 +170,9 @@ class World(object):
 
     def get_connections(self):
         return self._connections
+
+    def get_commands(self):
+        return self._get_commands
 
     def get_player(self):
         return self._player
@@ -267,35 +279,44 @@ class World(object):
         if not found:
             self._response = "You dont't have it."
 
+    def __execute_crud(self, crud_prop, place, object):
+        crud_item = Object(crud_prop.item)
+        if crud_prop.type == 'create':
+            place.add_object(crud_item)
+        elif crud_prop.type == 'delete':
+            place.remove_object(crud_item)
+        elif crud_prop.type == 'move':
+            object.remove_object(crud_item)
+            place.add_object(crud_item)
+
     def __specific_command(self, predicate, object_name):
         place = self._player.get_position()
+        commands = self._commands
 
-        for object in place.get_objects():
-            if object.name() == object_name:
-                commands = object.get_commands()
-                if commands and predicate in commands:
-                    for routine in commands[predicate].routines:
-                        if commands[predicate].flag:
-                            if commands[predicate].flag.activated:
-                                msg = commands[predicate].flag.true_msg
-                                self._response = msg if msg else ""
-                                return True
+        if predicate in commands:
+            if object_name in commands[predicate]:
+                operation = commands[predicate][object_name]
+                if operation.flag_prop and operation.crud_prop and operation.require_prop:
+                    flag = operation.flag_prop.flag
+                    if not flag.activated:
+                        ind = True
+                        for req in operation.require_prop:
+                            if req.__class__.__name__ == "RequirePlaceProp":
+                                ind = ind and all(Object(item) in place.get_objects() for item in req.require)
+                            elif req.__class__.__name__ == "RequireInventoryProp":
+                                ind = ind and all(Object(item) in self._player.get_inventory() for item in req.require)
                         
-                        if routine.__class__.__name__ == "CRUDRoutine":
-                            routine_item = Object(routine.item)
-                            if routine.type == 'create':
-                                place.add_object(routine_item)
-                            elif routine.type == 'delete':
-                                place.remove_object(routine_item)
-                            elif routine.type == 'move':
-                                object.remove_object(routine_item)
-                                place.add_object(routine_item)
-                            self._response = commands[predicate].message
-                            if commands[predicate].flag:
-                                commands[predicate].flag.activated = True
-                else:
-                    self._response = "I can't do that."
-                    return False
+                        if ind:
+                            self.__execute_crud(operation.crud_prop, place, place.get_object_by_name(object_name))
+                            flag.activated = True
+                            self._response = operation.message
+                    else:
+                        self._response = flag.true_prop.message
+
+            else:
+                self._response = "I can't do that."
+        else:
+            return False
 
         return True
 
@@ -324,6 +345,6 @@ class World(object):
         elif predicate == "LOOK":
             self._reset_console = True
         else:
-            object_name = command[OBJECT] if len(command) == 2 else None
+            object_name = command[OBJECT] if len(command) == 2 else "None"
             if not self.__specific_command(predicate, object_name):
                 self._response = f"I don't know how to {predicate.lower()}"
