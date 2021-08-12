@@ -50,22 +50,9 @@ Flags:
 Flag:
     'flag' name = WID '{'
         'activated:' activated = BOOL
-        (true_prop = TrueMsgProp)?
-        (false_prop = FalseMsgProp)?
-        (depend_on_prop = DependOnProp)?
+        'message:' message = STRING
+        ('dependencies:' '[' dependencies += [Flag] ']')?
     '}'
-;
-
-TrueMsgProp:
-    'true_msg:' message = STRING
-;
-
-FalseMsgProp:
-    'false_msg:' message = STRING
-;
-
-DependOnProp:
-    'dependencies:' dependencies += [Flag]
 ;
 
 Command:
@@ -76,16 +63,37 @@ Command:
 
 Operation:
     'on' (object = WID)? '{'
-        'message:' message = STRING
-        (flag_prop = FlagProp)?
-        (require_prop = RequireProp)*
-        (located_prop = LocatedProp)?
-        (crud_prop = CRUDProp)?
+        type = OperationType
     '}'
 ;
 
+OperationType:
+    MessageOperation | CRUDOperation | FlagOperation
+;
+
+MessageOperation:
+    'message:' message = STRING
+;
+
+CRUDOperation:
+    (require_prop = RequireProp)+
+    crud_prop = CRUDProp
+    'success:' success = STRING
+    'fail:' fail = STRING
+    (located_prop = LocatedProp)?
+    (flag_prop = FlagProp)?
+;
+
+FlagOperation:
+    flag_prop = FlagProp
+    'success:' success = STRING
+    'fail:' fail = STRING
+    (require_prop = RequireProp)*
+    (located_prop = LocatedProp)?
+;
+
 FlagProp:
-    'flag:' flag = [Flag]
+    'flag:' flag = [Flag] '==' value = BOOL
 ;
 
 RequireProp:

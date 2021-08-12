@@ -198,9 +198,14 @@ class World(object):
 
         return dirs
 
-    def check_flags(self):
-        pass
-
+    def check_flags(self, flag):
+        ind = True
+        if flag.dependencies:
+            for dependency in flag.dependencies:
+                ind = ind and dependency.activated
+        
+        return ind
+                
     def __move(self, predicate):
         exist = False
         place = self._player.get_position()
@@ -289,6 +294,24 @@ class World(object):
             object.remove_object(crud_item)
             place.add_object(crud_item)
 
+    def __eval_requirements(self, operation, place):
+        ind_place = True
+        ind_inv = True
+        for req in operation.require_prop:
+            if req.__class__.__name__ == "RequirePlaceProp":
+                ind_place = ind_place and all(Object(item) in place.get_objects() for item in req.require)
+            elif req.__class__.__name__ == "RequireInventoryProp":
+                ind_inv = ind_inv and all(Object(item) in self._player.get_inventory() for item in req.require)
+        return ind_place, ind_inv
+
+    def __eval_location(self, operation, place):
+        ind = True
+        if operation.located_prop:
+            req_place = Place(operation.located_prop.located) 
+            ind = ind and req_place == place 
+
+        return ind
+
     def __specific_command(self, predicate, object_name):
         place = self._player.get_position()
         commands = self._commands
@@ -296,29 +319,55 @@ class World(object):
         if predicate in commands:
             if object_name in commands[predicate]:
                 operation = commands[predicate][object_name]
-                if operation.flag_prop and operation.crud_prop and operation.require_prop:
-                    flag = operation.flag_prop.flag
-                    if not flag.activated:
-                        ind = True
-                        for req in operation.require_prop:
-                            if req.__class__.__name__ == "RequirePlaceProp":
-                                ind = ind and all(Object(item) in place.get_objects() for item in req.require)
-                            elif req.__class__.__name__ == "RequireInventoryProp":
-                                ind = ind and all(Object(item) in self._player.get_inventory() for item in req.require)
-                        
-                        if ind:
-                            self.__execute_crud(operation.crud_prop, place, place.get_object_by_name(object_name))
-                            flag.activated = True
-                            self._response = operation.message
+                if operation.type.__class__.__name__ == "MessageOperation":
+                    self._response = operation.type.message
+                elif operation.type.__class__.__name__ == "CRUDOperation":
+                    operation = operation.type
+                    req_place, req_inventory = self.__eval_requirements(operation, place)
+                    loc_ind = self.__eval_location(operation, place)
+                    if loc_ind and req_place:
+                        if req_inventory:
+                            if operation.flag_prop:
+                                flag = operation.flag_prop.flag
+                                value = operation.flag_prop.value
+                                if flag.activated == value:
+                                    if self.check_flags(flag):
+                                        self.__execute_crud(operation.crud_prop, place, place.get_object_by_name(object_name))
+                                        flag.activated = not value
+                                        self._response = operation.success
+                                    else:
+                                        self._response = operation.fail
+                                else:
+                                    self._response = flag.message
+                            else:
+                                self.__execute_crud(operation.crud_prop, place, place.get_object_by_name(object_name))
+                                self._response = operation.success
+                        else:
+                            self._response = operation.fail
                     else:
-                        self._response = flag.true_prop.message
-
+                        self._response = f"I don't see any {object_name}"
+                        
+                elif operation.type.__class__.__name__ == "FlagOperation":
+                    operation = operation.type
+                    flag = operation.flag_prop.flag
+                    value = operation.flag_prop.value
+                    req_place, req_inventory = self.__eval_requirements(operation, place)
+                    loc_ind = self.__eval_location(operation, place)
+                    if loc_ind and req_place:
+                        if flag.activated == value:
+                            if req_inventory and self.check_flags(flag):
+                                flag.activated = not value
+                                self._response = operation.success
+                            else:
+                                self._response = operation.fail
+                        else:
+                            self._response = flag.message
+                    else:
+                        self._response = f"I don't see any {object_name}"
             else:
                 self._response = "I can't do that."
         else:
-            return False
-
-        return True
+            self._response = f"I don't know how to {predicate.lower()}"
 
     def execute_command(self, command):
         command = check_command(command)
@@ -346,5 +395,5 @@ class World(object):
             self._reset_console = True
         else:
             object_name = command[OBJECT] if len(command) == 2 else "None"
-            if not self.__specific_command(predicate, object_name):
-                self._response = f"I don't know how to {predicate.lower()}"
+            self.__specific_command(predicate, object_name)
+                

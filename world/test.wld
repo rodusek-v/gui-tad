@@ -79,23 +79,38 @@ connections {
 command_defs {
     command examine {
         on chest {
-            message: "You have found golden key."
-            flag: examined_chest
             is_present: [chest]
             move: gold_key
+            success: "You have found golden key."
+            fail: ""
+            flag: examined_chest == false
+        }
+        on {
+            message: "Nothing cathes your eye."
         }
     }
     command open {
         on door {
-            message: "Door is already unlocked."
-            flag: is_door_opened
+            flag: is_door_opened == false
+            success: "You have opened the door."
+            fail: "It's locked."
             at: Room2
         }
     }
     command unlock {
         on door {
-            message: "Door is already open."
-            flag: is_door_unlocked
+            flag: is_door_unlocked == false
+            success: "You have unlocked the door."
+            fail: "You don't have key to unlock it."
+            is_carried: [gold_key]
+            at: Room2
+        }
+    }
+    command lock {
+        on door {
+            flag: is_door_unlocked == true
+            success: "You have locked the door."
+            fail: "You don't have key to lock it."
             is_carried: [gold_key]
             at: Room2
         }
@@ -105,18 +120,16 @@ command_defs {
 flags {
     flag is_door_unlocked {
         activated: false
-        true_msg: "You have unlocked the door."
-        false_msg: "You don't have key to unlock it."
+        message: "Door is already unlocked."
     }
     flag is_door_opened {
         activated: false
-        true_msg: "You have opened the door."
-        false_msg: "It's locked."
-        dependencies: is_door_unlocked
+        message: "Door is already open."
+        dependencies: [is_door_unlocked]
     }
     flag examined_chest {
         activated: false
-        true_msg: "Nothing cathes your eye."
+        message: "Nothing cathes your eye."
     }
 }
 
