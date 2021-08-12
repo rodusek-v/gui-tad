@@ -50,9 +50,20 @@ Flags:
 Flag:
     'flag' name = WID '{'
         'activated:' activated = BOOL
-        'message:' message = STRING
-        ('dependencies:' '[' dependencies += [Flag] ']')?
+        'action_on_true:' action_true = Action
+        'action_on_false:' action_false = Action
     '}'
+;
+
+Action:
+    '{'
+        ('message:' message = STRING)?
+        ('dependencies:' '[' dependencies += Condition ']')?
+    '}'
+;
+
+Condition:
+    flag = [Flag] '==' value = BOOL (',')?
 ;
 
 Command:

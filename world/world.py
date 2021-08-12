@@ -200,9 +200,12 @@ class World(object):
 
     def check_flags(self, flag):
         ind = True
-        if flag.dependencies:
-            for dependency in flag.dependencies:
-                ind = ind and dependency.activated
+        if flag.activated:
+            for dependency in flag.action_false.dependencies:
+                ind = ind and (dependency.flag.activated == dependency.value)
+        else:
+            for dependency in flag.action_true.dependencies:
+                ind = ind and (dependency.flag.activated == dependency.value)
         
         return ind
                 
@@ -338,7 +341,10 @@ class World(object):
                                     else:
                                         self._response = operation.fail
                                 else:
-                                    self._response = flag.message
+                                    if flag.activated:
+                                        self._response = flag.action_true.message
+                                    else:
+                                        self._response = flag.action_false.message
                             else:
                                 self.__execute_crud(operation.crud_prop, place, place.get_object_by_name(object_name))
                                 self._response = operation.success
@@ -361,7 +367,10 @@ class World(object):
                             else:
                                 self._response = operation.fail
                         else:
-                            self._response = flag.message
+                            if flag.activated:
+                                self._response = flag.action_true.message
+                            else:
+                                self._response = flag.action_false.message
                     else:
                         self._response = f"I don't see any {object_name}"
             else:
@@ -396,4 +405,6 @@ class World(object):
         else:
             object_name = command[OBJECT] if len(command) == 2 else "None"
             self.__specific_command(predicate, object_name)
+            if self._response == "":
+                self._reset_console = True
                 

@@ -92,8 +92,16 @@ command_defs {
     command open {
         on door {
             flag: is_door_opened == false
-            success: "You have opened the door."
+            success: ""
             fail: "It's locked."
+            at: Room2
+        }
+    }
+    command close {
+        on door {
+            flag: is_door_opened == true
+            success: ""
+            fail: "Door is already closed."
             at: Room2
         }
     }
@@ -110,7 +118,7 @@ command_defs {
         on door {
             flag: is_door_unlocked == true
             success: "You have locked the door."
-            fail: "You don't have key to lock it."
+            fail: "I can't do it."
             is_carried: [gold_key]
             at: Room2
         }
@@ -120,16 +128,30 @@ command_defs {
 flags {
     flag is_door_unlocked {
         activated: false
-        message: "Door is already unlocked."
+        action_on_true: {
+            message: "Door is already unlocked."
+        }
+        action_on_false: {
+            message: "Door is already locked."
+            dependencies: [is_door_unlocked == true, is_door_opened == false]
+        }
     }
     flag is_door_opened {
         activated: false
-        message: "Door is already open."
-        dependencies: [is_door_unlocked]
+        action_on_true: {
+            message: "Door is already open."
+            dependencies: [is_door_unlocked == true]
+        }
+        action_on_false: {
+            message: "Door is already closed."
+        }
     }
     flag examined_chest {
         activated: false
-        message: "Nothing cathes your eye."
+        action_on_true: {
+            message: "Nothing cathes your eye."
+        }
+        action_on_false: {}
     }
 }
 
