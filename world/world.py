@@ -1,138 +1,4 @@
-directions = {
-    "N" : "(N) North",
-    "W" : "(W) West",
-    "S" : "(S) South",
-    "E" : "(E) East"
-}
-
-opposite_directions = {
-    "N" : "S",
-    "W" : "E",
-    "S" : "N",
-    "E" : "W"
-}
-
-PREDICATE = 0
-OBJECT = 1
-
-
-def check_command(string):
-    split = string.upper().split()
-    if len(split) > 2:
-        raise Exception("Command must contain maximum two words")
-
-    return split
-
-
-class ObjectListInterface:
-
-    def add_object(self, object):
-        pass
-
-    def remove_object(self, object):
-        pass
-
-
-class CommonModel(ObjectListInterface):
-    def __init__(self, model) -> None:
-        super().__init__()
-        self._model = model
-        if self._model.contains:
-            self._objects = [Object(o) for o in self._model.contains.objects]
-        else:
-            self._objects = []
-
-    def __eq__(self, o) -> bool:
-        if isinstance(o, CommonModel):
-            return o.name() == self.name()
-
-        return False
-
-    def name(self):
-        return self._model.name.strip().upper()
-
-    def describe(self):
-        return self._model.description.description.strip()
-
-    def pretty_name(self):
-        return self._model.description.name.strip()
-
-    def get_objects(self):
-        return self._objects
-
-    def remove_object(self, object):
-        if self._model.contains:
-            self._model.contains.objects.remove(object.get_model())
-            object.set_container()
-            self._objects.remove(object)
-    
-    def add_object(self, object):
-        if self._model.contains:
-            self._model.contains.objects.append(object.get_model())
-            object.set_container(self._model)
-            self._objects.append(object)
-
-    def get_model(self):
-        return self._model
-
-
-class Place(CommonModel):
-
-    def __init__(self, model) -> None:
-        super().__init__(model)
-        if self._model.blockade:
-            self._blocks = {}
-            for block in self._model.blockade.blocks:
-                self._blocks[block.direction] = block
-        else:
-            self._blocks = {}
-
-    def get_blocks(self):
-        return self._blocks
-
-
-class Object(CommonModel):
-
-    def __init__(self, model) -> None:
-        super().__init__(model)
-
-    def is_pickable(self):
-        return self._model.pickable
-
-    def get_container(self):
-        return self._model.container
-
-    def set_container(self, container=None):
-        self._model.container = container
-
-
-class Player(ObjectListInterface):
-
-    def __init__(self, model) -> None:
-        super().__init__()
-        self._model = model
-        self._position = Place(self._model.position)
-        self._inventory = [Object(i) for i in self._model.items]
-
-    def get_position(self):
-        return self._position
-
-    def set_position(self, position):
-        self._position = Place(position)
-
-    def get_inventory(self):
-        return self._inventory
-
-    def remove_object(self, object):
-        self._model.items.remove(object.get_model())
-        object.set_container()
-        self._inventory.remove(object)
-    
-    def add_object(self, object):
-        self._model.items.append(object.get_model())
-        object.set_container(self._model)
-        self._inventory.append(object)
-
+from world.world_assets import *
 
 class World(object):
     
@@ -145,6 +11,7 @@ class World(object):
         self._reset_console = False
         self._finish_goal = model.finish
         self._game_over = False
+        self._is_finished = False
         self.__load_connections(model.connections.connections)
         self.__load_commands(model.commands.commands)
 
@@ -392,12 +259,6 @@ class World(object):
         else:
             self._response = f"I don't know how to {predicate.lower()}"
 
-    def get_places(self):
-        return self._places
-
-    def get_connections(self):
-        return self._connections
-
     def get_player(self):
         return self._player
 
@@ -423,6 +284,9 @@ class World(object):
         return dirs
 
     def execute_command(self, command):
+        if self._is_finished:
+            return
+
         command = check_command(command)
         if len(command) == 0:
             self._reset_console = True
@@ -459,10 +323,12 @@ class World(object):
                 self._reset_console = True
 
         if self.__is_game_finished():
+            self._is_finished = True
             self._response = "Congratulations you have successfully finished the game"
 
         if self._game_over:
+            self._is_finished = True
             self._response = "GAME OVER"
         
     def is_finished(self):
-        return self.__is_game_finished()
+        return self._is_finished

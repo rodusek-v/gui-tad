@@ -1,6 +1,6 @@
 from os.path import join, dirname
 from textx import metamodel_from_file
-from world import World
+from world.world import World
 
 class GameCmd(object):
     
@@ -68,7 +68,7 @@ class GameCmd(object):
 
 if __name__ == '__main__':
     this_folder = dirname(__file__)
-    meta_model = metamodel_from_file(join(this_folder, 'world.tx'))
-    model = meta_model.model_from_file(join(this_folder, 'test.wld'))
+    meta_model = metamodel_from_file(join(this_folder, 'textx/world.tx'))
+    model = meta_model.model_from_file(join(this_folder, 'textx/test.wld'))
     game = GameCmd(model)
     game.play()
