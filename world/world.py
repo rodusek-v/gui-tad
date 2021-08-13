@@ -15,6 +15,7 @@ opposite_directions = {
 PREDICATE = 0
 OBJECT = 1
 
+
 def check_command(string):
     split = string.upper().split()
     if len(split) > 2:
@@ -23,7 +24,16 @@ def check_command(string):
     return split
 
 
-class CommonModel(object):
+class ObjectListInterface:
+
+    def add_object(self, object):
+        pass
+
+    def remove_object(self, object):
+        pass
+
+
+class CommonModel(ObjectListInterface):
     def __init__(self, model) -> None:
         super().__init__()
         self._model = model
@@ -50,17 +60,16 @@ class CommonModel(object):
     def get_objects(self):
         return self._objects
 
-    def get_object_by_name(self, name):
-        return next(o for o in self._objects if o.name() == name)
-
     def remove_object(self, object):
         if self._model.contains:
             self._model.contains.objects.remove(object.get_model())
+            object.set_container()
             self._objects.remove(object)
     
     def add_object(self, object):
         if self._model.contains:
             self._model.contains.objects.append(object.get_model())
+            object.set_container(self._model)
             self._objects.append(object)
 
     def get_model(self):
@@ -90,14 +99,20 @@ class Object(CommonModel):
     def is_pickable(self):
         return self._model.pickable
 
+    def get_container(self):
+        return self._model.container
 
-class Player(object):
+    def set_container(self, container=None):
+        self._model.container = container
+
+
+class Player(ObjectListInterface):
 
     def __init__(self, model) -> None:
         super().__init__()
         self._model = model
         self._position = Place(self._model.position)
-        self._inventory = self.objects = [Object(i) for i in self._model.items]
+        self._inventory = [Object(i) for i in self._model.items]
 
     def get_position(self):
         return self._position
@@ -108,12 +123,14 @@ class Player(object):
     def get_inventory(self):
         return self._inventory
 
-    def remove_from_inventory(self, object):
+    def remove_object(self, object):
         self._model.items.remove(object.get_model())
+        object.set_container()
         self._inventory.remove(object)
     
-    def add_to_inventory(self, object):
+    def add_object(self, object):
         self._model.items.append(object.get_model())
+        object.set_container(self._model)
         self._inventory.append(object)
 
 
@@ -123,12 +140,30 @@ class World(object):
         super().__init__()
         self._places = [Place(p) for p in model.places]
         self._object_defs = [Object(o) for o in model.objects.objects]
-        self._flags = model.flags.flags
         self._player = Player(model.player)
         self._response = ""
         self._reset_console = False
+        self._finish_goal = model.finish
+        self._game_over = False
         self.__load_connections(model.connections.connections)
         self.__load_commands(model.commands.commands)
+
+    def __wrap_container(self, container):
+        ret_val = None
+        if container.__class__.__name__ in ["Place", "Object"]:
+            temp = CommonModel(container)
+            for place in self._places:
+                if temp == place:
+                    ret_val = place
+                    break
+                else:
+                    for obj in place.get_objects():
+                        if temp == obj:
+                            ret_val = obj
+                            break
+        elif container.__class__.__name__ == "Player":
+            ret_val = self._player
+        return ret_val
     
     def __load_connections(self, connections):
         self._connections = {}
@@ -164,41 +199,16 @@ class World(object):
     def __check_block(self, blocks, direction):
         return direction not in blocks or blocks[direction].flag.activated
 
-
-    def get_places(self):
-        return self._places
-
-    def get_connections(self):
-        return self._connections
-
-    def get_commands(self):
-        return self._get_commands
-
-    def get_player(self):
-        return self._player
-
-    def get_response(self):
-        ret_val = self._response
-        self._response = ""
-        return ret_val
-
-    def is_console_resetable(self):
-        ret_val = self._reset_console
-        self._reset_console = False
-        return ret_val
-
-    def available_directions(self):
+    def __is_game_finished(self):
         place = self._player.get_position()
-        dirs = []
-        blocks = place.get_blocks()
-        if place.name() in self._connections:
-            for conn in self._connections[place.name()]:
-                if self.__check_block(blocks, conn["direction"]):
-                    dirs.append(directions[conn["direction"]])
+        if Place(self._finish_goal.position) == place:
+            if self._finish_goal.flag_prop:
+                flag_prop = self._finish_goal.flag_prop
+                return flag_prop.flag.activated == flag_prop.value
+            else:
+                return True
 
-        return dirs
-
-    def check_flags(self, flag):
+    def __check_flags(self, flag):
         ind = True
         if flag.activated:
             for dependency in flag.action_false.dependencies:
@@ -238,7 +248,7 @@ class World(object):
             
             for o in to_remove:
                 place.remove_object(o)
-                self._player.add_to_inventory(o)
+                self._player.add_object(o)
             self._reset_console = True
             return
 
@@ -246,7 +256,7 @@ class World(object):
             if object.name() == object_name:
                 if object.is_pickable():
                     place.remove_object(object)
-                    self._player.add_to_inventory(object)
+                    self._player.add_object(object)
                     self._reset_console = True
                     found = True
                     break 
@@ -270,7 +280,7 @@ class World(object):
                 to_remove.append(object)
             
             for o in to_remove:
-                self._player.remove_from_inventory(o)
+                self._player.remove_object(o)
                 place.add_object(o)
 
             self._reset_console = True
@@ -278,7 +288,7 @@ class World(object):
 
         for object in self._player.get_inventory():
             if object.name() == object_name:
-                self._player.remove_from_inventory(object)
+                self._player.remove_object(object)
                 place.add_object(object)
                 self._reset_console = True
                 found = True
@@ -287,15 +297,19 @@ class World(object):
         if not found:
             self._response = "You dont't have it."
 
-    def __execute_crud(self, crud_prop, place, object):
-        crud_item = Object(crud_prop.item)
-        if crud_prop.type == 'create':
-            place.add_object(crud_item)
-        elif crud_prop.type == 'delete':
-            place.remove_object(crud_item)
-        elif crud_prop.type == 'move':
-            object.remove_object(crud_item)
-            place.add_object(crud_item)
+    def __execute_crud(self, crud_props):
+        for crud_prop in crud_props:
+            crud_item = Object(crud_prop.item)
+            if crud_prop.type == 'create':
+                if crud_item.is_pickable():
+                    self._player.add_object(crud_item)
+                else:
+                    self._player.get_position().add_object(crud_item)
+            elif crud_prop.type == 'delete':
+                self.__wrap_container(crud_item.get_container()).remove_object(crud_item)
+            elif crud_prop.type == 'move':
+                self.__wrap_container(crud_item.get_container()).remove_object(crud_item)
+                self._player.get_position().add_object(crud_item)
 
     def __eval_requirements(self, operation, place):
         ind_place = True
@@ -334,8 +348,8 @@ class World(object):
                                 flag = operation.flag_prop.flag
                                 value = operation.flag_prop.value
                                 if flag.activated == value:
-                                    if self.check_flags(flag):
-                                        self.__execute_crud(operation.crud_prop, place, place.get_object_by_name(object_name))
+                                    if self.__check_flags(flag):
+                                        self.__execute_crud(operation.crud_props)
                                         flag.activated = not value
                                         self._response = operation.success
                                     else:
@@ -346,7 +360,7 @@ class World(object):
                                     else:
                                         self._response = flag.action_false.message
                             else:
-                                self.__execute_crud(operation.crud_prop, place, place.get_object_by_name(object_name))
+                                self.__execute_crud(operation.crud_props)
                                 self._response = operation.success
                         else:
                             self._response = operation.fail
@@ -361,7 +375,7 @@ class World(object):
                     loc_ind = self.__eval_location(operation, place)
                     if loc_ind and req_place:
                         if flag.activated == value:
-                            if req_inventory and self.check_flags(flag):
+                            if req_inventory and self.__check_flags(flag):
                                 flag.activated = not value
                                 self._response = operation.success
                             else:
@@ -378,10 +392,44 @@ class World(object):
         else:
             self._response = f"I don't know how to {predicate.lower()}"
 
+    def get_places(self):
+        return self._places
+
+    def get_connections(self):
+        return self._connections
+
+    def get_player(self):
+        return self._player
+
+    def get_response(self):
+        ret_val = self._response
+        self._response = ""
+        return ret_val
+
+    def is_console_resetable(self):
+        ret_val = self._reset_console
+        self._reset_console = False
+        return ret_val
+
+    def available_directions(self):
+        place = self._player.get_position()
+        dirs = []
+        blocks = place.get_blocks()
+        if place.name() in self._connections:
+            for conn in self._connections[place.name()]:
+                if self.__check_block(blocks, conn["direction"]):
+                    dirs.append(directions[conn["direction"]])
+
+        return dirs
+
     def execute_command(self, command):
         command = check_command(command)
-        predicate = command[PREDICATE]
+        if len(command) == 0:
+            self._reset_console = True
+            return 
 
+        predicate = command[PREDICATE]
+    
         if predicate in directions or predicate == "GO":
             direction = predicate
             if predicate == "GO":
@@ -391,20 +439,30 @@ class World(object):
                     return
             
             self.__move(direction)
-                
         elif predicate in ["GET", "TAKE"]:
             object_name = command[OBJECT]
             self.__take(predicate, object_name)
         elif predicate == "DROP":
             object_name = command[OBJECT]
             self.__drop(object_name)
-        elif predicate == "I":
+        elif predicate in ["I", "INVENTORY"]:
             self._response = "INVENTORY"
         elif predicate == "LOOK":
             self._reset_console = True
         else:
             object_name = command[OBJECT] if len(command) == 2 else "None"
-            self.__specific_command(predicate, object_name)
+            try:
+                self.__specific_command(predicate, object_name)
+            except:
+                self._response = "Oops, can't do that."
             if self._response == "":
                 self._reset_console = True
-                
+
+        if self.__is_game_finished():
+            self._response = "Congratulations you have successfully finished the game"
+
+        if self._game_over:
+            self._response = "GAME OVER"
+        
+    def is_finished(self):
+        return self.__is_game_finished()

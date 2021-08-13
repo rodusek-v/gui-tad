@@ -56,6 +56,9 @@ class GameCmd(object):
                     else:
                         print(response)
 
+                if self._world.is_finished():
+                    break
+
                 if self._world.is_console_resetable():
                     print()
                     self._print_menu()

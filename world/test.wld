@@ -49,6 +49,7 @@ object_defs {
             description: Big green apple
         """
         pickable: true
+        container: Room1
     }
     object chest {
         """
@@ -60,11 +61,20 @@ object_defs {
             gold_key
         }
         pickable: false
+        container: Room3
     }
     object gold_key {
         """
             name: gold key
-            description: golden key that has cross on it
+            description: Golden key that has cross on it
+        """
+        pickable: true
+        container: chest
+    }
+    object seeds {
+        """
+            name: apple seeds
+            description: Seeds from fresh apple
         """
         pickable: true
     }
@@ -123,6 +133,15 @@ command_defs {
             at: Room2
         }
     }
+    command extract {
+        on seeds {
+            is_carried: [apple]
+            create: seeds
+            delete: apple
+            success: "You have extract seeds from apple."
+            fail: "From what?"
+        }
+    }
 }
 
 flags {
@@ -156,6 +175,11 @@ flags {
 }
 
 player {
+    name: Player1
     position: Room1
     inventory {}
+}
+
+finish {
+    position: Room4
 }

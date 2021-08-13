@@ -5,6 +5,11 @@ World:
     commands = CommandDefs
     flags = Flags
     player = Player
+    finish = Finish
+;
+
+Container:
+    Place | Player | Object
 ;
 
 Place:
@@ -32,6 +37,7 @@ Object:
         description = DescriptionSection
         (contains = ObjectsSection)?
         'pickable:' pickable = BOOL
+        ('container:' container = [Container])?
     '}'
 ;
 
@@ -88,7 +94,7 @@ MessageOperation:
 
 CRUDOperation:
     (require_prop = RequireProp)+
-    crud_prop = CRUDProp
+    crud_props += CRUDProp
     'success:' success = STRING
     'fail:' fail = STRING
     (located_prop = LocatedProp)?
@@ -125,7 +131,7 @@ LocatedProp:
 
 CRUDProp:
     type = CRUD ':' item = [Object] 
-    (', destination:' place = [Place])? 
+    (', destination:' destination = [Container])? 
 ;
 
 CRUD:
@@ -161,10 +167,18 @@ Connection:
 
 Player:
     'player {'
+        'name:' name = WID
         'position:' position = [Place]
         'inventory {'
             items *= [Object]
         '}'
+    '}'
+;
+
+Finish:
+    'finish {'
+        'position:' position = [Place]
+        (flag_prop = FlagProp)?
     '}'
 ;
 
@@ -177,7 +191,7 @@ Keyword:
     'description' | 'pickable' | 'flags' | 'flag' |
     'activated' | 'false_mgs' | 'true_msg' | 'require' |
     'dependencies' | 'blockade' | 'connections' |
-    'player' | 'start' | 'inventory'
+    'player' | 'start' | 'inventory' | 'finish'
 ;
 
 WID: 
