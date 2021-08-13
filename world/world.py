@@ -5,7 +5,6 @@ class World(object):
     def __init__(self, model) -> None:
         super().__init__()
         self._places = [Place(p) for p in model.places]
-        self._object_defs = [Object(o) for o in model.objects.objects]
         self._player = Player(model.player)
         self._response = ""
         self._reset_console = False
@@ -52,16 +51,10 @@ class World(object):
     def __load_commands(self, commands):
         self._commands = {}
         for command in commands:
-            temp = {}
-            for operation in command.operations:
-                if operation.object:
-                    temp[operation.object.strip().upper()] = operation
-                else:
-                    temp["None"] = operation
-
-            for predicate in command.names:
-                key = predicate.strip().upper()
-                self._commands[key] = temp
+            for text in command.text:
+                object_name = f" {text.object}" if text.object else ""
+                text_ = f"{text.predicate}{object_name}"
+                self._commands[text_.strip().upper()] = command.operation
 
     def __check_block(self, blocks, direction):
         return direction not in blocks or blocks[direction].flag.activated
@@ -196,66 +189,68 @@ class World(object):
 
         return ind
 
-    def __specific_command(self, predicate, object_name):
-        place = self._player.get_position()
-        commands = self._commands
-
-        if predicate in commands:
-            if object_name in commands[predicate]:
-                operation = commands[predicate][object_name]
-                if operation.type.__class__.__name__ == "MessageOperation":
-                    self._response = operation.type.message
-                elif operation.type.__class__.__name__ == "CRUDOperation":
-                    operation = operation.type
-                    req_place, req_inventory = self.__eval_requirements(operation, place)
-                    loc_ind = self.__eval_location(operation, place)
-                    if loc_ind and req_place:
-                        if req_inventory:
-                            if operation.flag_prop:
-                                flag = operation.flag_prop.flag
-                                value = operation.flag_prop.value
-                                if flag.activated == value:
-                                    if self.__check_flags(flag):
-                                        self.__execute_crud(operation.crud_props)
-                                        flag.activated = not value
-                                        self._response = operation.success
-                                    else:
-                                        self._response = operation.fail
-                                else:
-                                    if flag.activated:
-                                        self._response = flag.action_true.message
-                                    else:
-                                        self._response = flag.action_false.message
-                            else:
-                                self.__execute_crud(operation.crud_props)
-                                self._response = operation.success
+    def __execute_crud(self, operation, place, object_name):
+        req_place, req_inventory = self.__eval_requirements(operation, place)
+        loc_ind = self.__eval_location(operation, place)
+        if loc_ind and req_place:
+            if req_inventory:
+                if operation.flag_prop:
+                    flag = operation.flag_prop.flag
+                    value = operation.flag_prop.value
+                    if flag.activated == value:
+                        if self.__check_flags(flag):
+                            self.__execute_crud(operation.crud_props)
+                            flag.activated = not value
+                            self._response = operation.success
                         else:
                             self._response = operation.fail
                     else:
-                        self._response = f"I don't see any {object_name}"
-                        
-                elif operation.type.__class__.__name__ == "FlagOperation":
-                    operation = operation.type
-                    flag = operation.flag_prop.flag
-                    value = operation.flag_prop.value
-                    req_place, req_inventory = self.__eval_requirements(operation, place)
-                    loc_ind = self.__eval_location(operation, place)
-                    if loc_ind and req_place:
-                        if flag.activated == value:
-                            if req_inventory and self.__check_flags(flag):
-                                flag.activated = not value
-                                self._response = operation.success
-                            else:
-                                self._response = operation.fail
+                        if flag.activated:
+                            self._response = flag.action_true.message
                         else:
-                            if flag.activated:
-                                self._response = flag.action_true.message
-                            else:
-                                self._response = flag.action_false.message
-                    else:
-                        self._response = f"I don't see any {object_name}"
+                            self._response = flag.action_false.message
+                else:
+                    self.__execute_crud(operation.crud_props)
+                    self._response = operation.success
             else:
-                self._response = "I can't do that."
+                self._response = operation.fail
+        else:
+            self._response = f"I don't see any {object_name}" 
+
+    def __execute_flag(self, operation, place, object_name):
+        flag = operation.flag_prop.flag
+        value = operation.flag_prop.value
+        req_place, req_inventory = self.__eval_requirements(operation, place)
+        loc_ind = self.__eval_location(operation, place)
+        if loc_ind and req_place:
+            if flag.activated == value:
+                if req_inventory and self.__check_flags(flag):
+                    flag.activated = not value
+                    self._response = operation.success
+                else:
+                    self._response = operation.fail
+            else:
+                if flag.activated:
+                    self._response = flag.action_true.message
+                else:
+                    self._response = flag.action_false.message
+        else:
+            self._response = f"I don't see any {object_name}"
+
+    def __specific_command(self, predicate, object_name):
+        place = self._player.get_position()
+        commands = self._commands
+        temp = f" {object_name}" if object_name else ""
+        command_text = f"{predicate}{temp}"
+
+        if command_text in commands:
+            operation = commands[command_text]
+            if operation.__class__.__name__ == "MessageOperation":
+                self._response = operation.message
+            elif operation.__class__.__name__ == "CRUDOperation":
+                self.__execute_crud(operation, place, object_name)
+            elif operation.__class__.__name__ == "FlagOperation":
+                self.__execute_flag(operation, place, object_name)
         else:
             self._response = f"I don't know how to {predicate.lower()}"
 
@@ -294,33 +289,33 @@ class World(object):
 
         predicate = command[PREDICATE]
     
-        if predicate in directions or predicate == "GO":
-            direction = predicate
-            if predicate == "GO":
-                direction = command[OBJECT]
-                if direction not in directions:
-                    self._response = f"I don't know how to {predicate.lower()}"
-                    return
-            
-            self.__move(direction)
-        elif predicate in ["GET", "TAKE"]:
-            object_name = command[OBJECT]
-            self.__take(predicate, object_name)
-        elif predicate == "DROP":
-            object_name = command[OBJECT]
-            self.__drop(object_name)
-        elif predicate in ["I", "INVENTORY"]:
-            self._response = "INVENTORY"
-        elif predicate == "LOOK":
-            self._reset_console = True
-        else:
-            object_name = command[OBJECT] if len(command) == 2 else "None"
-            try:
-                self.__specific_command(predicate, object_name)
-            except:
-                self._response = "Oops, can't do that."
-            if self._response == "":
+        try:
+            if predicate in directions or predicate == "GO":
+                direction = predicate
+                if predicate == "GO":
+                    direction = command[OBJECT]
+                    if direction not in directions:
+                        self._response = f"I don't know how to {predicate.lower()}"
+                        return
+                
+                self.__move(direction)
+            elif predicate in ["GET", "TAKE"]:
+                object_name = command[OBJECT]
+                self.__take(predicate, object_name)
+            elif predicate == "DROP":
+                object_name = command[OBJECT]
+                self.__drop(object_name)
+            elif predicate in ["I", "INVENTORY"]:
+                self._response = "INVENTORY"
+            elif predicate == "LOOK":
                 self._reset_console = True
+            else:
+                object_name = command[OBJECT] if len(command) == 2 else None
+                self.__specific_command(predicate, object_name)
+                if self._response == "":
+                    self._reset_console = True
+        except:
+            self._response = "Oops, can't do that."
 
         if self.__is_game_finished():
             self._is_finished = True

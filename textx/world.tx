@@ -64,27 +64,25 @@ Flag:
 Action:
     '{'
         ('message:' message = STRING)?
-        ('dependencies:' '[' dependencies += Condition ']')?
+        ('dependencies:' '[' dependencies += Condition [','] ']')?
     '}'
 ;
 
 Condition:
-    flag = [Flag] '==' value = BOOL (',')?
+    flag = [Flag] '==' value = BOOL
 ;
 
 Command:
-    'command' names += WID '{'
-        operations += Operation
+    'command' text += CommandText [','] '{'
+        operation = Operation
     '}' 
 ;
 
-Operation:
-    'on' (object = WID)? '{'
-        type = OperationType
-    '}'
+CommandText:
+    '"' predicate = WID (object = WID)? '"'
 ;
 
-OperationType:
+Operation:
     MessageOperation | CRUDOperation | FlagOperation
 ;
 

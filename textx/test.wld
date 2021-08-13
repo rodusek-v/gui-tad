@@ -87,60 +87,48 @@ connections {
 }
 
 command_defs {
-    command examine {
-        on chest {
-            is_present: [chest]
-            move: gold_key
-            success: "You have found golden key."
-            fail: ""
-            flag: examined_chest == false
-        }
-        on {
-            message: "Nothing cathes your eye."
-        }
+    command "examine chest" {
+        is_present: [chest]
+        move: gold_key
+        success: "You have found golden key."
+        fail: ""
+        flag: examined_chest == false
     }
-    command open {
-        on door {
-            flag: is_door_opened == false
-            success: ""
-            fail: "It's locked."
-            at: Room2
-        }
+    command "examine" {
+        message: "Nothing catches your eye."
     }
-    command close {
-        on door {
-            flag: is_door_opened == true
-            success: ""
-            fail: "Door is already closed."
-            at: Room2
-        }
+    command "open door" {
+        flag: is_door_opened == false
+        success: ""
+        fail: "It's locked."
+        at: Room2
     }
-    command unlock {
-        on door {
-            flag: is_door_unlocked == false
-            success: "You have unlocked the door."
-            fail: "You don't have key to unlock it."
-            is_carried: [gold_key]
-            at: Room2
-        }
+    command "close door" {
+        flag: is_door_opened == true
+        success: ""
+        fail: "Door is already closed."
+        at: Room2
     }
-    command lock {
-        on door {
-            flag: is_door_unlocked == true
-            success: "You have locked the door."
-            fail: "I can't do it."
-            is_carried: [gold_key]
-            at: Room2
-        }
+    command "unlock door" {
+        flag: is_door_unlocked == false
+        success: "You have unlocked the door."
+        fail: "You don't have key to unlock it."
+        is_carried: [gold_key]
+        at: Room2
     }
-    command extract {
-        on seeds {
-            is_carried: [apple]
-            create: seeds
-            delete: apple
-            success: "You have extract seeds from apple."
-            fail: "From what?"
-        }
+    command "lock door" {
+        flag: is_door_unlocked == true
+        success: "You have locked the door."
+        fail: "I can't do it."
+        is_carried: [gold_key]
+        at: Room2
+    }
+    command "extract seeds", "derivate seeds", "break apple" {
+        is_carried: [apple]
+        create: seeds
+        delete: apple
+        success: "You have extract seeds from apple."
+        fail: "From what?"
     }
 }
 
