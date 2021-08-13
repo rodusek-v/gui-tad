@@ -80,6 +80,7 @@ class Place(CommonModel):
 
     def __init__(self, model) -> None:
         super().__init__(model)
+        self._turns_in = 0
         if self._model.blockade:
             self._blocks = {}
             for block in self._model.blockade.blocks:
@@ -89,6 +90,19 @@ class Place(CommonModel):
 
     def get_blocks(self):
         return self._blocks
+
+    def check_blockade(self):
+        for _, block in self._blocks.items():
+            if block.turns is not None and block.turns.value <= self._turns_in \
+                and not block.flag.activated:
+                return True
+        return False
+
+    def increase_turns(self):
+        self._turns_in += 1
+
+    def reset_turns(self):
+        self._turns_in = 0
 
 
 class Object(CommonModel):
@@ -118,7 +132,8 @@ class Player(ObjectListInterface):
         return self._position
 
     def set_position(self, position):
-        self._position = Place(position)
+        self._position.reset_turns()
+        self._position = position
 
     def get_inventory(self):
         return self._inventory

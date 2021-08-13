@@ -86,7 +86,7 @@ class World(object):
         if place.name() in self._connections:
             for conn in self._connections[place.name()]:
                 if conn["direction"] == predicate and self.__check_block(blocks, conn["direction"]):
-                    self._player.set_position(conn["to"])
+                    self._player.set_position(self.__wrap_container(conn["to"]))
                     exist = True
                     self._reset_console = True
                     break
@@ -189,7 +189,7 @@ class World(object):
 
         return ind
 
-    def __execute_crud(self, operation, place, object_name):
+    def __execute_crud_operation(self, operation, place, object_name):
         req_place, req_inventory = self.__eval_requirements(operation, place)
         loc_ind = self.__eval_location(operation, place)
         if loc_ind and req_place:
@@ -217,7 +217,7 @@ class World(object):
         else:
             self._response = f"I don't see any {object_name}" 
 
-    def __execute_flag(self, operation, place, object_name):
+    def __execute_flag_operation(self, operation, place, object_name):
         flag = operation.flag_prop.flag
         value = operation.flag_prop.value
         req_place, req_inventory = self.__eval_requirements(operation, place)
@@ -248,12 +248,20 @@ class World(object):
             if operation.__class__.__name__ == "MessageOperation":
                 self._response = operation.message
             elif operation.__class__.__name__ == "CRUDOperation":
-                self.__execute_crud(operation, place, object_name)
+                self.__execute_crud_operation(operation, place, object_name)
             elif operation.__class__.__name__ == "FlagOperation":
-                self.__execute_flag(operation, place, object_name)
+                self.__execute_flag_operation(operation, place, object_name)
         else:
             self._response = f"I don't know how to {predicate.lower()}"
+    
+    def __check_life(self):
+        place = self._player.get_position()
+        if not place.check_blockade():
+            place.increase_turns()
+        else:
+            self._game_over = True
 
+    
     def get_player(self):
         return self._player
 
@@ -314,7 +322,10 @@ class World(object):
                 self.__specific_command(predicate, object_name)
                 if self._response == "":
                     self._reset_console = True
-        except:
+
+            self.__check_life()
+        except Exception as ex:
+            print(ex)
             self._response = "Oops, can't do that."
 
         if self.__is_game_finished():

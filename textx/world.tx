@@ -150,7 +150,11 @@ Blockade:
 ;
 
 Block:
-    flag = [Flag] ',' direction = Direction
+    'flag' '=' flag = [Flag] ',' 'direction' '=' direction = Direction (',' 'allowed_turns' '=' turns = Turn)? 
+;
+
+Turn:
+    value = INT
 ;
 
 Connections:

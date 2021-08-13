@@ -15,10 +15,12 @@ place Room2 {
         description: You are in room Two, entrance to the room Four is blocked by door  
     """
 
-    objects {}
+    objects {
+        gun
+    }
 
     blockade {
-        is_door_opened, N
+        flag = is_door_opened, direction = N
     }
 }
 
@@ -37,6 +39,30 @@ place Room4 {
     """
         name: Room4
         description: You are in room Four
+    """
+
+    objects {}
+}
+
+place Room5 {
+    """
+        name: Room5
+        description: You are in room Five
+    """
+
+    objects {
+        monster
+    }
+
+    blockade {
+        flag = is_monster_defeated, direction = S, allowed_turns = 1
+    }
+}
+
+place Room6 {
+    """
+        name: Room6
+        description: You are in room Six, there is a some kind of lever
     """
 
     objects {}
@@ -78,12 +104,30 @@ object_defs {
         """
         pickable: true
     }
+    object monster {
+        """
+            name: evil monster
+            description: Evil monster that you need to defeat
+        """
+        pickable: false
+        container: Room5
+    }
+    object gun {
+        """
+            name: gun
+            description: Powerful gun
+        """
+        pickable: true
+        container: Room2
+    }
 }
 
 connections {
     Room1, N, Room2
+    Room1, E, Room5
     Room2, W, Room3
     Room2, N, Room4
+    Room5, S, Room6
 }
 
 command_defs {
@@ -130,6 +174,14 @@ command_defs {
         success: "You have extract seeds from apple."
         fail: "From what?"
     }
+    command "shot monster" {
+        is_carried: [gun]
+        is_present: [monster]
+        delete: monster
+        success: "You have defeated monster."
+        fail: "Monster killed you."
+        flag: is_monster_defeated == false
+    }
 }
 
 flags {
@@ -157,6 +209,13 @@ flags {
         activated: false
         action_on_true: {
             message: "Nothing cathes your eye."
+        }
+        action_on_false: {}
+    }
+    flag is_monster_defeated {
+        activated: false
+        action_on_true: {
+            message: "You have already defeat the monster."
         }
         action_on_false: {}
     }
