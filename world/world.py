@@ -319,12 +319,15 @@ class World(object):
             return 
 
         predicate = command[PREDICATE]
-    
+        
         try:
+            predicate = full_names.get(predicate, predicate)
+                
             if predicate in directions or predicate == "GO":
                 direction = predicate
                 if predicate == "GO":
                     direction = command[OBJECT]
+                    direction = full_names.get(direction, direction)
                     if direction not in directions:
                         self._response = f"I don't know how to {predicate.lower()}"
                         return
@@ -345,8 +348,6 @@ class World(object):
                 self.__specific_command(predicate, object_name)
                 if self._response == "":
                     self._reset_console = True
-
-            self.__check_life()
         except IndexError:
             if predicate == "GO":
                 self._response = f"Where to {predicate.lower()}?"
@@ -354,6 +355,8 @@ class World(object):
                 self._response = f"What to {predicate.lower()}?"
         except:
             self._response = "Oops, can't do that."
+
+        self.__check_life()
 
         if self.__is_game_finished():
             self._is_finished = True

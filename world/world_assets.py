@@ -5,6 +5,13 @@ directions = {
     "E" : "(E) East"
 }
 
+full_names = {
+    "NORTH": "N",
+    "WEST": "W",
+    "SOUTH": "S",
+    "EAST": "E"
+}
+
 opposite_directions = {
     "N" : "S",
     "W" : "E",
