@@ -95,8 +95,8 @@ class Place(CommonModel):
         for _, block in self._blocks.items():
             if block.turns is not None and block.turns.value <= self._turns_in \
                 and not block.flag.activated:
-                return True
-        return False
+                return block.flag.action_false.message
+        return ""
 
     def increase_turns(self):
         self._turns_in += 1

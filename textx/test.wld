@@ -227,7 +227,9 @@ flags {
         action_on_true: {
             message: "You have already defeat the monster."
         }
-        action_on_false: {}
+        action_on_false: {
+            message: "Monster got really close to you and it has killed you."
+        }
     }
     flag is_lever_pulled {
         activated: false

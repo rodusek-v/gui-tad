@@ -273,9 +273,11 @@ class World(object):
     
     def __check_life(self):
         place = self._player.get_position()
-        if not place.check_blockade():
+        message = place.check_blockade()
+        if not message:
             place.increase_turns()
         else:
+            self._response = message
             self._game_over = True
     
     def get_player(self):
@@ -345,6 +347,11 @@ class World(object):
                     self._reset_console = True
 
             self.__check_life()
+        except IndexError:
+            if predicate == "GO":
+                self._response = f"Where to {predicate.lower()}?"
+            else:
+                self._response = f"What to {predicate.lower()}?"
         except:
             self._response = "Oops, can't do that."
 
@@ -354,7 +361,7 @@ class World(object):
 
         if self._game_over:
             self._is_finished = True
-            self._response = "GAME OVER"
+            self._response += "\nGAME OVER"
         
     def is_finished(self):
         return self._is_finished
