@@ -84,12 +84,12 @@ object_defs {
         """
 
         objects {
-            gold_key
+            key
         }
         pickable: false
         container: Room3
     }
-    object gold_key {
+    object key {
         """
             name: gold key
             description: Golden key that has cross on it
@@ -133,13 +133,17 @@ connections {
 command_defs {
     command "examine chest" {
         is_present: [chest]
-        move: gold_key
+        move: key
         success: "You have found golden key."
         fail: ""
         flag: examined_chest == false
     }
     command "examine" {
         message: "Nothing catches your eye."
+    }
+    command "examine gun" {
+        message: ""
+        item: gun
     }
     command "open door" {
         flag: is_door_opened == false
@@ -157,14 +161,14 @@ command_defs {
         flag: is_door_unlocked == false
         success: "You have unlocked the door."
         fail: "You don't have key to unlock it."
-        is_carried: [gold_key]
+        is_carried: [key]
         at: Room2
     }
     command "lock door" {
         flag: is_door_unlocked == true
         success: "You have locked the door."
         fail: "I can't do it."
-        is_carried: [gold_key]
+        is_carried: [key]
         at: Room2
     }
     command "extract seeds", "derivate seeds", "break apple" {
@@ -181,6 +185,12 @@ command_defs {
         success: "You have defeated monster."
         fail: "Monster killed you."
         flag: is_monster_defeated == false
+    }
+    command "pull lever" {
+        flag: is_lever_pulled == false
+        success: "You pulled the lever. Something happend."
+        fail: ""
+        at: Room6
     }
 }
 
@@ -219,6 +229,13 @@ flags {
         }
         action_on_false: {}
     }
+    flag is_lever_pulled {
+        activated: false
+        action_on_true: {
+            message: "You have already pull the lever."
+        }
+        action_on_false: {}
+    }
 }
 
 player {
@@ -229,4 +246,5 @@ player {
 
 finish {
     position: Room4
+    flag: is_lever_pulled == true
 }

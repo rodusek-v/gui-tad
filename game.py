@@ -1,6 +1,7 @@
 from os.path import join, dirname
 from textx import metamodel_from_file
 from world.world import World
+from utils.utils import clear, getch
 
 class GameCmd(object):
     
@@ -44,24 +45,33 @@ class GameCmd(object):
         self._print_directions()
 
     def play(self):
+        clear()
         self._print_menu()
         while True:
             try:
-                command = input(">")
-                self._world.execute_command(command)
-                response = self._world.get_response()
-                if response != "":
-                    if response == "INVENTORY":
-                        self._print_inventory()
-                    else:
-                        print(response)
+                if self._world.wait_enter():
+                    print("\t\t\t\tPress enter to continue...")
+                    while getch() != '\r':
+                        pass
 
-                if self._world.is_finished():
-                    break
-
-                if self._world.is_console_resetable():
-                    print()
+                    clear()
                     self._print_menu()
+                else:
+                    command = input(">")
+                    self._world.execute_command(command)
+                    response = self._world.get_response()
+                    if response != "":
+                        if response == "INVENTORY":
+                            self._print_inventory()
+                        else:
+                            print(response)
+
+                    if self._world.is_finished():
+                        break
+
+                    if self._world.is_console_resetable():
+                        clear()
+                        self._print_menu()
             except Exception as ex:
                 print(ex)
 

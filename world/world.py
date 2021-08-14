@@ -11,6 +11,7 @@ class World(object):
         self._finish_goal = model.finish
         self._game_over = False
         self._is_finished = False
+        self._press_enter = False
         self.__load_connections(model.connections.connections)
         self.__load_commands(model.commands.commands)
 
@@ -202,6 +203,7 @@ class World(object):
                             self.__execute_crud(operation.crud_props)
                             flag.activated = not value
                             self._response = operation.success
+                            self._press_enter = True
                         else:
                             self._response = operation.fail
                     else:
@@ -212,10 +214,11 @@ class World(object):
                 else:
                     self.__execute_crud(operation.crud_props)
                     self._response = operation.success
+                    self._press_enter = True
             else:
                 self._response = operation.fail
         else:
-            self._response = f"I don't see any {object_name}" 
+            self._response = f"I don't see any {object_name.lower()}" 
 
     def __execute_flag_operation(self, operation, place, object_name):
         flag = operation.flag_prop.flag
@@ -227,6 +230,8 @@ class World(object):
                 if req_inventory and self.__check_flags(flag):
                     flag.activated = not value
                     self._response = operation.success
+                    if self._response != "":
+                        self._press_enter = True
                 else:
                     self._response = operation.fail
             else:
@@ -235,7 +240,19 @@ class World(object):
                 else:
                     self._response = flag.action_false.message
         else:
-            self._response = f"I don't see any {object_name}"
+            self._response = f"I don't see any {object_name.lower()}"
+
+    def __execute_message_operation(self, operation, place, object_name):
+        if operation.item:
+            place = self._player.get_position()
+            inventory = self._player.get_inventory()
+            item = Object(operation.item)
+            if item in place.get_objects() or item in inventory:
+                self._response = item.describe()
+            else:
+                self._response = f"I don't see any {object_name.lower()}"
+        else:
+             self._response = operation.message
 
     def __specific_command(self, predicate, object_name):
         place = self._player.get_position()
@@ -246,7 +263,7 @@ class World(object):
         if command_text in commands:
             operation = commands[command_text]
             if operation.__class__.__name__ == "MessageOperation":
-                self._response = operation.message
+                self.__execute_message_operation(operation, place, object_name)
             elif operation.__class__.__name__ == "CRUDOperation":
                 self.__execute_crud_operation(operation, place, object_name)
             elif operation.__class__.__name__ == "FlagOperation":
@@ -260,7 +277,6 @@ class World(object):
             place.increase_turns()
         else:
             self._game_over = True
-
     
     def get_player(self):
         return self._player
@@ -273,6 +289,11 @@ class World(object):
     def is_console_resetable(self):
         ret_val = self._reset_console
         self._reset_console = False
+        return ret_val
+
+    def wait_enter(self):
+        ret_val = self._press_enter
+        self._press_enter = False
         return ret_val
 
     def available_directions(self):
@@ -324,8 +345,7 @@ class World(object):
                     self._reset_console = True
 
             self.__check_life()
-        except Exception as ex:
-            print(ex)
+        except:
             self._response = "Oops, can't do that."
 
         if self.__is_game_finished():
