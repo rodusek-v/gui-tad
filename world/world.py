@@ -243,16 +243,36 @@ class World(object):
             self._response = f"I don't see any {object_name.lower()}"
 
     def __execute_message_operation(self, operation, place, object_name):
-        if operation.item:
-            place = self._player.get_position()
-            inventory = self._player.get_inventory()
-            item = Object(operation.item)
-            if item in place.get_objects() or item in inventory:
-                self._response = item.describe()
+        loc_ind = self.__eval_location(operation, place)
+        if loc_ind:
+            if operation.item:
+                place = self._player.get_position()
+                inventory = self._player.get_inventory()
+                item = Object(operation.item)
+                if item in place.get_objects() or item in inventory:
+                    self._response = item.describe()
             else:
-                self._response = f"I don't see any {object_name.lower()}"
+                self._response = operation.message
+        
+        if self._response == "":
+             self._response = f"I don't see any {object_name.lower()}"
+
+    def __execute_relocation_operation(self, operation, place):
+        req_place, req_inventory = self.__eval_requirements(operation, place)
+        from_ = self.__wrap_container(operation.from_)
+        to_ = self.__wrap_container(operation.to_)
+        if place == from_:
+            if req_inventory and req_place:
+                self._response = operation.success
+                if self._response != "":
+                    self._press_enter = True
+                self._player.set_position(to_)
+            else:
+                if operation.can_die:
+                    self._game_over = True
+                self._response = operation.fail
         else:
-             self._response = operation.message
+            self._response = f"I can't do that."
 
     def __specific_command(self, predicate, object_name):
         place = self._player.get_position()
@@ -268,8 +288,12 @@ class World(object):
                 self.__execute_crud_operation(operation, place, object_name)
             elif operation.__class__.__name__ == "FlagOperation":
                 self.__execute_flag_operation(operation, place, object_name)
+            elif operation.__class__.__name__ == "RelocateOperation":
+                self.__execute_relocation_operation(operation, place)
+            return True
         else:
             self._response = f"I don't know how to {predicate.lower()}"
+            return False
     
     def __check_life(self):
         place = self._player.get_position()
@@ -321,33 +345,33 @@ class World(object):
         predicate = command[PREDICATE]
         
         try:
-            predicate = full_names.get(predicate, predicate)
-                
-            if predicate in directions or predicate == "GO":
-                direction = predicate
-                if predicate == "GO":
-                    direction = command[OBJECT]
-                    direction = full_names.get(direction, direction)
-                    if direction not in directions:
-                        self._response = f"I don't know how to {predicate.lower()}"
-                        return
-                
-                self.__move(direction)
-            elif predicate in ["GET", "TAKE"]:
-                object_name = command[OBJECT]
-                self.__take(predicate, object_name)
-            elif predicate == "DROP":
-                object_name = command[OBJECT]
-                self.__drop(object_name)
-            elif predicate in ["I", "INVENTORY"]:
-                self._response = "INVENTORY"
-            elif predicate == "LOOK":
-                self._reset_console = True
-            else:
-                object_name = command[OBJECT] if len(command) == 2 else None
-                self.__specific_command(predicate, object_name)
-                if self._response == "":
+            object_name = command[OBJECT] if len(command) == 2 else None
+            if not self.__specific_command(predicate, object_name):
+                predicate = full_names.get(predicate, predicate)
+                    
+                if predicate in directions or predicate == "GO":
+                    direction = predicate
+                    if predicate == "GO":
+                        direction = command[OBJECT]
+                        direction = full_names.get(direction, direction)
+                        if direction not in directions:
+                            self._response = f"I don't know how to {predicate.lower()}"
+                            return
+                    
+                    self.__move(direction)
+                elif predicate in ["GET", "TAKE"]:
+                    object_name = command[OBJECT]
+                    self.__take(predicate, object_name)
+                elif predicate == "DROP":
+                    object_name = command[OBJECT]
+                    self.__drop(object_name)
+                elif predicate in ["I", "INVENTORY"]:
+                    self._response = "INVENTORY"
+                elif predicate == "LOOK":
                     self._reset_console = True
+            
+            if self._response == "":
+                self._reset_console = True
         except IndexError:
             if predicate == "GO":
                 self._response = f"Where to {predicate.lower()}?"

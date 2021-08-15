@@ -83,12 +83,13 @@ CommandText:
 ;
 
 Operation:
-    MessageOperation | CRUDOperation | FlagOperation
+    MessageOperation | CRUDOperation | FlagOperation | RelocateOperation
 ;
 
 MessageOperation:
     'message:' message = STRING
     ('item:' item = [Object])?
+    (located_prop = LocatedProp)?
 ;
 
 CRUDOperation:
@@ -106,6 +107,15 @@ FlagOperation:
     'fail:' fail = STRING
     (require_prop = RequireProp)*
     (located_prop = LocatedProp)?
+;
+
+RelocateOperation:
+    'from:' from_ = [Place]
+    'to:' to_ = [Place]
+    'success:' success = STRING
+    'fail:' fail = STRING
+    'can_die:' can_die = BOOL
+    (require_prop = RequireProp)*
 ;
 
 FlagProp:

@@ -34,10 +34,12 @@ class GameCmd(object):
                     print(f"{object.pretty_name()},", end=" ")
 
     def _print_directions(self):
-        print("Directions:", end=" ")
-        for direction in self._world.available_directions():
-            print(f"{direction}", end=" ")
-        print()
+        directions = self._world.available_directions()
+        if len(directions) != 0:
+            print("Directions:", end=" ")
+            for direction in directions:
+                print(f"{direction}", end=" ")
+            print()
 
     def _print_menu(self):
         self._print_place_description()

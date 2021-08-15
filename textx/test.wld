@@ -17,6 +17,7 @@ place Room2 {
 
     objects {
         gun
+        ladder
     }
 
     blockade {
@@ -27,7 +28,7 @@ place Room2 {
 place Room3 {
     """
         name: Room3
-        description: You are in room Three
+        description: You are in room Three, there is an attic entrance
     """
     
     objects {
@@ -63,6 +64,15 @@ place Room6 {
     """
         name: Room6
         description: You are in room Six, there is a some kind of lever
+    """
+
+    objects {}
+}
+
+place Room7 {
+    """
+        name: Room7
+        description: You are in room Seven, there is picture hanging on the wall
     """
 
     objects {}
@@ -116,6 +126,14 @@ object_defs {
         """
             name: gun
             description: Powerful gun
+        """
+        pickable: true
+        container: Room2
+    }
+    object ladder {
+        """
+            name: iron ladder
+            description: Very tall ladder
         """
         pickable: true
         container: Room2
@@ -191,6 +209,25 @@ command_defs {
         success: "You pulled the lever. Something happend."
         fail: ""
         at: Room6
+    }
+    command "climb up" {
+        from: Room3
+        to: Room7
+        success: "You have climbed into old and dark attic."
+        fail: "With what?"
+        can_die: false
+        is_present: [ladder]
+    }
+    command "get down" {
+        from: Room7
+        to: Room3
+        success: ""
+        fail: ""
+        can_die: false
+    }
+    command "examine picture" {
+        message: "You can see a monster that is shot from a man with a hat."
+        at: Room7
     }
 }
 
