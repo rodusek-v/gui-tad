@@ -12,8 +12,8 @@ class World(object):
         self._game_over = False
         self._is_finished = False
         self._press_enter = False
-        self.__load_connections(model.connections.connections)
-        self.__load_commands(model.commands.commands)
+        self.__load_connections(model.connections)
+        self.__load_commands(model.commands)
 
     def __wrap_container(self, container):
         ret_val = None
@@ -101,6 +101,7 @@ class World(object):
         if object_name == "ALL":
             if len(place.get_objects()) == 0:
                 self._response = f"You can't {predicate.lower()} anything."
+                return
 
             to_remove = []
             for object in place.get_objects():
@@ -111,22 +112,21 @@ class World(object):
                 place.remove_object(o)
                 self._player.add_object(o)
             self._reset_console = True
-            return
-
-        for object in place.get_objects():
-            if object.name() == object_name:
-                if object.is_pickable():
-                    place.remove_object(object)
-                    self._player.add_object(object)
-                    self._reset_console = True
-                    found = True
-                    break 
-                else:
-                    self._response = f"You can't take {object.name()}"
-                    return
-        
-        if not found:
-            self._response = "You can't find it."
+        else:
+            for object in place.get_objects():
+                if object.name() == object_name:
+                    if object.is_pickable():
+                        place.remove_object(object)
+                        self._player.add_object(object)
+                        self._reset_console = True
+                        found = True
+                        break 
+                    else:
+                        self._response = f"You can't take {object.name()}"
+                        return
+            
+            if not found:
+                self._response = "You can't find it."
 
     def __drop(self, object_name):
         found = False

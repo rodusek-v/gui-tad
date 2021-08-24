@@ -51,7 +51,7 @@ class CommonModel(ObjectListInterface):
 
     def __eq__(self, o) -> bool:
         if isinstance(o, CommonModel):
-            return o.name() == self.name()
+            return o.get_model() == self._model
 
         return False
 

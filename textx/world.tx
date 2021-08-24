@@ -1,11 +1,23 @@
 World:
-    places += Place
-    objects = ObjectDefs
-    connections = Connections
-    commands = CommandDefs
-    flags = Flags
-    player = Player
-    finish = Finish
+    (
+        ('places' '{'
+            places += Place
+        '}')
+        ('objects' '{'
+            objects *= Object
+        '}')
+        ('connections' '{'
+            connections *= Connection
+        '}')
+        ('commands' '{'
+            commands *= Command
+        '}')
+        ('flags' '{'
+            flags *= Flag
+        '}')
+        player = Player 
+        finish = Finish
+    )#
 ;
 
 Container:
@@ -15,56 +27,38 @@ Container:
 Place:
     'place' name = WID '{'
         description = DescriptionSection
-        contains = ObjectsSection
+        contains = ContainsSection
         (blockade = Blockade)?
-    '}'
-;
-
-ObjectDefs:
-    'object_defs {'
-        objects *= Object
-    '}' 
-;
-
-CommandDefs:
-    'command_defs {'
-        commands *= Command
     '}'
 ;
 
 Object:
     'object' name = WID '{'
         description = DescriptionSection
-        (contains = ObjectsSection)?
-        'pickable:' pickable = BOOL
-        ('container:' container = [Container])?
+        (contains = ContainsSection)?
+        'pickable' ':' pickable = BOOL
+        ('container' ':' container = [Container])?
     '}'
 ;
 
-ObjectsSection:
-    'objects {'
+ContainsSection:
+    'contains' '{'
         objects *= [Object]
-    '}'
-;
-
-Flags:
-    'flags {'
-        flags += Flag
     '}'
 ;
 
 Flag:
     'flag' name = WID '{'
-        'activated:' activated = BOOL
-        'action_on_true:' action_true = Action
-        'action_on_false:' action_false = Action
+        'activated' ':' activated = BOOL
+        'action_on_true' ':' action_true = Action
+        'action_on_false' ':' action_false = Action
     '}'
 ;
 
 Action:
     '{'
-        ('message:' message = STRING)?
-        ('dependencies:' '[' dependencies += Condition [','] ']')?
+        ('message' ':' message = STRING)?
+        ('dependencies' ':' '[' dependencies += Condition [','] ']')?
     '}'
 ;
 
@@ -87,39 +81,39 @@ Operation:
 ;
 
 MessageOperation:
-    'message:' message = STRING
-    ('item:' item = [Object])?
+    'message' ':' message = STRING
+    ('item' ':' item = [Object])?
     (located_prop = LocatedProp)?
 ;
 
 CRUDOperation:
     (require_prop = RequireProp)+
     crud_props += CRUDProp
-    'success:' success = STRING
-    'fail:' fail = STRING
+    'success' ':' success = STRING
+    'fail' ':' fail = STRING
     (located_prop = LocatedProp)?
     (flag_prop = FlagProp)?
 ;
 
 FlagOperation:
     flag_prop = FlagProp
-    'success:' success = STRING
-    'fail:' fail = STRING
+    'success' ':' success = STRING
+    'fail' ':' fail = STRING
     (require_prop = RequireProp)*
     (located_prop = LocatedProp)?
 ;
 
 RelocateOperation:
-    'from:' from_ = [Place]
-    'to:' to_ = [Place]
-    'success:' success = STRING
-    'fail:' fail = STRING
-    'can_die:' can_die = BOOL
+    'from' ':' from_ = [Place]
+    'to' ':' to_ = [Place]
+    'success' ':' success = STRING
+    'fail' ':' fail = STRING
+    'can_die' ':' can_die = BOOL
     (require_prop = RequireProp)*
 ;
 
 FlagProp:
-    'flag:' flag = [Flag] '==' value = BOOL
+    'flag' ':' flag = [Flag] '==' value = BOOL
 ;
 
 RequireProp:
@@ -127,35 +121,30 @@ RequireProp:
 ;
 
 RequirePlaceProp:
-    'is_present:' '[' require += [Object] ']'
+    'is_present' ':' '[' require += [Object] ']'
 ;
 
 RequireInventoryProp:
-    'is_carried:' '[' require += [Object] ']'
+    'is_carried' ':' '[' require += [Object] ']'
 ;
 
 LocatedProp:
-    'at:' located = [Place]
+    'at' ':' located = [Place]
 ;
 
 CRUDProp:
-    type = CRUD ':' item = [Object] 
-    (', destination:' destination = [Container])? 
-;
-
-CRUD:
-    'create' | 'delete' | 'move'
+    type = CRUD ':' item = [Object]
 ;
 
 DescriptionSection:
     '"""'
-        'name:' name = /.*/
-        'description:' description = /.*/
+        'name' ':' name = /.*/
+        'description' ':' description = /.*/
     '"""'
 ;
 
 Blockade:
-    'blockade {'
+    'blockade' '{'
         blocks += Block
     '}'
 ;
@@ -168,29 +157,23 @@ Turn:
     value = INT
 ;
 
-Connections:
-    'connections {'
-        connections *= Connection
-    '}'
-;
-
 Connection:
-    from_ = [Place] ',' direction = Direction ',' to_ = [Place] 
+    from_ = [Place] ',' direction = Direction ',' to_ = [Place] ';'
 ;
 
 Player:
-    'player {'
-        'name:' name = WID
-        'position:' position = [Place]
-        'inventory {'
+    'player' '{'
+        'name' ':' name = WID
+        'position' ':' position = [Place]
+        'inventory' '{'
             items *= [Object]
         '}'
     '}'
 ;
 
 Finish:
-    'finish {'
-        'position:' position = [Place]
+    'finish' '{'
+        'position' ':' position = [Place]
         (flag_prop = FlagProp)?
     '}'
 ;
@@ -199,14 +182,40 @@ Direction:
     'N' | 'S' | 'E' | 'W'
 ;
 
-Keyword:
-    'place' | 'items' | 'item' | 'name' | 
-    'description' | 'pickable' | 'flags' | 'flag' |
-    'activated' | 'false_mgs' | 'true_msg' | 'require' |
-    'dependencies' | 'blockade' | 'connections' |
-    'player' | 'start' | 'inventory' | 'finish'
+CRUD:
+    'create' | 'delete' | 'move'
+;
+
+EntityKeywords:
+    'place' | 'command' | 'object' |
+    'flag' | 'player' | 'finish'
+;
+
+SectionKeywords:
+    'places' | 'objects' | 'connections' | 'commands' | 'flags'
+    'action_on_true' | 'action_on_false' | 'blockade'
+;
+
+CollectionKeywords:
+    'contains' | 'dependencies' | 'is_present' | 'is_carried' | 'inventory' 
+;
+
+LocationKeywords:
+    'from' | 'to' | 'at' | 'position'
+;
+
+PropertiesKeywords:
+    'pickable' | 'container' | 'activated' |
+    'message' | 'item' | 'success' | 'fail' |
+    'can_die' | 'name' | 'description' | 'direction' | 
+    'allowed_turns'
+;
+
+Keywords:
+    EntityKeywords | SectionKeywords | PropertiesKeywords | 
+    CollectionKeywords | PropertiesKeywords | CRUD | Direction
 ;
 
 WID: 
-    !Keyword ID
+    !Keywords ID
 ;

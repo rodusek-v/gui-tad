@@ -1,84 +1,80 @@
-place Room1 {
-    """
-        name: Room1
-        description: You are in room One
-    """
+places {
+    place Room1 {
+        """
+            name: Room1
+            description: You are in room One
+        """
 
-    objects {
-        apple
+        contains {
+            apple
+        }
+    }
+    place Room2 {
+        """
+            name: Room2
+            description: You are in room Two, entrance to the room Four is blocked by door  
+        """
+
+        contains {
+            gun
+            ladder
+        }
+
+        blockade {
+            flag = is_door_opened, direction = N
+        }
+    }
+    place Room3 {
+        """
+            name: Room3
+            description: You are in room Three, there is an attic entrance
+        """
+        
+        contains {
+            chest
+        }
+    }
+    place Room4 {
+        """
+            name: Room4
+            description: You are in room Four
+        """
+
+        contains {}
+    }
+    place Room5 {
+        """
+            name: Room5
+            description: You are in room Five
+        """
+
+        contains {
+            monster
+        }
+
+        blockade {
+            flag = is_monster_defeated, direction = S, allowed_turns = 1
+        }
+    }
+    place Room6 {
+        """
+            name: Room6
+            description: You are in room Six, there is a some kind of lever
+        """
+
+        contains {}
+    }
+    place Room7 {
+        """
+            name: Room7
+            description: You are in room Seven, there is picture hanging on the wall
+        """
+
+        contains {}
     }
 }
 
-place Room2 {
-    """
-        name: Room2
-        description: You are in room Two, entrance to the room Four is blocked by door  
-    """
-
-    objects {
-        gun
-        ladder
-    }
-
-    blockade {
-        flag = is_door_opened, direction = N
-    }
-}
-
-place Room3 {
-    """
-        name: Room3
-        description: You are in room Three, there is an attic entrance
-    """
-    
-    objects {
-        chest
-    }
-}
-
-place Room4 {
-    """
-        name: Room4
-        description: You are in room Four
-    """
-
-    objects {}
-}
-
-place Room5 {
-    """
-        name: Room5
-        description: You are in room Five
-    """
-
-    objects {
-        monster
-    }
-
-    blockade {
-        flag = is_monster_defeated, direction = S, allowed_turns = 1
-    }
-}
-
-place Room6 {
-    """
-        name: Room6
-        description: You are in room Six, there is a some kind of lever
-    """
-
-    objects {}
-}
-
-place Room7 {
-    """
-        name: Room7
-        description: You are in room Seven, there is picture hanging on the wall
-    """
-
-    objects {}
-}
-
-object_defs {
+objects {
     object apple {
         """
             name: an apple
@@ -93,7 +89,7 @@ object_defs {
             description: Small chest for jewelery
         """
 
-        objects {
+        contains {
             key
         }
         pickable: false
@@ -141,14 +137,14 @@ object_defs {
 }
 
 connections {
-    Room1, N, Room2
-    Room1, E, Room5
-    Room2, W, Room3
-    Room2, N, Room4
-    Room5, S, Room6
+    Room1, N, Room2;
+    Room1, E, Room5;
+    Room2, W, Room3;
+    Room2, N, Room4;
+    Room5, S, Room6;
 }
 
-command_defs {
+commands {
     command "examine chest" {
         is_present: [chest]
         move: key
@@ -226,7 +222,7 @@ command_defs {
         can_die: false
     }
     command "examine picture" {
-        message: "You can see a monster that is shot from a man with a hat."
+        message: "You can see a monster that is shot by a man with a hat."
         at: Room7
     }
 }
