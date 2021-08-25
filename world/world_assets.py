@@ -41,116 +41,136 @@ class ObjectListInterface:
 
 
 class CommonModel(ObjectListInterface):
-    def __init__(self, model) -> None:
+    def __init__(
+        self, 
+        parent=None,
+        name=None, 
+        description=None, 
+        contains=None
+    ) -> None:
         super().__init__()
-        self._model = model
-        if self._model.contains:
-            self._objects = [Object(o) for o in self._model.contains.objects]
-        else:
-            self._objects = []
+        self.name = name
+        self.description = description
+        self.contains = contains
 
-    def __eq__(self, o) -> bool:
-        if isinstance(o, CommonModel):
-            return o.get_model() == self._model
-
-        return False
-
-    def name(self):
-        return self._model.name.strip().upper()
+    def get_name(self):
+        return self.name.strip().upper()
 
     def describe(self):
-        return self._model.description.description.strip()
+        return self.description.description.strip()
 
     def pretty_name(self):
-        return self._model.description.name.strip()
+        return self.description.name.strip()
 
     def get_objects(self):
-        return self._objects
+        return self.contains.objects
 
     def remove_object(self, object):
-        if self._model.contains:
-            self._model.contains.objects.remove(object.get_model())
+        try:
+            self.contains.objects.remove(object)
             object.set_container()
-            self._objects.remove(object)
+        except ValueError:
+            pass
     
     def add_object(self, object):
-        if self._model.contains:
-            self._model.contains.objects.append(object.get_model())
-            object.set_container(self._model)
-            self._objects.append(object)
-
-    def get_model(self):
-        return self._model
+        self.contains.objects.append(object)
+        object.set_container(self)
 
 
 class Place(CommonModel):
 
-    def __init__(self, model) -> None:
-        super().__init__(model)
-        self._turns_in = 0
-        if self._model.blockade:
-            self._blocks = {}
-            for block in self._model.blockade.blocks:
-                self._blocks[block.direction] = block
+    def __init__(
+        self,
+        parent=None, 
+        name=None, 
+        description=None, 
+        contains=None, 
+        blockade=None,
+        turns_in=None
+    ) -> None:
+        super().__init__(parent=parent, name=name, description=description, contains=contains)
+        self.turns_in = turns_in
+        self.blockade = blockade
+        if self.blockade:
+            self.blocks = {}
+            for block in self.blockade.blocks:
+                self.blocks[block.direction] = block
         else:
-            self._blocks = {}
+            self.blocks = {}
 
     def get_blocks(self):
-        return self._blocks
+        return self.blocks
 
     def check_blockade(self):
-        for _, block in self._blocks.items():
-            if block.turns is not None and block.turns.value <= self._turns_in \
+        for _, block in self.blocks.items():
+            if block.turns is not None and block.turns.value <= self.turns_in \
                 and not block.flag.activated:
                 return block.flag.action_false.message
         return ""
 
     def increase_turns(self):
-        self._turns_in += 1
+        self.turns_in += 1
 
     def reset_turns(self):
-        self._turns_in = 0
+        self.turns_in = 0
 
 
 class Object(CommonModel):
 
-    def __init__(self, model) -> None:
-        super().__init__(model)
+    def __init__(
+        self,
+        parent=None, 
+        name=None, 
+        description=None, 
+        contains=None,
+        pickable=None,
+        container=None
+    ) -> None:
+        super().__init__(parent=parent, name=name, description=description, contains=contains)
+        self.pickable = pickable
+        self.container = container
 
     def is_pickable(self):
-        return self._model.pickable
+        return self.pickable
 
     def get_container(self):
-        return self._model.container
+        return self.container
 
     def set_container(self, container=None):
-        self._model.container = container
+        self.container = container
 
 
 class Player(ObjectListInterface):
 
-    def __init__(self, model) -> None:
+    def __init__(
+        self,
+        parent=None,
+        name=None,
+        position=None,
+        items=None
+    ) -> None:
         super().__init__()
-        self._model = model
-        self._position = Place(self._model.position)
-        self._inventory = [Object(i) for i in self._model.items]
+        self.name = name
+        self.position = position
+        self.items = items
 
     def get_position(self):
-        return self._position
+        return self.position
 
     def set_position(self, position):
-        self._position.reset_turns()
-        self._position = position
+        self.position.reset_turns()
+        self.position = position
 
     def get_inventory(self):
-        return self._inventory
+        return self.items
 
     def remove_object(self, object):
-        self._model.items.remove(object.get_model())
-        object.set_container()
-        self._inventory.remove(object)
+        try:
+            self.items.remove(object)
+            object.set_container()
+        except ValueError:
+            pass
     
     def add_object(self, object):
-        self._model.items.append(object.get_model())
-        object.set_container(self._model)
-        self._inventory.append(object)
+        self.items.append(object)
+        object.set_container(self)

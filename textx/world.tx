@@ -28,6 +28,7 @@ Place:
     'place' name = WID '{'
         description = DescriptionSection
         contains = ContainsSection
+        ('turns_in' ':' turns_in = INT)?
         (blockade = Blockade)?
     '}'
 ;
@@ -35,7 +36,7 @@ Place:
 Object:
     'object' name = WID '{'
         description = DescriptionSection
-        (contains = ContainsSection)?
+        contains = ContainsSection
         'pickable' ':' pickable = BOOL
         ('container' ':' container = [Container])?
     '}'
@@ -77,7 +78,7 @@ CommandText:
 ;
 
 Operation:
-    MessageOperation | CRUDOperation | FlagOperation | RelocateOperation
+    MessageOperation | CDMOperation | FlagOperation | RelocateOperation
 ;
 
 MessageOperation:
@@ -86,9 +87,9 @@ MessageOperation:
     (located_prop = LocatedProp)?
 ;
 
-CRUDOperation:
+CDMOperation:
     (require_prop = RequireProp)+
-    crud_props += CRUDProp
+    cdm_props += CDMProp
     'success' ':' success = STRING
     'fail' ':' fail = STRING
     (located_prop = LocatedProp)?
@@ -132,8 +133,8 @@ LocatedProp:
     'at' ':' located = [Place]
 ;
 
-CRUDProp:
-    type = CRUD ':' item = [Object]
+CDMProp:
+    type = CDM ':' item = [Object]
 ;
 
 DescriptionSection:
@@ -182,7 +183,7 @@ Direction:
     'N' | 'S' | 'E' | 'W'
 ;
 
-CRUD:
+CDM:
     'create' | 'delete' | 'move'
 ;
 
@@ -213,7 +214,7 @@ PropertiesKeywords:
 
 Keywords:
     EntityKeywords | SectionKeywords | PropertiesKeywords | 
-    CollectionKeywords | PropertiesKeywords | CRUD | Direction
+    CollectionKeywords | PropertiesKeywords | CDM | Direction
 ;
 
 WID: 

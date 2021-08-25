@@ -1,13 +1,12 @@
 from os.path import join, dirname
-from textx import metamodel_from_file
 from world.world import World
 from utils.utils import clear, getch
 
 class GameCmd(object):
     
-    def __init__(self, model) -> None:
+    def __init__(self, metamodel_file, model_file) -> None:
         super().__init__()
-        self._world = World(model)
+        self._world = World(metamodel_file, model_file)
 
     def _print_place_description(self):
         print(self._world.get_player().get_position().describe())
@@ -80,7 +79,5 @@ class GameCmd(object):
 
 if __name__ == '__main__':
     this_folder = dirname(__file__)
-    meta_model = metamodel_from_file(join(this_folder, 'textx/world.tx'))
-    model = meta_model.model_from_file(join(this_folder, 'textx/test.wld'))
-    game = GameCmd(model)
+    game = GameCmd(join(this_folder, 'textx/world.tx'), join(this_folder, 'textx/test.wld'))
     game.play()

@@ -1,11 +1,14 @@
 from world.world_assets import *
+from textx import metamodel_from_file
 
 class World(object):
     
-    def __init__(self, model) -> None:
+    def __init__(self, meta_model_file, model_file) -> None:
         super().__init__()
-        self._places = [Place(p) for p in model.places]
-        self._player = Player(model.player)
+        meta_model = metamodel_from_file(meta_model_file, classes=[Place, Object, Player])
+        model = meta_model.model_from_file(model_file)
+        self._places = model.places
+        self._player = model.player
         self._response = ""
         self._reset_console = False
         self._finish_goal = model.finish
@@ -14,23 +17,6 @@ class World(object):
         self._press_enter = False
         self.__load_connections(model.connections)
         self.__load_commands(model.commands)
-
-    def __wrap_container(self, container):
-        ret_val = None
-        if container.__class__.__name__ in ["Place", "Object"]:
-            temp = CommonModel(container)
-            for place in self._places:
-                if temp == place:
-                    ret_val = place
-                    break
-                else:
-                    for obj in place.get_objects():
-                        if temp == obj:
-                            ret_val = obj
-                            break
-        elif container.__class__.__name__ == "Player":
-            ret_val = self._player
-        return ret_val
     
     def __load_connections(self, connections):
         self._connections = {}
@@ -62,7 +48,7 @@ class World(object):
 
     def __is_game_finished(self):
         place = self._player.get_position()
-        if Place(self._finish_goal.position) == place:
+        if self._finish_goal.position == place:
             if self._finish_goal.flag_prop:
                 flag_prop = self._finish_goal.flag_prop
                 return flag_prop.flag.activated == flag_prop.value
@@ -84,10 +70,10 @@ class World(object):
         exist = False
         place = self._player.get_position()
         blocks = place.get_blocks()
-        if place.name() in self._connections:
-            for conn in self._connections[place.name()]:
+        if place.get_name() in self._connections:
+            for conn in self._connections[place.get_name()]:
                 if conn["direction"] == predicate and self.__check_block(blocks, conn["direction"]):
-                    self._player.set_position(self.__wrap_container(conn["to"]))
+                    self._player.set_position(conn["to"])
                     exist = True
                     self._reset_console = True
                     break
@@ -114,7 +100,7 @@ class World(object):
             self._reset_console = True
         else:
             for object in place.get_objects():
-                if object.name() == object_name:
+                if object.get_name() == object_name:
                     if object.is_pickable():
                         place.remove_object(object)
                         self._player.add_object(object)
@@ -122,7 +108,7 @@ class World(object):
                         found = True
                         break 
                     else:
-                        self._response = f"You can't take {object.name()}"
+                        self._response = f"You can't take {object.get_name()}"
                         return
             
             if not found:
@@ -135,6 +121,7 @@ class World(object):
         if object_name == "ALL":
             if len(self._player.get_inventory()) == 0:
                 self._response = "You can't drop anything."
+                return
             
             to_remove = []
             for object in self._player.get_inventory():
@@ -145,52 +132,51 @@ class World(object):
                 place.add_object(o)
 
             self._reset_console = True
-            return
+        else:
+            for object in self._player.get_inventory():
+                if object.get_name() == object_name:
+                    self._player.remove_object(object)
+                    place.add_object(object)
+                    self._reset_console = True
+                    found = True
+                    break
+            
+            if not found:
+                self._response = "You dont't have it."
 
-        for object in self._player.get_inventory():
-            if object.name() == object_name:
-                self._player.remove_object(object)
-                place.add_object(object)
-                self._reset_console = True
-                found = True
-                break
-        
-        if not found:
-            self._response = "You dont't have it."
-
-    def __execute_crud(self, crud_props):
-        for crud_prop in crud_props:
-            crud_item = Object(crud_prop.item)
-            if crud_prop.type == 'create':
-                if crud_item.is_pickable():
-                    self._player.add_object(crud_item)
+    def __execute_cdm(self, cdm_props):
+        for cdm_prop in cdm_props:
+            cdm_item = cdm_prop.item
+            if cdm_prop.type == 'create':
+                if cdm_item.is_pickable():
+                    self._player.add_object(cdm_item)
                 else:
-                    self._player.get_position().add_object(crud_item)
-            elif crud_prop.type == 'delete':
-                self.__wrap_container(crud_item.get_container()).remove_object(crud_item)
-            elif crud_prop.type == 'move':
-                self.__wrap_container(crud_item.get_container()).remove_object(crud_item)
-                self._player.get_position().add_object(crud_item)
+                    self._player.get_position().add_object(cdm_item)
+            elif cdm_prop.type == 'delete':
+                cdm_item.get_container().remove_object(cdm_item)
+            elif cdm_prop.type == 'move':
+                cdm_item.get_container().remove_object(cdm_item)
+                self._player.get_position().add_object(cdm_item)
 
     def __eval_requirements(self, operation, place):
         ind_place = True
         ind_inv = True
         for req in operation.require_prop:
             if req.__class__.__name__ == "RequirePlaceProp":
-                ind_place = ind_place and all(Object(item) in place.get_objects() for item in req.require)
+                ind_place = ind_place and all(item in place.get_objects() for item in req.require)
             elif req.__class__.__name__ == "RequireInventoryProp":
-                ind_inv = ind_inv and all(Object(item) in self._player.get_inventory() for item in req.require)
+                ind_inv = ind_inv and all(item in self._player.get_inventory() for item in req.require)
         return ind_place, ind_inv
 
     def __eval_location(self, operation, place):
         ind = True
         if operation.located_prop:
-            req_place = Place(operation.located_prop.located) 
+            req_place = operation.located_prop.located
             ind = ind and req_place == place 
 
         return ind
 
-    def __execute_crud_operation(self, operation, place, object_name):
+    def __execute_cdm_operation(self, operation, place, object_name):
         req_place, req_inventory = self.__eval_requirements(operation, place)
         loc_ind = self.__eval_location(operation, place)
         if loc_ind and req_place:
@@ -200,7 +186,7 @@ class World(object):
                     value = operation.flag_prop.value
                     if flag.activated == value:
                         if self.__check_flags(flag):
-                            self.__execute_crud(operation.crud_props)
+                            self.__execute_cdm(operation.cdm_props)
                             flag.activated = not value
                             self._response = operation.success
                             self._press_enter = True
@@ -212,13 +198,13 @@ class World(object):
                         else:
                             self._response = flag.action_false.message
                 else:
-                    self.__execute_crud(operation.crud_props)
+                    self.__execute_cdm(operation.cdm_props)
                     self._response = operation.success
                     self._press_enter = True
             else:
                 self._response = operation.fail
         else:
-            self._response = f"I don't see any {object_name.lower()}" 
+            self._response = f"I don't see any {object_name.lower()}" if object_name else "I can't do that."
 
     def __execute_flag_operation(self, operation, place, object_name):
         flag = operation.flag_prop.flag
@@ -240,7 +226,7 @@ class World(object):
                 else:
                     self._response = flag.action_false.message
         else:
-            self._response = f"I don't see any {object_name.lower()}"
+            self._response = f"I don't see any {object_name.lower()}" if object_name else "I can't do that."
 
     def __execute_message_operation(self, operation, place, object_name):
         loc_ind = self.__eval_location(operation, place)
@@ -248,19 +234,19 @@ class World(object):
             if operation.item:
                 place = self._player.get_position()
                 inventory = self._player.get_inventory()
-                item = Object(operation.item)
+                item = operation.item
                 if item in place.get_objects() or item in inventory:
                     self._response = item.describe()
             else:
                 self._response = operation.message
         
         if self._response == "":
-             self._response = f"I don't see any {object_name.lower()}"
+             self._response = f"I don't see any {object_name.lower()}" if object_name else "I can't do that."
 
     def __execute_relocation_operation(self, operation, place):
         req_place, req_inventory = self.__eval_requirements(operation, place)
-        from_ = self.__wrap_container(operation.from_)
-        to_ = self.__wrap_container(operation.to_)
+        from_ = operation.from_
+        to_ = operation.to_
         if place == from_:
             if req_inventory and req_place:
                 self._response = operation.success
@@ -284,8 +270,8 @@ class World(object):
             operation = commands[command_text]
             if operation.__class__.__name__ == "MessageOperation":
                 self.__execute_message_operation(operation, place, object_name)
-            elif operation.__class__.__name__ == "CRUDOperation":
-                self.__execute_crud_operation(operation, place, object_name)
+            elif operation.__class__.__name__ == "CDMOperation":
+                self.__execute_cdm_operation(operation, place, object_name)
             elif operation.__class__.__name__ == "FlagOperation":
                 self.__execute_flag_operation(operation, place, object_name)
             elif operation.__class__.__name__ == "RelocateOperation":
@@ -326,8 +312,8 @@ class World(object):
         place = self._player.get_position()
         dirs = []
         blocks = place.get_blocks()
-        if place.name() in self._connections:
-            for conn in self._connections[place.name()]:
+        if place.get_name() in self._connections:
+            for conn in self._connections[place.get_name()]:
                 if self.__check_block(blocks, conn["direction"]):
                     dirs.append(directions[conn["direction"]])
 
