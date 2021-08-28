@@ -23,13 +23,13 @@ class MainWindow(QMainWindow):
         self.__init_working_space()
 
     def __init_working_space(self):
-        temp = GridScroll()
+        temp = QWidget()
         temp.setStyleSheet("background-color: #c9c5c5;")
         
         self.working_space = Grid()
-        self.working_space.setGeometry(10, 10, 1000, 1000)
-        self.working_space.setStyleSheet("background-color: white")
-        temp.setWidget(self.working_space)
+        temp.setLayout(QHBoxLayout())
+        temp.layout().addWidget(self.working_space)
+        temp.layout().setContentsMargins(0, 0, 0, 0)
 
         self.setCentralWidget(temp)
 
