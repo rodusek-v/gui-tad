@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QScrollBar
 stylesheet = """
  /* --------------------------------------- QScrollBar  -----------------------------------*/
 QScrollBar:horizontal {
-    background-color: rgba(255, 255, 255, 0);
+    background-color: transparent;
     height: 12px;
     margin: 3px 0x 3px 0px;
 }
@@ -27,7 +27,7 @@ QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
 }
 
 QScrollBar:vertical {
-    background-color: rgba(255, 255, 255, 0);
+    background-color: transparent;
     width: 12px;
     margin: 0px 3px 0px 3px;
 }

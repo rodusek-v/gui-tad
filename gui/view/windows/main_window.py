@@ -1,8 +1,9 @@
-from view.worktop import WorktopView
 from PyQt6.QtWidgets import QApplication, QHBoxLayout, QWidget
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QDockWidget, QMainWindow, QMenu, QMenuBar
+
+from view.worktop import WorktopView
 
 class MainWindow(QMainWindow):
 
@@ -58,6 +59,12 @@ class MainWindow(QMainWindow):
         a = QAction("Add", self)
         self.top_toolbar.addAction(a)
         a.triggered.connect(self.working_space.toggle_addition)
+        a = QAction("Grid", self)
+        self.top_toolbar.addAction(a)
+        a.triggered.connect(self.working_space.toggle_grid)
+        a = QAction("Drag", self)
+        self.top_toolbar.addAction(a)
+        a.triggered.connect(self.working_space.toggle_drag)
 
     def __toggle_toolbar(self):
         if self.top_toolbar.height() == 100:
