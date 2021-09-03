@@ -61,9 +61,6 @@ class GridScrollBar(QScrollBar):
     def move_scroll_bar(self, d):
         self.setValue(self.value() + d)
 
-    def is_min_max_same(self):
-        return self.minimum() == self.maximum()
-
     def is_at_maximum(self):
         return self.value() == self.maximum()
 

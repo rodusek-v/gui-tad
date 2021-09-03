@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QLineF, QPointF, QRect, QRectF, QSizeF, Qt
+from PyQt6.QtCore import QLineF, QPointF, QRectF, QSizeF, Qt
 from PyQt6.QtGui import QMouseEvent, QPen, QResizeEvent, QWheelEvent
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsView, QWidget
 
@@ -72,6 +72,7 @@ class WorktopView(QGraphicsView):
         except:
             new_rect = translated_visible_rect
         new_scene = new_rect.united(current_scene)
+
         if current_scene == new_scene:
             left_top_point = None
             right_bottom_point = None
@@ -89,7 +90,7 @@ class WorktopView(QGraphicsView):
                 right_bottom_point = new_rect.bottomRight()
 
             new_scene = QRectF(left_top_point, right_bottom_point)
-            if self.size().width() > new_scene.width() or self.size().height() > new_scene.height():
+            if self.size().width() - 5 > new_scene.width() or self.size().height() - 5 > new_scene.height():
                 new_scene = current_scene
                 
         if (translated_visible_rect.contains(new_rect.topLeft()) and \
