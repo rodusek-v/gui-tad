@@ -1,5 +1,5 @@
-from PyQt6.QtCore import QLineF, QPointF, QRectF, QSizeF, Qt
-from PyQt6.QtGui import QMouseEvent, QPen, QResizeEvent, QWheelEvent
+from PyQt6.QtCore import QEvent, QLineF, QPointF, QRect, QRectF, QSizeF, Qt
+from PyQt6.QtGui import QColor, QMouseEvent, QPen, QResizeEvent, QTransform, QWheelEvent
 from PyQt6.QtWidgets import QGraphicsScene, QGraphicsView, QWidget
 
 from view.worktop import GridScrollBar
@@ -7,15 +7,24 @@ from view.worktop import GridScrollBar
 
 class WorktopView(QGraphicsView):
 
-    def __init__(self, parent=None, side=100):
+    def __init__(self, action_selector, parent=None, side=100):
         super().__init__(parent=parent)
         self.last_time_move = None
         self.grid = []
         self.places = None
-        self.addition = False
-        self.grid_turn_on = False
-        self.drag = False
+        
+        self.action_selector = action_selector
+        self.action_selector.cursor_changed.connect(
+            lambda: self.setCursor(self.action_selector.get_current_cursor())
+        )
+        self.action_selector.grid_changed.connect(
+            lambda: self.__draw_grid() if self.action_selector.grid() else self.__delete_grid()
+        )
+
         self.dragging = False
+        self.move_selection = None
+        
+        self.hover_cell = None
         self.side = side
 
         self.h_scroll = GridScrollBar()
@@ -30,14 +39,17 @@ class WorktopView(QGraphicsView):
         self.setScene(QGraphicsScene())
 
     def __refresh_grid(self):
-        if self.grid_turn_on:
-            for cell in self.grid:
-                self.scene().removeItem(cell)
-            self.grid = []  
+        if self.action_selector.grid():
+            self.__delete_grid()
             self.__draw_grid()
+    
+    def __delete_grid(self):
+        for cell in self.grid:
+            self.scene().removeItem(cell)
+        self.grid = []
 
     def __slider_change(self):
-        if self.grid_turn_on:
+        if self.action_selector.grid():
             self.__refresh_grid()
 
     def __draw_grid(self):
@@ -110,6 +122,43 @@ class WorktopView(QGraphicsView):
             self.v_scroll.show() 
         self.setSceneRect(new_scene)
 
+    def __dragging(self, event: QMouseEvent):
+        if self.action_selector.grid():
+            self.__refresh_grid()
+        if self.last_time_move is None:
+            self.last_time_move = event.position()
+
+        dx = self.last_time_move.x() - event.position().x()
+        dy = self.last_time_move.y() - event.position().y()
+        self.__resize_scene(dx, dy)
+        self.h_scroll.move_scroll_bar(dx)
+        self.v_scroll.move_scroll_bar(dy)
+        self.last_time_move = event.position()
+
+    def __add_hover(self, event: QMouseEvent):
+        adding_point = QPointF(
+            event.position().x() + self.h_scroll.value(),
+            event.position().y() + self.v_scroll.value()
+        )
+        if self.hover_cell:
+            self.scene().removeItem(self.hover_cell)
+            self.hover_cell = None
+        row = int(adding_point.x() / self.side)
+        column = int(adding_point.y() / self.side)
+        if adding_point.x() < 0:
+            row -= 1
+        if adding_point.y() < 0:
+            column -= 1
+        margin = 10
+        side_size = self.side - margin * 2
+        point = QPointF(row * self.side + margin, column * self.side + margin)
+        item = self.scene().itemAt(point, QTransform())
+        if self.places is None or item not in self.places.childItems():
+            r = QRectF(point, QSizeF(side_size, side_size))
+            pen = QPen(Qt.GlobalColor.black)
+            pen.setDashPattern([0, 5, 10, 5])
+            self.hover_cell = self.scene().addRect(r, pen, QColor(168, 168, 168))
+
     def resizeEvent(self, event: QResizeEvent) -> None:
         scene_x = self.sceneRect().x()
         scene_y = self.sceneRect().y()
@@ -126,33 +175,32 @@ class WorktopView(QGraphicsView):
         return super().resizeEvent(event)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
-        if self.grid_turn_on:
+        if self.action_selector.grid():
             self.__refresh_grid()
         if self.places:
             self.__resize_scene(0, -(event.angleDelta().y() / 6))
         return super().wheelEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        if self.places is not None and not self.addition and self.dragging:
-            if self.grid_turn_on:
-                self.__refresh_grid()
-            if self.last_time_move is None:
-                self.last_time_move = event.position()
-
-            dx = self.last_time_move.x() - event.position().x()
-            dy = self.last_time_move.y() - event.position().y()
-            self.__resize_scene(dx, dy)
-            self.h_scroll.move_scroll_bar(dx)
-            self.v_scroll.move_scroll_bar(dy)
-            self.last_time_move = event.position()
+        add = self.action_selector.add()
+        if add:
+           self.__add_hover(event)
+        if self.places is not None and not add and self.dragging:
+            self.__dragging(event)
 
         return super().mouseMoveEvent(event)
+
+    def leaveEvent(self, event: QEvent) -> None:
+        if self.hover_cell:
+            self.scene().removeItem(self.hover_cell)
+            self.hover_cell = None
+        return super().leaveEvent(event)
     
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        if self.drag:
+        if self.action_selector.drag():
             self.dragging = True
-            self.setCursor(Qt.CursorShape.ClosedHandCursor)
-        if self.addition:
+            self.setCursor(self.action_selector.get_cursor("grab"))
+        if self.action_selector.add():
             adding_point = QPointF(
                 event.position().x() + self.h_scroll.value(),
                 event.position().y() + self.v_scroll.value()
@@ -165,26 +213,29 @@ class WorktopView(QGraphicsView):
                 column -= 1
             margin = 10
             side_size = self.side - margin * 2
-            ta = QWidget()
-            ta.setStyleSheet("background: red;")
-            ta.setGeometry(
-                row * self.side + margin,  
-                column * self.side + margin, 
-                side_size, 
-                side_size
-            )
+            point = QPointF(row * self.side + margin, column * self.side + margin)
+            item = self.scene().itemAt(point, QTransform())
+            if self.places is None or item not in self.places.childItems():
+                ta = QWidget()
+                ta.setStyleSheet("background: black;")
+                ta.setGeometry(QRect(point.toPoint(), QSizeF(side_size, side_size).toSize()))
 
-            new_place = self.scene().addWidget(ta)
-            if self.places is None:
-                self.places = self.scene().createItemGroup([new_place])
-            else:
-                self.places.addToGroup(new_place)
+                new_place = self.scene().addWidget(ta)
+
+                if self.places is None:
+                    self.places = self.scene().createItemGroup([new_place])
+                else:
+                    self.places.addToGroup(new_place)
+                self.scene().removeItem(self.hover_cell)
+                self.hover_cell = None
+        if self.action_selector.select():
+            pass
         return super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self.last_time_move = None
-        if self.drag:
-            self.setCursor(Qt.CursorShape.OpenHandCursor)
+        if self.action_selector.drag():
+            self.setCursor(self.action_selector.get_cursor("drag"))
             self.dragging = False
         return super().mouseReleaseEvent(event)
 
@@ -195,27 +246,3 @@ class WorktopView(QGraphicsView):
             self.viewport().width(), 
             self.viewport().height()
         )
-
-    def toggle_addition(self):
-        self.addition = not self.addition
-        if self.addition:
-            self.setCursor(Qt.CursorShape.UpArrowCursor)
-        else:
-            self.setCursor(Qt.CursorShape.ArrowCursor)
-
-    def toggle_grid(self):
-        self.grid_turn_on = not self.grid_turn_on
-        if self.grid_turn_on:
-            self.__draw_grid()
-        else:
-            for cell in self.grid:
-                self.scene().removeItem(cell)
-            self.grid = []  
-
-    def toggle_drag(self):
-        self.drag = not self.drag
-        if self.drag:
-            self.setCursor(Qt.CursorShape.OpenHandCursor)
-        else:
-            self.setCursor(Qt.CursorShape.ArrowCursor)
-            

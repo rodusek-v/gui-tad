@@ -1,9 +1,51 @@
-from PyQt6.QtWidgets import QApplication, QHBoxLayout, QWidget
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QPushButton, QSizePolicy, QWidget
+from PyQt6.QtCore import QEvent, QObject, QSize, Qt
+from PyQt6.QtGui import QEnterEvent, QIcon
 from PyQt6.QtWidgets import QDockWidget, QMainWindow, QMenu, QMenuBar
 
-from view.worktop import WorktopView
+from view.worktop import WorktopView, ActionSelector
+
+
+class ToggleButton(QPushButton):
+    def __init__(self, text: str = None, parent: QObject = None):
+        super().__init__(text, parent)
+        self.styles = {
+            "border": "none",
+            "padding": "10px",
+            "margin": "0px",
+            "background": "transparent"
+        }
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.setStyleSheet(self.__get_style())
+        self.setCheckable(True)
+
+    def __get_style(self):
+        return " ".join([f"{key}: {value};" for key, value in self.styles.items()])
+
+    def select(self):
+        if self.isChecked():
+            self.styles["background"] = "#393f4f"
+        else:
+            self.styles["background"] = "transparent"
+        self.setStyleSheet(self.__get_style())
+
+    def enterEvent(self, event: QEnterEvent) -> None:
+        if not self.isChecked():
+            self.styles["background"] = "#363636"
+            self.setStyleSheet(self.__get_style())
+        return super().enterEvent(event)
+
+    def leaveEvent(self, event: QEvent) -> None:
+        if not self.isChecked():
+            self.styles["background"] = "transparent"
+            self.setStyleSheet(self.__get_style())
+        return super().leaveEvent(event)
+
+    def setStyle(self, key, value):
+        self.styles[key] = value
+        self.setStyleSheet(self.__get_style())
+        self.repaint()
+
 
 class MainWindow(QMainWindow):
 
@@ -13,6 +55,8 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon('icons/icon.png'))
         screen = QApplication.primaryScreen().size()
         self.resize(int(screen.width() * 0.8), int(screen.height() * 0.8))
+
+        self.action_selector = ActionSelector()
 
         self.side_dock = QDockWidget()
         self.side_dock.setFixedWidth(int(self.size().width() * 0.23))
@@ -27,7 +71,7 @@ class MainWindow(QMainWindow):
         temp = QWidget()
         temp.setStyleSheet("background-color: #c9c5c5;")
         
-        self.working_space = WorktopView()
+        self.working_space = WorktopView(self.action_selector)
         self.working_space.setMinimumWidth(int(self.size().width() * 0.77))
         temp.setLayout(QHBoxLayout())
         temp.layout().addWidget(self.working_space)
@@ -51,23 +95,51 @@ class MainWindow(QMainWindow):
 
         self.top_toolbar = self.addToolBar("")
         self.top_toolbar.setAllowedAreas(Qt.ToolBarArea.TopToolBarArea)
-        self.top_toolbar.setMovable(True)
+        self.top_toolbar.setMovable(False)
         self.top_toolbar.setFloatable(False)
-        a = QAction("Toggle", self)
-        self.top_toolbar.addAction(a)
-        a.triggered.connect(self.__toggle_toolbar)
-        a = QAction("Add", self)
-        self.top_toolbar.addAction(a)
-        a.triggered.connect(self.working_space.toggle_addition)
-        a = QAction("Grid", self)
-        self.top_toolbar.addAction(a)
-        a.triggered.connect(self.working_space.toggle_grid)
-        a = QAction("Drag", self)
-        self.top_toolbar.addAction(a)
-        a.triggered.connect(self.working_space.toggle_drag)
+        self.top_toolbar.setFixedHeight(60)
+        self.top_toolbar.setStyleSheet("background-color: #a6a6a6; padding: 0px; border: none;")
+        self.__set_up_toolbar()
 
-    def __toggle_toolbar(self):
-        if self.top_toolbar.height() == 100:
-            self.top_toolbar.setFixedHeight(20)
-        else:
-            self.top_toolbar.setFixedHeight(100)
+    def __set_up_toolbar(self):
+        grid = ToggleButton("", self)
+        grid.setIcon(QIcon("icons/grid.png"))
+        grid.setIconSize(QSize(35, 35))
+        self.top_toolbar.addWidget(grid)
+        grid.clicked.connect(self.action_selector.toggle_grid)
+        grid.clicked.connect(grid.select)
+
+        self.top_toolbar.addSeparator()
+
+        select = ToggleButton("", self)
+        select.setIcon(QIcon("icons/arrow.png"))
+        select.setIconSize(QSize(35, 35))
+        self.top_toolbar.addWidget(select)
+        select.clicked.connect(lambda: self.action_selector.activate('select'))
+        add = ToggleButton("", self)
+        add.setIcon(QIcon("icons/box.png"))
+        add.setIconSize(QSize(35, 35))
+        self.top_toolbar.addWidget(add)
+        add.clicked.connect(lambda: self.action_selector.activate('add'))
+        drag = ToggleButton("", self)
+        self.top_toolbar.addWidget(drag)
+        drag.setIcon(QIcon("icons/hand.png"))
+        drag.setIconSize(QSize(35, 35))
+        drag.clicked.connect(lambda: self.action_selector.activate('drag'))
+
+        grp = QButtonGroup()
+        grp.addButton(select)
+        grp.addButton(add)
+        grp.addButton(drag)
+        grp.buttonClicked.connect(lambda btn: self.__toggle(grp.buttons(), btn))
+
+        select.click()
+
+    @staticmethod
+    def __toggle(buttons, to_toggle):
+        for btn in buttons:
+            btn.setChecked(False)
+            btn.setStyle("background", "transparent")
+
+        to_toggle.setChecked(True)
+        to_toggle.setStyle("background", "#393f4f")
