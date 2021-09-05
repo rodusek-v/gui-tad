@@ -67,6 +67,25 @@ class MainWindow(QMainWindow):
         self.__init_working_space()
         self.__init_top_side()
 
+        
+        style = """
+            QMenuBar {
+                background-color: #262626;
+                color: #bfbfbf;
+            }
+            QMenuBar::item::selected {
+                background-color: #363636;
+            }
+            QMenu {
+                background-color: #262626;
+                color: #bfbfbf;
+            }
+            QMenu::item::selected {
+                background-color: #363636;
+            }
+        """
+        self.setStyleSheet(style)
+
     def __init_working_space(self):
         temp = QWidget()
         temp.setStyleSheet("background-color: #c9c5c5;")
@@ -98,7 +117,7 @@ class MainWindow(QMainWindow):
         self.top_toolbar.setMovable(False)
         self.top_toolbar.setFloatable(False)
         self.top_toolbar.setFixedHeight(60)
-        self.top_toolbar.setStyleSheet("background-color: #a6a6a6; padding: 0px; border: none;")
+        self.top_toolbar.setStyleSheet("background-color: #262626; padding: 0px; border: none;")
         self.__set_up_toolbar()
 
     def __set_up_toolbar(self):
@@ -123,7 +142,7 @@ class MainWindow(QMainWindow):
         add.clicked.connect(lambda: self.action_selector.activate('add'))
         drag = ToggleButton("", self)
         self.top_toolbar.addWidget(drag)
-        drag.setIcon(QIcon("icons/hand.png"))
+        drag.setIcon(QIcon("icons/filled_hand.png"))
         drag.setIconSize(QSize(35, 35))
         drag.clicked.connect(lambda: self.action_selector.activate('drag'))
 
