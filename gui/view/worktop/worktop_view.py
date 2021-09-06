@@ -16,7 +16,7 @@ class WorktopView(QGraphicsView):
         
         self.action_selector = action_selector
         self.action_selector.cursor_changed.connect(
-            lambda: self.setCursor(self.action_selector.get_current_cursor())
+            lambda: self.viewport().setCursor(self.action_selector.get_current_cursor())
         )
         self.action_selector.grid_changed.connect(
             lambda: self.__draw_grid() if self.action_selector.grid() else self.__delete_grid()
@@ -30,9 +30,14 @@ class WorktopView(QGraphicsView):
 
         self.h_scroll = GridScrollBar()
         self.v_scroll = GridScrollBar()
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.setStyleSheet("background: #f0f0f0;")
         self.setHorizontalScrollBar(self.h_scroll)
         self.setVerticalScrollBar(self.v_scroll)
+        
+        self.h_scroll.hide()
+        self.v_scroll.hide()
         self.h_scroll.sliderMoved.connect(self.__slider_change)
         self.v_scroll.sliderMoved.connect(self.__slider_change)
 
@@ -77,35 +82,9 @@ class WorktopView(QGraphicsView):
             self.grid.append(self.scene().addLine(r, pen))
 
     def __resize_scene(self, dx, dy):
-        current_scene = self.sceneRect()
         visible_rect = self.get_visible_rect()
         translated_visible_rect = visible_rect.translated(dx, dy)
-        try:
-            new_rect = translated_visible_rect.united(self.places.boundingRect())
-        except:
-            new_rect = translated_visible_rect
-        new_scene = new_rect.united(current_scene)
-
-        if current_scene == new_scene:
-            left_top_point = None
-            right_bottom_point = None
-            if dx >= 0 and dy >= 0:
-                left_top_point = new_rect.topLeft()
-                right_bottom_point = current_scene.bottomRight()
-            elif dx >= 0 and dy <= 0:
-                left_top_point = QPointF(new_rect.x(), current_scene.y())
-                right_bottom_point = QPointF(current_scene.topRight().x(), new_rect.bottomLeft().y())
-            elif dx <= 0 and dy >= 0:
-                left_top_point = QPointF(current_scene.x(), new_rect.topRight().y())
-                right_bottom_point = QPointF(new_rect.topRight().x(), current_scene.bottomRight().y())
-            else:
-                left_top_point = current_scene.topLeft()
-                right_bottom_point = new_rect.bottomRight()
-
-            new_scene = QRectF(left_top_point, right_bottom_point)
-            if self.size().width() - 5 > new_scene.width() or self.size().height() - 5 > new_scene.height():
-                new_scene = current_scene
-                
+        new_rect = translated_visible_rect.united(self.places.boundingRect())
         if (translated_visible_rect.contains(new_rect.topLeft()) and \
             translated_visible_rect.contains(new_rect.topRight())) or \
                 translated_visible_rect.contains(new_rect.bottomLeft()) and \
@@ -120,8 +99,14 @@ class WorktopView(QGraphicsView):
             translated_visible_rect.contains(new_rect.bottomRight()):
             self.v_scroll.hide()
         else:
-            self.v_scroll.show() 
-        self.setSceneRect(new_scene)
+            self.v_scroll.show()
+        move_scroll = [True, True] 
+        if self.sceneRect().width() > new_rect.width():
+            move_scroll[0] = False
+        if self.sceneRect().height() > new_rect.height():
+            move_scroll[1] = False
+        self.setSceneRect(new_rect)
+        return move_scroll
 
     def __dragging(self, event: QMouseEvent):
         scene_point = QPointF(
@@ -135,9 +120,12 @@ class WorktopView(QGraphicsView):
 
         dx = self.last_time_move.x() - scene_point.x()
         dy = self.last_time_move.y() - scene_point.y()
-        self.__resize_scene(dx, dy)
-        self.h_scroll.move_scroll_bar(dx)
-        self.v_scroll.move_scroll_bar(dy)
+        ind = self.__resize_scene(dx, dy)
+        if ind[0]:
+            self.h_scroll.move_scroll_bar(dx)
+        if ind[1]:
+            self.v_scroll.move_scroll_bar(dy)
+
         self.repaint()
 
     def __add_hover(self, event: QMouseEvent):
@@ -242,8 +230,10 @@ class WorktopView(QGraphicsView):
         if self.action_selector.grid():
             self.__refresh_grid()
         if self.places:
-            self.__resize_scene(0, -(event.angleDelta().y() / 6))
-        return super().wheelEvent(event)
+            ind = self.__resize_scene(0, -(event.angleDelta().y() / 6))
+            if ind[1]:
+                self.v_scroll.move_scroll_bar(-(event.angleDelta().y() / 6))
+        #return super().wheelEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         add = self.action_selector.add()
@@ -263,7 +253,7 @@ class WorktopView(QGraphicsView):
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if self.action_selector.drag():
             self.dragging = True
-            self.setCursor(self.action_selector.get_cursor("grab"))
+            self.viewport().setCursor(self.action_selector.get_cursor("grab"))
         if self.action_selector.add():
             self.__add_press(event)
         if self.action_selector.select():
@@ -273,7 +263,7 @@ class WorktopView(QGraphicsView):
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self.last_time_move = None
         if self.action_selector.drag():
-            self.setCursor(self.action_selector.get_cursor("drag"))
+            self.viewport().setCursor(self.action_selector.get_cursor("drag"))
             self.dragging = False
             
         return super().mouseReleaseEvent(event)
@@ -282,8 +272,8 @@ class WorktopView(QGraphicsView):
         return QRectF(
             self.h_scroll.value(), 
             self.v_scroll.value(), 
-            self.viewport().width(), 
-            self.viewport().height()
+            self.viewport().width() + 1, 
+            self.viewport().height() + 1
         )
 
     @staticmethod
