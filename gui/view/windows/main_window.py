@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QPushButton, QSizePolicy, QWidget
-from PyQt6.QtCore import QEvent, QObject, QSize, Qt
+from PyQt6.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QStatusBar, QWidget
+from PyQt6.QtCore import QEvent, QObject, QPoint, QSize, Qt
 from PyQt6.QtGui import QEnterEvent, QIcon
 from PyQt6.QtWidgets import QDockWidget, QMainWindow, QMenu, QMenuBar
 
@@ -83,8 +83,18 @@ class MainWindow(QMainWindow):
             QMenu::item::selected {
                 background-color: #363636;
             }
+            QStatusBar {
+                background-color: #262626;
+            }
         """
         self.setStyleSheet(style)
+
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        self.location_label = QLabel()
+        self.location_label.setStyleSheet("color: #bfbfbf")
+        self.set_status_location(QPoint(0, 0))
+        self.status_bar.addPermanentWidget(self.location_label)
 
     def __init_working_space(self):
         temp = QWidget()
@@ -95,6 +105,7 @@ class MainWindow(QMainWindow):
         temp.setLayout(QHBoxLayout())
         temp.layout().addWidget(self.working_space)
         temp.layout().setContentsMargins(10, 10, 10, 10)
+        self.working_space.viewport_change.connect(self.set_status_location)
 
         self.setCentralWidget(temp)
 
@@ -153,6 +164,9 @@ class MainWindow(QMainWindow):
         grp.buttonClicked.connect(lambda btn: self.__toggle(grp.buttons(), btn))
 
         select.click()
+
+    def set_status_location(self, point):
+        self.location_label.setText(f"X: {point.x()} Y: {point.y()}")
 
     @staticmethod
     def __toggle(buttons, to_toggle):

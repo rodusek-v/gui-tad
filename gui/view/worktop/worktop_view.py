@@ -1,12 +1,14 @@
-from PyQt6.QtCore import QEvent, QLineF, QPointF, QRect, QRectF, QSizeF, Qt
+from PyQt6.QtCore import QEvent, QLineF, QPoint, QPointF, QRectF, QSizeF, Qt, pyqtSignal
 from PyQt6.QtGui import QBrush, QColor, QMouseEvent, QPen, QResizeEvent, QTransform, QWheelEvent
-from PyQt6.QtWidgets import QGraphicsProxyWidget, QGraphicsScene, QGraphicsView, QWidget
+from PyQt6.QtWidgets import QGraphicsScene, QGraphicsView, QWidget
 
 from view.worktop import GridScrollBar
 from view.worktop.action_selection import ActionSelector
 
 
 class WorktopView(QGraphicsView):
+
+    viewport_change = pyqtSignal(QPoint)
 
     def __init__(self, action_selector: ActionSelector, parent=None, side=100):
         super().__init__(parent=parent)
@@ -23,7 +25,10 @@ class WorktopView(QGraphicsView):
         )
 
         self.dragging = False
-        self.selection = []
+        self.selection = {
+            "item": None,
+            "boundries": []
+        }
         
         self.hover_cell = None
         self.side = side
@@ -81,7 +86,7 @@ class WorktopView(QGraphicsView):
             )
             self.grid.append(self.scene().addLine(r, pen))
 
-    def __resize_scene(self, dx, dy):
+    def __resize_scene(self, dx=0, dy=0):
         visible_rect = self.get_visible_rect()
         translated_visible_rect = visible_rect.translated(dx, dy)
         new_rect = translated_visible_rect.united(self.places.boundingRect())
@@ -106,13 +111,34 @@ class WorktopView(QGraphicsView):
         if self.sceneRect().height() > new_rect.height():
             move_scroll[1] = False
         self.setSceneRect(new_rect)
+        self.viewport_change.emit(translated_visible_rect.topLeft().toPoint())
         return move_scroll
 
-    def __dragging(self, event: QMouseEvent):
-        scene_point = QPointF(
-            event.position().x() + self.h_scroll.value(),
-            event.position().y() + self.v_scroll.value()
+    def get_scene_point(self, point: QPointF):
+        return QPointF(
+            point.x() + self.h_scroll.value(),
+            point.y() + self.v_scroll.value()
         )
+
+    def is_space_available(self, point: QPointF):
+        row = int(point.x() / self.side)
+        column = int(point.y() / self.side)
+        if point.x() < 0:
+            row -= 1
+        if point.y() < 0:
+            column -= 1
+        margin = 10
+        side_size = self.side - margin * 2
+        point = QPointF(row * self.side + margin + side_size / 2, column * self.side + margin + side_size / 2)
+        item = self.scene().itemAt(point, QTransform())
+        if self.places is None or item not in self.places.childItems():
+            point = QPointF(row * self.side + margin, column * self.side + margin)
+            return QRectF(point, QSizeF(side_size, side_size))
+        else:
+            return None
+
+    def __dragging(self, event: QMouseEvent):
+        scene_point = self.get_scene_point(event.position())
         if self.action_selector.grid():
             self.__refresh_grid()
         if self.last_time_move is None:
@@ -129,50 +155,25 @@ class WorktopView(QGraphicsView):
         self.repaint()
 
     def __add_hover(self, event: QMouseEvent):
-        adding_point = QPointF(
-            event.position().x() + self.h_scroll.value(),
-            event.position().y() + self.v_scroll.value()
-        )
+        adding_point = self.get_scene_point(event.position())
         if self.hover_cell:
             self.scene().removeItem(self.hover_cell)
             self.hover_cell = None
-        row = int(adding_point.x() / self.side)
-        column = int(adding_point.y() / self.side)
-        if adding_point.x() < 0:
-            row -= 1
-        if adding_point.y() < 0:
-            column -= 1
-        margin = 10
-        side_size = self.side - margin * 2
-        point = QPointF(row * self.side + margin, column * self.side + margin)
-        item = self.scene().itemAt(point, QTransform())
-        if self.places is None or item not in self.places.childItems():
-            r = QRectF(point, QSizeF(side_size, side_size))
+        space_rect = self.is_space_available(adding_point)
+        if space_rect:
             pen = QPen(Qt.GlobalColor.black)
             pen.setDashPattern([0, 5, 10, 5])
-            self.hover_cell = self.scene().addRect(r, pen, QColor(212, 212, 212))
+            self.hover_cell = self.scene().addRect(space_rect, pen, QColor(212, 212, 212))
 
     def __add_press(self, event: QMouseEvent):
-        adding_point = QPointF(
-            event.position().x() + self.h_scroll.value(),
-            event.position().y() + self.v_scroll.value()
-        )
-        row = int(adding_point.x() / self.side)
-        column = int(adding_point.y() / self.side)
-        if adding_point.x() < 0:
-            row -= 1
-        if adding_point.y() < 0:
-            column -= 1
-        margin = 10
-        side_size = self.side - margin * 2
-        point = QPointF(row * self.side + margin, column * self.side + margin)
-        item = self.scene().itemAt(point, QTransform())
-        if self.places is None or item not in self.places.childItems():
+        adding_point = self.get_scene_point(event.position())
+        space_rect = self.is_space_available(adding_point)
+        if space_rect:
             place = QWidget()
             place.setStyleSheet("""
                 background: rgb(140, 140, 140);
             """)
-            place.setGeometry(QRect(point.toPoint(), QSizeF(side_size, side_size).toSize()))
+            place.setGeometry(space_rect.toRect())
             new_place = self.scene().addWidget(place)
 
             if self.places is None:
@@ -181,19 +182,12 @@ class WorktopView(QGraphicsView):
                 self.places.addToGroup(new_place)
             self.scene().removeItem(self.hover_cell)
             self.hover_cell = None
+            self.__resize_scene()
 
     def __selecting(self, event: QMouseEvent):
-        select_point = QPointF(
-            event.position().x() + self.h_scroll.value(),
-            event.position().y() + self.v_scroll.value()
-        )
+        select_point = self.get_scene_point(event.position())
         item = self.scene().itemAt(select_point, QTransform())
 
-        if len(self.selection) != 0:
-            for child in self.selection:
-                if not isinstance(child, QGraphicsProxyWidget):
-                    self.scene().removeItem(child)
-            self.selection = []
         if self.places and item in self.places.childItems():
             item_rect = item.sceneBoundingRect()
             left_top_rect = self.create_selection_frame(item_rect.topLeft(), 4)
@@ -204,12 +198,39 @@ class WorktopView(QGraphicsView):
             pen = QPen(Qt.GlobalColor.black)
             brush = QBrush(Qt.GlobalColor.white)
 
-            self.selection.append(item)
-            self.selection.append(self.scene().addRect(item_rect, pen))
-            self.selection.append(self.scene().addRect(left_top_rect, pen, brush))
-            self.selection.append(self.scene().addRect(right_top_rect, pen, brush))
-            self.selection.append(self.scene().addRect(left_bottom_rect, pen, brush))
-            self.selection.append(self.scene().addRect(right_bottom_rect, pen, brush))  
+            self.selection["item"] = item
+            self.selection["boundries"] = [
+                self.scene().addLine(QLineF(item_rect.topLeft(), item_rect.topRight()), pen),
+                self.scene().addLine(QLineF(item_rect.topLeft(), item_rect.bottomLeft()), pen),
+                self.scene().addLine(QLineF(item_rect.bottomLeft(), item_rect.bottomRight()), pen),
+                self.scene().addLine(QLineF(item_rect.bottomRight(), item_rect.topRight()), pen),
+                self.scene().addRect(left_top_rect, pen, brush),
+                self.scene().addRect(right_top_rect, pen, brush),
+                self.scene().addRect(left_bottom_rect, pen, brush),
+                self.scene().addRect(right_bottom_rect, pen, brush)
+            ]
+
+    def __moving(self, event: QMouseEvent):
+        move_to_point = self.get_scene_point(event.position())
+        space_rect = self.is_space_available(move_to_point)
+        if space_rect:
+            if self.selection["item"] is not None:
+                for child in self.selection["boundries"]:
+                    self.scene().removeItem(child)
+                
+                dx = space_rect.x() - self.selection["item"].x()
+                dy = space_rect.y() - self.selection["item"].y()
+
+                self.places.removeFromGroup(self.selection["item"])
+                self.selection["item"].moveBy(dx, dy)
+                self.places.addToGroup(self.selection["item"])
+
+                self.selection["item"] = None
+                self.selection["boundries"] = []
+
+                self.scene().removeItem(self.hover_cell)
+                self.hover_cell = None
+                self.__resize_scene()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         scene_x = self.sceneRect().x()
@@ -223,6 +244,8 @@ class WorktopView(QGraphicsView):
             height = event.size().height()
         
         self.setSceneRect(QRectF(QPointF(scene_x, scene_y), QSizeF(width, height)))
+        if self.places:
+            self.__resize_scene()
         self.__refresh_grid()
         return super().resizeEvent(event)
 
@@ -233,14 +256,16 @@ class WorktopView(QGraphicsView):
             ind = self.__resize_scene(0, -(event.angleDelta().y() / 6))
             if ind[1]:
                 self.v_scroll.move_scroll_bar(-(event.angleDelta().y() / 6))
-        #return super().wheelEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         add = self.action_selector.add()
+        select = self.action_selector.select()
         if add:
-           self.__add_hover(event)
+            self.__add_hover(event)
         if self.places is not None and not add and self.dragging:
             self.__dragging(event)
+        if select and self.selection["item"] is not None:
+            self.__add_hover(event)
 
         return super().mouseMoveEvent(event)
 
@@ -257,7 +282,10 @@ class WorktopView(QGraphicsView):
         if self.action_selector.add():
             self.__add_press(event)
         if self.action_selector.select():
-            self.__selecting(event)
+            if self.selection["item"] is None:
+                self.__selecting(event)
+            else:
+                self.__moving(event)
         return super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
@@ -283,8 +311,3 @@ class WorktopView(QGraphicsView):
             center_point.y() - offset,
             offset * 2, offset * 2
         )
-    
-    @staticmethod
-    def move_by(items, dx, dy):
-        for item in items:
-            item.moveBy(dx, dy)
