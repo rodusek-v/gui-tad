@@ -11,7 +11,7 @@ class WorktopView(QGraphicsView):
 
     viewport_change = pyqtSignal(QPoint)
 
-    def __init__(self, action_selector: ActionSelector, parent=None, side=100):
+    def __init__(self, action_selector: ActionSelector, parent=None, side=100, margin=10):
         super().__init__(parent=parent)
         self.last_time_move = None
         self.grid = []
@@ -33,6 +33,7 @@ class WorktopView(QGraphicsView):
         
         self.hover_cell = None
         self.side = side
+        self.margin = margin
 
         self.h_scroll = GridScrollBar()
         self.v_scroll = GridScrollBar()
@@ -49,6 +50,7 @@ class WorktopView(QGraphicsView):
 
         self.setMouseTracking(True)
         self.setScene(QGraphicsScene())
+        self.setInteractive(False)
 
     def __refresh_grid(self):
         if self.action_selector.grid():
@@ -79,13 +81,17 @@ class WorktopView(QGraphicsView):
                 QPointF(x + i * self.side, y - self.side), 
                 QPointF(x + i * self.side, y + height + self.side)
             )
-            self.grid.append(self.scene().addLine(r, pen))
+            cell = self.scene().addLine(r, pen)
+            cell.setZValue(-100)
+            self.grid.append(cell)
         for j in range(0, vertical + 1):
             r = QLineF(
                 QPointF(x - self.side, y + j * self.side), 
                 QPointF(x + width + self.side, y + j * self.side)
             )
-            self.grid.append(self.scene().addLine(r, pen))
+            cell = self.scene().addLine(r, pen)
+            cell.setZValue(-100)
+            self.grid.append(cell)
 
     def __resize_scene(self, dx=0, dy=0):
         visible_rect = self.get_visible_rect()
@@ -171,15 +177,16 @@ class WorktopView(QGraphicsView):
         if self.selection["item"] is not None:
             for child in self.selection["boundries"]:
                 self.scene().removeItem(child)
+
+            self.selection["boundries"] = []
         if self.places and item in self.places.childItems():
-            print(item.widget().neighbours)
             item_rect = item.sceneBoundingRect()
             left_top_rect = self.create_selection_frame(item_rect.topLeft(), 4)
             right_top_rect = self.create_selection_frame(item_rect.topRight(), 4)
             left_bottom_rect = self.create_selection_frame(item_rect.bottomLeft(), 4)
             right_bottom_rect = self.create_selection_frame(item_rect.bottomRight(), 4)
 
-            pen = QPen(Qt.GlobalColor.black)
+            pen = QPen(Qt.GlobalColor.black, 0.7)
             brush = QBrush(Qt.GlobalColor.white)
 
             self.selection["item"] = item
@@ -201,11 +208,13 @@ class WorktopView(QGraphicsView):
             if self.selection["item"] is not None:
                 dx = space_rect.x() - self.selection["item"].x()
                 dy = space_rect.y() - self.selection["item"].y()
-
-                self.places.removeFromGroup(self.selection["item"])
-                self.selection["item"].moveBy(dx, dy)
-                self.places.addToGroup(self.selection["item"])
+                
                 if isinstance(self.selection["item"], QGraphicsProxyWidget):
+                    points = self.selection["item"].widget().say_goodbye()
+                    self.__remove_items(points)
+                    self.places.removeFromGroup(self.selection["item"])
+                    self.selection["item"].moveBy(dx, dy)
+                    self.places.addToGroup(self.selection["item"])
                     self.__check_neighbours(self.selection["item"].widget())
 
                 self.selection["item"] = None
@@ -214,28 +223,36 @@ class WorktopView(QGraphicsView):
                 self.scene().removeItem(self.hover_cell)
                 self.hover_cell = None
                 self.__resize_scene()
-                
+
+    def __remove_items(self, points):
+        z_value = self.places.zValue()
+        self.places.setZValue(-100)
+        for point in points:
+            item = self.scene().itemAt(point, QTransform())
+            if item:
+                self.scene().removeItem(item)
+        self.places.setZValue(z_value)
+
+    
     def __check_neighbours(self, new_place: PlaceItem):
         center_point = QPointF(
             new_place.geometry().x() + self.side / 2,
             new_place.geometry().y() + self.side / 2
         )
-
-        directions = {
-            "N": (0, -self.side), "E": (self.side, 0), 
-            "S": (0, self.side), "W": (-self.side, 0)
-        }
         
-        new_place.say_goodbye()
-        for direction, offset in directions.items():
+        pen = QPen(Qt.GlobalColor.black, 0.7)
+        brush = QBrush(QColor(140, 140, 140))
+        for direction, offset in PlaceItem.directions.items():
             check_point = QPointF(
-                center_point.x() + offset[0],
-                center_point.y() + offset[1]
+                center_point.x() + offset.x() * self.side,
+                center_point.y() + offset.y() * self.side
             )
             item = self.scene().itemAt(check_point, QTransform())
             if isinstance(item, QGraphicsProxyWidget):
-                new_place.say_hello(Sides(direction), item.widget())
-        
+                rel_rect = new_place.say_hello(Sides(direction), item.widget())
+                bar = self.scene().addRect(rel_rect, pen, brush)
+                bar.setZValue(-10)
+
     def get_scene_point(self, point: QPointF):
         return QPointF(
             point.x() + self.h_scroll.value(),
@@ -249,12 +266,14 @@ class WorktopView(QGraphicsView):
             row -= 1
         if point.y() < 0:
             column -= 1
-        margin = 10
-        side_size = self.side - margin * 2
-        point = QPointF(row * self.side + margin + side_size / 2, column * self.side + margin + side_size / 2)
+        side_size = self.side - self.margin * 2
+        point = QPointF(
+            row * self.side + self.margin + side_size / 2, 
+            column * self.side + self.margin + side_size / 2
+        )
         item = self.scene().itemAt(point, QTransform())
         if self.places is None or item not in self.places.childItems():
-            point = QPointF(row * self.side + margin, column * self.side + margin)
+            point = QPointF(row * self.side + self.margin, column * self.side + self.margin)
             return QRectF(point, QSizeF(side_size, side_size))
         else:
             return None
@@ -263,11 +282,15 @@ class WorktopView(QGraphicsView):
         if event.key() == Qt.Key.Key_Delete and self.selection["item"]:
             for item in self.selection["boundries"]:
                 self.scene().removeItem(item)
-            self.selection["item"].widget().say_goodbye()
+            points = self.selection["item"].widget().say_goodbye()
+            self.__remove_items(points)
             self.places.removeFromGroup(self.selection["item"])
             
             self.selection["item"] = None
             self.selection["boundries"] = []
+            if self.hover_cell:
+                self.scene().removeItem(self.hover_cell)
+                self.hover_cell = None
             self.__resize_scene()
         return super().keyPressEvent(event)
 

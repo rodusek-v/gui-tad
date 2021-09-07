@@ -157,7 +157,7 @@ class MainWindow(QMainWindow):
         drag.setIconSize(QSize(35, 35))
         drag.clicked.connect(lambda: self.action_selector.activate('drag'))
 
-        grp = QButtonGroup()
+        grp = QButtonGroup(self)
         grp.addButton(select)
         grp.addButton(add)
         grp.addButton(drag)
