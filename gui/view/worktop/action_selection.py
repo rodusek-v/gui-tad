@@ -12,14 +12,16 @@ class ActionSelector(QObject):
         super().__init__()
         self.grid_turn_on = False
         self.cursors = {
-            "add": QCursor(QPixmap('icons/cursors/box.png')),
+            "add_place": QCursor(QPixmap('icons/cursors/box.png')),
+            "add_object": QCursor(QPixmap('icons/cursors/object.png')),
             "drag": QCursor(QPixmap('icons/cursors/hand.png')),
             "select": QCursor(QPixmap('icons/cursors/arrow.png')),
             "grab": QCursor(QPixmap('icons/cursors/grab.png'))
         }
 
         self.interaction_group = {
-            "add": False,
+            "add_place": False,
+            "add_object": False,
             "drag": False,
             "select": False
         }
@@ -41,8 +43,11 @@ class ActionSelector(QObject):
         self.current_cursor = self.cursors[key]
         self.cursor_changed.emit()
 
-    def add(self):
-        return self.interaction_group['add']    
+    def add_place(self):
+        return self.interaction_group['add_place']    
+
+    def add_object(self):
+        return self.interaction_group['add_object']   
     
     def toggle_grid(self):
         self.grid_turn_on = not self.grid_turn_on

@@ -1,9 +1,11 @@
 from PyQt6.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QStatusBar, QWidget
-from PyQt6.QtCore import QEvent, QObject, QPoint, QSize, Qt
-from PyQt6.QtGui import QEnterEvent, QIcon
+from PyQt6.QtCore import QEvent, QObject, QPoint, QPropertyAnimation, QRect, QSize, Qt
+from PyQt6.QtGui import QEnterEvent, QIcon, QResizeEvent, QStandardItemModel
 from PyQt6.QtWidgets import QDockWidget, QMainWindow, QMenu, QMenuBar
 
 from view.worktop import WorktopView, ActionSelector
+from view.worldtree import WorldTreeView
+from model.world import World
 
 
 class ToggleButton(QPushButton):
@@ -58,12 +60,7 @@ class MainWindow(QMainWindow):
 
         self.action_selector = ActionSelector()
 
-        self.side_dock = QDockWidget()
-        self.side_dock.setFixedWidth(int(self.size().width() * 0.23))
-        self.side_dock.setWindowTitle("Explorer")
-        self.side_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
-        self.side_dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.side_dock)
+        self.__init_tree_view()
         self.__init_working_space()
         self.__init_top_side()
 
@@ -74,17 +71,28 @@ class MainWindow(QMainWindow):
                 color: #bfbfbf;
             }
             QMenuBar::item::selected {
-                background-color: #363636;
+                background-color: #3d3d3d;
             }
             QMenu {
                 background-color: #262626;
                 color: #bfbfbf;
             }
             QMenu::item::selected {
-                background-color: #363636;
+                background-color: #3d3d3d;
             }
             QStatusBar {
+                background-color: #3d3d3d;
+            }
+            QMainWindow {
                 background-color: #262626;
+            }
+            QDockWidget {
+                background-color: transparent; 
+                color: #bfbfbf;
+            }
+            QToolBar::separator {
+                background-color: #262626;
+                width: 2px;
             }
         """
         self.setStyleSheet(style)
@@ -95,6 +103,53 @@ class MainWindow(QMainWindow):
         self.location_label.setStyleSheet("color: #bfbfbf")
         self.set_status_location(QPoint(0, 0))
         self.status_bar.addPermanentWidget(self.location_label)
+        self.side_bar = QWidget(self)
+        self.side_bar.setStyleSheet("background-color: rgba(140, 140, 140, 0.7);")
+        self.side_bar.setLayout(QHBoxLayout())
+        toggle = QPushButton("toggle")
+        toggle.clicked.connect(self.animate)
+        self.top_toolbar.addWidget(toggle)
+        self.showed = False
+
+    def animate(self):
+        current_width = self.side_bar.width()
+        if self.showed:
+            width = 0
+            self.showed = False
+        else:
+            width = 300
+            self.showed = True
+        self.animation = QPropertyAnimation(self.side_bar, b'geometry')
+        self.animation.setDuration(500)
+        self.animation.setStartValue(QRect(self.width() - current_width, 0, current_width, self.height()))
+        self.animation.setEndValue(QRect(self.width() - width, 0, width, self.height()))
+        self.animation.start()
+
+    def __init_tree_view(self):
+        self.side_dock = QDockWidget()
+        self.side_dock.setFixedWidth(int(self.size().width() * 0.23))
+        self.side_dock.setWindowTitle("Explorer")
+        font = self.side_dock.font()
+        font.setPointSize(13)
+        self.side_dock.setFont(font)
+        self.side_dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea)
+        self.side_dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.side_dock)
+
+        self.tree_view = WorldTreeView()
+        self.tree_view.setHeaderHidden(True)
+        font.setPointSize(12)
+        self.tree_view.setFont(font)
+        self.side_dock.setWidget(self.tree_view)
+
+        treeModel = QStandardItemModel()
+        rootNode = treeModel.invisibleRootItem()
+        
+        world_node = World(name="Test World")
+        rootNode.appendRow(world_node)
+
+        self.tree_view.setModel(treeModel)
+        self.tree_view.expandAll()
 
     def __init_working_space(self):
         temp = QWidget()
@@ -123,12 +178,12 @@ class MainWindow(QMainWindow):
         menu_bar.addMenu(help_menu_item)
         self.setMenuBar(menu_bar)
 
-        self.top_toolbar = self.addToolBar("")
+        self.top_toolbar = self.addToolBar("World toolbar")
         self.top_toolbar.setAllowedAreas(Qt.ToolBarArea.TopToolBarArea)
         self.top_toolbar.setMovable(False)
         self.top_toolbar.setFloatable(False)
         self.top_toolbar.setFixedHeight(60)
-        self.top_toolbar.setStyleSheet("background-color: #262626; padding: 0px; border: none;")
+        self.top_toolbar.setStyleSheet("background-color: #3d3d3d; padding: 0px; border: none;")
         self.__set_up_toolbar()
 
     def __set_up_toolbar(self):
@@ -146,27 +201,58 @@ class MainWindow(QMainWindow):
         select.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(select)
         select.clicked.connect(lambda: self.action_selector.activate('select'))
-        add = ToggleButton("", self)
-        add.setIcon(QIcon("icons/box.png"))
-        add.setIconSize(QSize(35, 35))
-        self.top_toolbar.addWidget(add)
-        add.clicked.connect(lambda: self.action_selector.activate('add'))
+
         drag = ToggleButton("", self)
         self.top_toolbar.addWidget(drag)
         drag.setIcon(QIcon("icons/filled_hand.png"))
         drag.setIconSize(QSize(35, 35))
         drag.clicked.connect(lambda: self.action_selector.activate('drag'))
 
+        add_place = ToggleButton("", self)
+        add_place.setIcon(QIcon("icons/box.png"))
+        add_place.setIconSize(QSize(35, 35))
+        self.top_toolbar.addWidget(add_place)
+        add_place.clicked.connect(lambda: self.action_selector.activate('add_place'))
+
+        add_object = ToggleButton("", self)
+        add_object.setIcon(QIcon("icons/object.png"))
+        add_object.setIconSize(QSize(35, 35))
+        self.top_toolbar.addWidget(add_object)
+        add_object.clicked.connect(lambda: self.action_selector.activate('add_object'))
+
+        self.top_toolbar.addSeparator()
+
+        flag = ToggleButton("", self)
+        flag.setCheckable(False)
+        flag.setIcon(QIcon("icons/flag.png"))
+        flag.setIconSize(QSize(35, 35))
+        self.top_toolbar.addWidget(flag)
+        #flag.clicked.connect(lambda: self.action_selector.activate('flag'))
+
+        command = ToggleButton("", self)
+        command.setCheckable(False)
+        command.setIcon(QIcon("icons/command.png"))
+        command.setIconSize(QSize(35, 35))
+        self.top_toolbar.addWidget(command)
+        #command.clicked.connect(lambda: self.action_selector.activate('command'))
+
+        self.top_toolbar.addSeparator()
+        
         grp = QButtonGroup(self)
         grp.addButton(select)
-        grp.addButton(add)
         grp.addButton(drag)
+        grp.addButton(add_place)
+        grp.addButton(add_object)
         grp.buttonClicked.connect(lambda btn: self.__toggle(grp.buttons(), btn))
 
         select.click()
 
     def set_status_location(self, point):
         self.location_label.setText(f"X: {point.x()} Y: {point.y()}")
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        self.side_bar.setGeometry(event.size().width(), 0, 0, event.size().height())
+        return super().resizeEvent(event)
 
     @staticmethod
     def __toggle(buttons, to_toggle):

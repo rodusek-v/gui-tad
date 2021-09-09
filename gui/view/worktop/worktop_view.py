@@ -11,7 +11,7 @@ class WorktopView(QGraphicsView):
 
     viewport_change = pyqtSignal(QPoint)
 
-    def __init__(self, action_selector: ActionSelector, parent=None, side=100, margin=10):
+    def __init__(self, action_selector: ActionSelector, parent=None, side=100, margin=5):
         super().__init__(parent=parent)
         self.last_time_move = None
         self.grid = []
@@ -34,6 +34,7 @@ class WorktopView(QGraphicsView):
         self.hover_cell = None
         self.side = side
         self.margin = margin
+        self.dash_pattern = [0, self.side / 20, self.side / 10, self.side / 20]
 
         self.h_scroll = GridScrollBar()
         self.v_scroll = GridScrollBar()
@@ -69,7 +70,7 @@ class WorktopView(QGraphicsView):
     def __draw_grid(self):
         visible_rect = self.get_visible_rect()
         pen = QPen(Qt.GlobalColor.darkGray)
-        pen.setDashPattern([0, 5, 10, 5])
+        pen.setDashPattern(self.dash_pattern)
         width = visible_rect.width()
         height = visible_rect.height()
         horizontal = int(width / self.side) + 2
@@ -138,7 +139,7 @@ class WorktopView(QGraphicsView):
 
         self.repaint()
 
-    def __add_hover(self, event: QMouseEvent):
+    def __add_place_hover(self, event: QMouseEvent):
         adding_point = self.get_scene_point(event.position())
         if self.hover_cell:
             self.scene().removeItem(self.hover_cell)
@@ -146,14 +147,14 @@ class WorktopView(QGraphicsView):
         space_rect = self.is_space_available(adding_point)
         if space_rect:
             pen = QPen(Qt.GlobalColor.black)
-            pen.setDashPattern([0, 5, 10, 5])
+            pen.setDashPattern(self.dash_pattern)
             self.hover_cell = self.scene().addRect(space_rect, pen, QColor(212, 212, 212))
 
-    def __add_press(self, event: QMouseEvent):
+    def __add_place_press(self, event: QMouseEvent):
         adding_point = self.get_scene_point(event.position())
         space_rect = self.is_space_available(adding_point)
         if space_rect:
-            place = PlaceItem()
+            place = PlaceItem(margin=self.margin)
             place.setStyleSheet("""
                 background: rgb(140, 140, 140);
             """)
@@ -320,14 +321,14 @@ class WorktopView(QGraphicsView):
                 self.v_scroll.move_scroll_bar(-(event.angleDelta().y() / 6))
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        add = self.action_selector.add()
+        add_place = self.action_selector.add_place()
         select = self.action_selector.select()
-        if add:
-            self.__add_hover(event)
-        if (self.places and len(self.places.childItems()) != 0) and not add and self.dragging:
+        if add_place:
+            self.__add_place_hover(event)
+        if (self.places and len(self.places.childItems()) != 0) and not add_place and self.dragging:
             self.__dragging(event)
         if select and self.selection["item"] is not None:
-            self.__add_hover(event)
+            self.__add_place_hover(event)
 
         return super().mouseMoveEvent(event)
 
@@ -341,12 +342,14 @@ class WorktopView(QGraphicsView):
         if self.action_selector.drag():
             self.dragging = True
             self.viewport().setCursor(self.action_selector.get_cursor("grab"))
-        if self.action_selector.add():
-            self.__add_press(event)
+        if self.action_selector.add_place():
+            self.__add_place_press(event)
         if self.action_selector.select():
             self.__selecting(event)
             if self.selection["item"] is not None:
                 self.__moving(event)
+
+        self.repaint()
                 
         return super().mousePressEvent(event)
 

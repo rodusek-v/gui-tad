@@ -82,35 +82,43 @@ Operation:
 ;
 
 MessageOperation:
-    'message' ':' message = STRING
-    ('item' ':' item = [Object])?
-    (located_prop = LocatedProp)?
+    (
+        ('message' ':' message = STRING)
+        ('item' ':' item = [Object])?
+        (located_prop = LocatedProp)?
+    )#
 ;
 
 CDMOperation:
-    (require_prop = RequireProp)+
-    cdm_props += CDMProp
-    'success' ':' success = STRING
-    'fail' ':' fail = STRING
-    (located_prop = LocatedProp)?
-    (flag_prop = FlagProp)?
+    (
+        (require_prop = RequireProp)+
+        (cdm_props += CDMProp)
+        ('success' ':' success = STRING)
+        ('fail' ':' fail = STRING)
+        (located_prop = LocatedProp)?
+        (flag_prop = FlagProp)?
+    )#
 ;
 
 FlagOperation:
-    flag_prop = FlagProp
-    'success' ':' success = STRING
-    'fail' ':' fail = STRING
-    (require_prop = RequireProp)*
-    (located_prop = LocatedProp)?
+    (
+        (flag_prop = FlagProp)
+        ('success' ':' success = STRING)
+        ('fail' ':' fail = STRING)
+        (require_prop = RequireProp)*
+        (located_prop = LocatedProp)?
+    )#
 ;
 
 RelocateOperation:
-    'from' ':' from_ = [Place]
-    'to' ':' to_ = [Place]
-    'success' ':' success = STRING
-    'fail' ':' fail = STRING
-    'can_die' ':' can_die = BOOL
-    (require_prop = RequireProp)*
+    (
+        ('from' ':' from_ = [Place])
+        ('to' ':' to_ = [Place])
+        ('success' ':' success = STRING)
+        ('fail' ':' fail = STRING)
+        ('can_die' ':' can_die = BOOL)
+        (require_prop = RequireProp)*
+    )#
 ;
 
 FlagProp:
