@@ -1,3 +1,4 @@
+from model.place import Place
 from PyQt6.QtCore import QEvent, QLineF, QPoint, QPointF, QRectF, QSizeF, Qt, pyqtSignal
 from PyQt6.QtGui import QBrush, QColor, QKeyEvent, QMouseEvent, QPen, QResizeEvent, QTransform, QWheelEvent
 from PyQt6.QtWidgets import QGraphicsProxyWidget, QGraphicsScene, QGraphicsView
@@ -6,17 +7,28 @@ from view.worktop import GridScrollBar
 from view.worktop.action_selection import ActionSelector
 from view.worktop.place_item import PlaceItem, Sides
 
+from controller import WorldController
+
 
 class WorktopView(QGraphicsView):
 
     viewport_change = pyqtSignal(QPoint)
 
-    def __init__(self, action_selector: ActionSelector, parent=None, side=100, margin=5):
+    def __init__(
+        self,
+        controller: WorldController,
+        action_selector: ActionSelector, 
+        parent=None, 
+        side=100, 
+        margin=5
+    ):
         super().__init__(parent=parent)
         self.last_time_move = None
         self.grid = []
         self.places = None
         
+        self.controller = controller
+
         self.action_selector = action_selector
         self.action_selector.cursor_changed.connect(
             lambda: self.viewport().setCursor(self.action_selector.get_current_cursor())
@@ -137,8 +149,6 @@ class WorktopView(QGraphicsView):
         if ind[1]:
             self.v_scroll.move_scroll_bar(dy)
 
-        self.repaint()
-
     def __add_place_hover(self, event: QMouseEvent):
         adding_point = self.get_scene_point(event.position())
         if self.hover_cell:
@@ -153,8 +163,11 @@ class WorktopView(QGraphicsView):
     def __add_place_press(self, event: QMouseEvent):
         adding_point = self.get_scene_point(event.position())
         space_rect = self.is_space_available(adding_point)
+        
         if space_rect:
-            place = PlaceItem(margin=self.margin)
+            self.scene().removeItem(self.hover_cell)
+            self.hover_cell = None
+            place = PlaceItem(self.controller.add_place(), margin=self.margin)
             place.setStyleSheet("""
                 background: rgb(140, 140, 140);
             """)
@@ -167,8 +180,6 @@ class WorktopView(QGraphicsView):
                 self.places.addToGroup(new_place)
             
             self.__check_neighbours(place)
-            self.scene().removeItem(self.hover_cell)
-            self.hover_cell = None
             self.__resize_scene()
 
     def __selecting(self, event: QMouseEvent):
@@ -289,9 +300,6 @@ class WorktopView(QGraphicsView):
             
             self.selection["item"] = None
             self.selection["boundries"] = []
-            if self.hover_cell:
-                self.scene().removeItem(self.hover_cell)
-                self.hover_cell = None
             self.__resize_scene()
         return super().keyPressEvent(event)
 
@@ -325,10 +333,13 @@ class WorktopView(QGraphicsView):
         select = self.action_selector.select()
         if add_place:
             self.__add_place_hover(event)
+            self.update()
         if (self.places and len(self.places.childItems()) != 0) and not add_place and self.dragging:
             self.__dragging(event)
+            self.update()
         if select and self.selection["item"] is not None:
             self.__add_place_hover(event)
+            self.update()
 
         return super().mouseMoveEvent(event)
 
@@ -336,6 +347,7 @@ class WorktopView(QGraphicsView):
         if self.hover_cell:
             self.scene().removeItem(self.hover_cell)
             self.hover_cell = None
+            self.update()
         return super().leaveEvent(event)
     
     def mousePressEvent(self, event: QMouseEvent) -> None:
@@ -344,12 +356,12 @@ class WorktopView(QGraphicsView):
             self.viewport().setCursor(self.action_selector.get_cursor("grab"))
         if self.action_selector.add_place():
             self.__add_place_press(event)
+            self.update()
         if self.action_selector.select():
             self.__selecting(event)
             if self.selection["item"] is not None:
                 self.__moving(event)
-
-        self.repaint()
+            self.update()
                 
         return super().mousePressEvent(event)
 

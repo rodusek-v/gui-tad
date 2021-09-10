@@ -1,0 +1,25 @@
+place {{self.name}} {
+    """
+        name: {{self.description.name}}
+        description: {{self.description.description}}
+    """
+
+    contains {
+        {% for item in self.contains %}
+            {{item.name}}
+        {% endfor %}
+    }
+
+    {% if self.turns_in %}
+        turns_in: self.turns_in
+    {% endif %}
+
+    {% if self.blockade %}
+        blockade {
+            {% for block in self.blockade %}
+                flag = {{block.flag.name}}, direction = {{block.direction}}
+                {% if block.turns %}, allowed_turns = {{block.turns.value}} {% endif %}
+            {% endfor %}
+        }
+    {% endif %}
+}

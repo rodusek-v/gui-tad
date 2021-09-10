@@ -1,0 +1,9 @@
+player {
+    name: {{self.name}}
+    position: {{self.position.name}}
+    inventory {
+        {% for item in items %}
+            {{item.name}}
+        {% endfor %}
+    }
+}

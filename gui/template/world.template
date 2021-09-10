@@ -1,0 +1,37 @@
+places {
+    {% for place in self.places %}
+        {{place.text_model}}
+    {% endfor %}
+}
+
+objects {
+    {% for object in self.objects %}
+        {{object.text_model}}
+    {% endfor %}
+}
+
+connections {
+    {% for conn in self.connections %}
+        {{conn.text_model}}
+    {% endfor %}
+}
+
+commands {
+    {% for command in self.commands %}
+        {{command.text_model}}
+    {% endfor %}
+}
+
+flags {
+    {% for flag in self.flags %}
+        {{flag.text_model}}
+    {% endfor %}
+}
+
+player {
+    {{self.player.text_model}}
+}
+
+finish {
+    {{self.finish.text_model}}
+}

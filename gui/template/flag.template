@@ -1,0 +1,5 @@
+flag {{self.name}} {
+    activated: {{str(self.activated).lower()}}
+    action_on_true: {{self.action_on_true}}
+    action_on_false: {{self.action_on_false}}
+}

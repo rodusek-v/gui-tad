@@ -7,8 +7,7 @@ class Flag(QStandardItem):
         name=None,
         activated=None,
         action_on_true=None,
-        action_on_false=None,
-        parent=None
+        action_on_false=None
     ) -> None:
         super().__init__()
         self.name = name

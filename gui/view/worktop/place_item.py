@@ -16,13 +16,14 @@ class PlaceItem(QWidget):
         "S": QPointF(0, 1), "W": QPointF(-1, 0)
     }
 
-    def __init__(self, parent=None, margin=10, cwidth=10) -> None:
+    def __init__(self, model, parent=None, margin=10, cwidth=10) -> None:
         super().__init__(parent=parent)
         self._neighbours = {
             key.name: None for key in Sides
         }
         self.margin = margin
         self.cwidth = cwidth
+        self.model = model
 
     def __relation_rect(self, side: Sides):
         geometry = self.geometry()

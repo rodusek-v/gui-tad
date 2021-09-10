@@ -79,5 +79,5 @@ class GameCmd(object):
 
 if __name__ == '__main__':
     this_folder = dirname(__file__)
-    game = GameCmd(join(this_folder, 'textx/world.tx'), join(this_folder, 'textx/test.wld'))
+    game = GameCmd(join(this_folder, '../textx/world.tx'), join(this_folder, '../textx/test.wld'))
     game.play()

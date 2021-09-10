@@ -1,0 +1,6 @@
+finish {
+    position: {{self.position.name}}
+    {% if self.flag_prop %}
+        flag: {{self.flag_prop.flag.name}} == {{str(self.flag_prop.value).lower()}}
+    {% endif %}
+}

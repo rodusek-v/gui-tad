@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QDockWidget, QMainWindow, QMenu, QMenuBar
 
 from view.worktop import WorktopView, ActionSelector
 from view.worldtree import WorldTreeView
-from model.world import World
+from controller import WorldController
 
 
 class ToggleButton(QPushButton):
@@ -59,6 +59,7 @@ class MainWindow(QMainWindow):
         self.resize(int(screen.width() * 0.8), int(screen.height() * 0.8))
 
         self.action_selector = ActionSelector()
+        self.controller = WorldController()
 
         self.__init_tree_view()
         self.__init_working_space()
@@ -103,8 +104,9 @@ class MainWindow(QMainWindow):
         self.location_label.setStyleSheet("color: #bfbfbf")
         self.set_status_location(QPoint(0, 0))
         self.status_bar.addPermanentWidget(self.location_label)
+
         self.side_bar = QWidget(self)
-        self.side_bar.setStyleSheet("background-color: rgba(140, 140, 140, 0.7);")
+        self.side_bar.setStyleSheet("background-color: rgb(140, 140, 140);")
         self.side_bar.setLayout(QHBoxLayout())
         toggle = QPushButton("toggle")
         toggle.clicked.connect(self.animate)
@@ -145,8 +147,7 @@ class MainWindow(QMainWindow):
         treeModel = QStandardItemModel()
         rootNode = treeModel.invisibleRootItem()
         
-        world_node = World(name="Test World")
-        rootNode.appendRow(world_node)
+        rootNode.appendRow(self.controller.model)
 
         self.tree_view.setModel(treeModel)
         self.tree_view.expandAll()
@@ -155,7 +156,7 @@ class MainWindow(QMainWindow):
         temp = QWidget()
         temp.setStyleSheet("background-color: #c9c5c5;")
         
-        self.working_space = WorktopView(self.action_selector)
+        self.working_space = WorktopView(self.controller, self.action_selector)
         self.working_space.setMinimumWidth(int(self.size().width() * 0.77))
         temp.setLayout(QHBoxLayout())
         temp.layout().addWidget(self.working_space)
