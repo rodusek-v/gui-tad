@@ -1,5 +1,5 @@
 from typing import Union, List
-from PyQt6.QtGui import QStandardItem
+from PyQt6.QtGui import QIcon, QStandardItem
 
 from model.utils import Description
 
@@ -20,6 +20,9 @@ class Object(QStandardItem):
         self.contains = contains
         self.pickable = pickable
         self.container = container
+
+        self.setIcon(QIcon("icons/nodes/object.png"))
+        self.setEditable(False)
 
     @property
     def name(self) -> str:

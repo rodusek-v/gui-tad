@@ -23,13 +23,14 @@ class Place(QStandardItem):
         self.blockade = blockade
 
         self.setIcon(QIcon("icons/nodes/box.png"))
+        self.setEditable(False)
         
     @property
     def name(self) -> str:
         return self._name
 
     @name.setter
-    def name(self, value: str):
+    def name(self, value: str) -> None:
         self._name = value
         self.setText(self._name)
 
@@ -38,7 +39,7 @@ class Place(QStandardItem):
         return self._description
 
     @description.setter
-    def description(self, value: Description):
+    def description(self, value: Description) -> None:
         self._description = value
 
     @property
@@ -46,7 +47,7 @@ class Place(QStandardItem):
         return self._contains
 
     @contains.setter
-    def contains(self, value: List['Object']):
+    def contains(self, value: List['Object']) -> None:
         self._contains = value
 
     @property
@@ -54,7 +55,7 @@ class Place(QStandardItem):
         return self._turns_in
 
     @turns_in.setter
-    def turns_in(self, value: int):
+    def turns_in(self, value: int) -> None:
         self._turns_in = value
 
     @property
@@ -62,8 +63,11 @@ class Place(QStandardItem):
         return self._blockade
 
     @blockade.setter
-    def blockade(self, value: List[Block]):
+    def blockade(self, value: List[Block]) -> None:
         self._blockade = value
+
+    def add_object(self, object: 'Object') -> None:
+        self._contains.append(object)
     
 
 from model.object import Object

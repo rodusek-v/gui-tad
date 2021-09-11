@@ -28,6 +28,6 @@ class WorldController(object):
 
     def add_object(self) -> Object:
         count = self.model.objects_count()
-        object = Object(f"new_place{f'_{count}' if count != 0 else ''}")
+        object = Object(f"new_object{f'_{count}' if count != 0 else ''}")
         self.model.append_object(object)
         return object

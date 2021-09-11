@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QDockWidget, QMainWindow, QMenu, QMenuBar
 
 from view.worktop import WorktopView, ActionSelector
 from view.worldtree import WorldTreeView
+from view.sidebars import SideBar
 from controller import WorldController
 
 
@@ -103,17 +104,17 @@ class MainWindow(QMainWindow):
         self.location_label = QLabel()
         self.location_label.setStyleSheet("color: #bfbfbf")
         self.set_status_location(QPoint(0, 0))
+
+        self.selected_place = QLabel()
+        self.selected_place.setStyleSheet("color: #bfbfbf")
+
+        self.status_bar.addPermanentWidget(self.selected_place)
         self.status_bar.addPermanentWidget(self.location_label)
 
-        self.side_bar = QWidget(self)
-        self.side_bar.setStyleSheet("background-color: rgb(140, 140, 140);")
-        self.side_bar.setLayout(QHBoxLayout())
-        toggle = QPushButton("toggle")
-        toggle.clicked.connect(self.animate)
-        self.top_toolbar.addWidget(toggle)
+        self.side_bar = SideBar(self)
         self.showed = False
 
-    def animate(self):
+    def __animate(self):
         current_width = self.side_bar.width()
         if self.showed:
             width = 0
@@ -121,7 +122,7 @@ class MainWindow(QMainWindow):
         else:
             width = 300
             self.showed = True
-        self.animation = QPropertyAnimation(self.side_bar, b'geometry')
+        self.animation = QPropertyAnimation(self.side_bar.holder, b'geometry')
         self.animation.setDuration(500)
         self.animation.setStartValue(QRect(self.width() - current_width, 0, current_width, self.height()))
         self.animation.setEndValue(QRect(self.width() - width, 0, width, self.height()))
@@ -162,6 +163,8 @@ class MainWindow(QMainWindow):
         temp.layout().addWidget(self.working_space)
         temp.layout().setContentsMargins(10, 10, 10, 10)
         self.working_space.viewport_change.connect(self.set_status_location)
+        self.working_space.selection_change.connect(self.set_selected_place)
+        self.working_space.selection_activated.connect(self.open_place)
 
         self.setCentralWidget(temp)
 
@@ -251,8 +254,19 @@ class MainWindow(QMainWindow):
     def set_status_location(self, point):
         self.location_label.setText(f"X: {point.x()} Y: {point.y()}")
 
+    def set_selected_place(self, title):
+        self.selected_place.setText(title)
+        if title != "":
+            self.selected_place.setText(f"Place: {title}")
+
+    def open_place(self, place_model):
+        self.side_bar.set_form(place_model)
+        if not self.showed:
+            self.__animate()
+
     def resizeEvent(self, event: QResizeEvent) -> None:
-        self.side_bar.setGeometry(event.size().width(), 0, 0, event.size().height())
+        current_width = self.side_bar.width()
+        self.side_bar.setGeometry(event.size().width() - current_width, 0, current_width, event.size().height())
         return super().resizeEvent(event)
 
     @staticmethod

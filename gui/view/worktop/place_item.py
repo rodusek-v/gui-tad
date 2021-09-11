@@ -1,6 +1,9 @@
 from enum import Enum
-from PyQt6.QtCore import QPointF, QRectF, QSizeF
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtCore import QPointF, QRectF, QSize, QSizeF, Qt
+from PyQt6.QtGui import QDropEvent
+from PyQt6.QtWidgets import QAbstractItemView, QLabel, QListWidget, QSizePolicy
+
+from view.worktop.object_item import ObjectItem
 
 class Sides(Enum):
     N = "N"
@@ -8,7 +11,7 @@ class Sides(Enum):
     W = "W"
     E = "E"
 
-class PlaceItem(QWidget):
+class PlaceItem(QListWidget):
 
     inverse_side = {"N": "S", "S": "N", "E": "W", "W": "E"}
     directions = {
@@ -16,14 +19,46 @@ class PlaceItem(QWidget):
         "S": QPointF(0, 1), "W": QPointF(-1, 0)
     }
 
-    def __init__(self, model, parent=None, margin=10, cwidth=10) -> None:
+    def __init__(self, model, parent=None, margin=10, cwidth=10, size=100) -> None:
         super().__init__(parent=parent)
         self._neighbours = {
             key.name: None for key in Sides
         }
         self.margin = margin
         self.cwidth = cwidth
-        self.model = model
+        self._model = model
+
+        self.label = QLabel(self)
+        self.label.resize(size, self.label.height())
+        font = self.label.font()
+        font.setPointSize(8)
+        self.label.setFont(font)
+        self.__set_title()
+        self.setViewportMargins(0, self.label.height(), 0, 0)
+
+        self.setAcceptDrops(True)
+        self.setIconSize(QSize(size / 4.54, size / 4.54))
+        self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
+        self.setResizeMode(self.ResizeMode.Adjust)
+        self.setViewMode(self.ViewMode.IconMode)
+        self.setSelectionMode(self.SelectionMode.ExtendedSelection)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.__fill_item()
+    
+    def __set_title(self):
+        text = self._model.name
+        title_size = len(text) * self.label.font().pointSize()
+        width = self.label.width()
+        if title_size > width + self.label.font().pointSize():
+            temp = int(width / self.label.font().pointSize()) + 1
+            text = text[:temp - 3] + "..."
+        self.label.setText(text)
+        self.label.setContentsMargins(10, 0, 0, 0)
+        self.label.setStyleSheet("border-bottom: 1px solid black;")
+    
+    def __fill_item(self):
+        for obj in self._model.contains:
+            self.list_model.appendRow(obj)
 
     def __relation_rect(self, side: Sides):
         geometry = self.geometry()
@@ -54,9 +89,27 @@ class PlaceItem(QWidget):
 
         return QRectF(point, size)
 
+    def dropEvent(self, event: QDropEvent) -> None:
+        if self != event.source():
+            super().dropEvent(event)
+            source = event.source()
+            for i in range(len(source.selectedIndexes()) - 1, -1, -1):
+                source.takeItem(source.selectedIndexes()[i].row())
+            source.clearSelection()
+        else:
+            event.ignore()
+
     @property
     def neighbours(self):
         return self._neighbours
+
+    @property
+    def title(self):
+        return self._model.name
+
+    @property
+    def model(self):
+        return self._model
 
     def set_neighbour(self, side: Sides, neighbour):
         self._neighbours[side.name] = neighbour
@@ -77,7 +130,7 @@ class PlaceItem(QWidget):
     def say_goodbye(self):
         rel_centers = []
         for side, neighbour in self._neighbours.items():
-            if neighbour:
+            if neighbour is not None:
                 self.remove_neighbour(Sides(side))
                 neighbour.remove_neighbour(Sides(self.inverse_side[side]))
                 rel_rect = self.__relation_rect(Sides(side))
@@ -85,4 +138,10 @@ class PlaceItem(QWidget):
                     rel_rect.x() + rel_rect.width() / 2,
                     rel_rect.y() + rel_rect.height() / 2,
                 ))
+
         return rel_centers
+
+    def add_object(self, object):
+        object_item = ObjectItem(object, self)
+        self.addItem(object_item)
+        #print(self.item(self.count() - 1).listWidget())

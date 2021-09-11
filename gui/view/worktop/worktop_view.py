@@ -1,4 +1,3 @@
-from model.place import Place
 from PyQt6.QtCore import QEvent, QLineF, QPoint, QPointF, QRectF, QSizeF, Qt, pyqtSignal
 from PyQt6.QtGui import QBrush, QColor, QKeyEvent, QMouseEvent, QPen, QResizeEvent, QTransform, QWheelEvent
 from PyQt6.QtWidgets import QGraphicsProxyWidget, QGraphicsScene, QGraphicsView
@@ -7,12 +6,16 @@ from view.worktop import GridScrollBar
 from view.worktop.action_selection import ActionSelector
 from view.worktop.place_item import PlaceItem, Sides
 
+from model.place import Place
+
 from controller import WorldController
 
 
 class WorktopView(QGraphicsView):
 
     viewport_change = pyqtSignal(QPoint)
+    selection_change = pyqtSignal(str)
+    selection_activated = pyqtSignal(Place)
 
     def __init__(
         self,
@@ -212,6 +215,7 @@ class WorktopView(QGraphicsView):
                 self.scene().addRect(left_bottom_rect, pen, brush),
                 self.scene().addRect(right_bottom_rect, pen, brush)
             ]
+            self.selection_change.emit(item.widget().title)
 
     def __moving(self, event: QMouseEvent):
         move_to_point = self.get_scene_point(event.position())
@@ -235,6 +239,8 @@ class WorktopView(QGraphicsView):
                 self.scene().removeItem(self.hover_cell)
                 self.hover_cell = None
                 self.__resize_scene()
+                self.selection_change.emit("")
+                
 
     def __remove_items(self, points):
         z_value = self.places.zValue()
@@ -300,6 +306,7 @@ class WorktopView(QGraphicsView):
             
             self.selection["item"] = None
             self.selection["boundries"] = []
+            self.selection_change.emit("")
             self.__resize_scene()
         return super().keyPressEvent(event)
 
@@ -362,6 +369,14 @@ class WorktopView(QGraphicsView):
             if self.selection["item"] is not None:
                 self.__moving(event)
             self.update()
+        if self.action_selector.add_object():
+            point = self.get_scene_point(event.position())
+            if self.is_space_available(point) is None:
+                item = self.scene().itemAt(point, QTransform())
+                if isinstance(item, QGraphicsProxyWidget):
+                    a = item.widget()
+                    if isinstance(a, PlaceItem):
+                        a.add_object(self.controller.add_object())
                 
         return super().mousePressEvent(event)
 
@@ -372,6 +387,13 @@ class WorktopView(QGraphicsView):
             self.dragging = False
             
         return super().mouseReleaseEvent(event)
+
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        select_point = self.get_scene_point(event.position())
+        item = self.scene().itemAt(select_point, QTransform())
+        if self.places and item in self.places.childItems():
+            self.selection_activated.emit(item.widget().model)
+        return super().mouseDoubleClickEvent(event)
 
     def get_visible_rect(self):
         return QRectF(
