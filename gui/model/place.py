@@ -1,26 +1,32 @@
 
 from typing import List
+from PyQt6.QtCore import QRectF
 from PyQt6.QtGui import QIcon, QStandardItem
 
 from model.utils import Block, Description
+from model.item_node import ItemNode
 
 
-class Place(QStandardItem):
+class Place(QStandardItem, ItemNode):
 
     def __init__(
         self,
         name:str = "new_place",
         description: Description = Description(),
-        contains:List['Object'] = list(),
+        contains:List['Object'] = None,
         turns_in:int = None,
         blockade:List['Block'] = None,
     ) -> None:
         super().__init__()
         self.name = name
         self.description = description
+        if contains is None:
+            contains = []
         self.contains = contains
         self.turns_in = turns_in
         self.blockade = blockade
+
+        self.position = None
 
         self.setIcon(QIcon("icons/nodes/box.png"))
         self.setEditable(False)
@@ -66,7 +72,19 @@ class Place(QStandardItem):
     def blockade(self, value: List[Block]) -> None:
         self._blockade = value
 
+    @property
+    def position(self) -> QRectF:
+        return self._position
+
+    @position.setter
+    def position(self, position: QRectF):
+        self._position = position
+
+    def get_objects(self) -> List['Object']:
+        return self.contains
+
     def add_object(self, object: 'Object') -> None:
+        object.container = self
         self._contains.append(object)
     
 

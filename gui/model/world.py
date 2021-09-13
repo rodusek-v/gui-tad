@@ -1,3 +1,4 @@
+from model.item_node import ItemNode
 from model.utils import TextModel
 from PyQt6.QtGui import QIcon, QStandardItem
 
@@ -10,6 +11,9 @@ class World(QStandardItem, TextModel):
         self._connections = list()
         self._player = None
         self._finish = None
+
+        self._places_count = 0
+        self._objects_count = 0
 
         self.setIcon(QIcon("icons/map.png"))
         self.setEditable(False)
@@ -71,9 +75,17 @@ class World(QStandardItem, TextModel):
 
     def append_place(self, place):
         self._places.appendRow(place)
+        self._places_count += 1
+
+    def remove_place(self, row_num):
+        row = self._places.takeRow(row_num)
+        if len(row) != 0 and isinstance(row[0], ItemNode):
+            for obj in row[0].get_objects():
+                obj.free()
 
     def append_object(self, object):
         self._objects.appendRow(object)
+        self._objects_count += 1
 
     def append_command(self, command):
         self._commands.appendRow(command)
@@ -82,10 +94,10 @@ class World(QStandardItem, TextModel):
         self._flags.appendRow(flag)
 
     def places_count(self) -> int:
-        return self._places.rowCount()
+        return self._places_count
 
     def objects_count(self) -> int:
-        return self._objects.rowCount()
+        return self._objects_count
 
     @staticmethod
     def __create_folder_item(icon: QIcon, text: str):

@@ -165,6 +165,15 @@ class MainWindow(QMainWindow):
         self.working_space.viewport_change.connect(self.set_status_location)
         self.working_space.selection_change.connect(self.set_selected_place)
         self.working_space.selection_activated.connect(self.open_place)
+        self.working_space.item_remove_start.connect(self.tree_view.deactivate_selection)
+        self.working_space.item_remove_end.connect(self.tree_view.activate_selection)
+        
+        self.tree_view.selected_place.connect(lambda x: self.working_space.selecting(x.position.center()))
+        self.tree_view.remove_place_signal.connect(self.working_space.delete_selected)
+
+        self.working_space.selection_change.connect(
+            lambda x: self.tree_view.setCurrentIndex(x.index()) if x else None
+        )
 
         self.setCentralWidget(temp)
 
@@ -254,7 +263,8 @@ class MainWindow(QMainWindow):
     def set_status_location(self, point):
         self.location_label.setText(f"X: {point.x()} Y: {point.y()}")
 
-    def set_selected_place(self, title):
+    def set_selected_place(self, item):
+        title = "" if item is None else item.name
         self.selected_place.setText(title)
         if title != "":
             self.selected_place.setText(f"Place: {title}")

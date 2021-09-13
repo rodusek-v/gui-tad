@@ -1,9 +1,11 @@
 from enum import Enum
+
 from PyQt6.QtCore import QPointF, QRectF, QSize, QSizeF, Qt
 from PyQt6.QtGui import QDropEvent
-from PyQt6.QtWidgets import QAbstractItemView, QLabel, QListWidget, QSizePolicy
+from PyQt6.QtWidgets import QAbstractItemView, QLabel, QListWidget
 
 from view.worktop.object_item import ObjectItem
+from model.place import Place
 
 class Sides(Enum):
     N = "N"
@@ -19,7 +21,7 @@ class PlaceItem(QListWidget):
         "S": QPointF(0, 1), "W": QPointF(-1, 0)
     }
 
-    def __init__(self, model, parent=None, margin=10, cwidth=10, size=100) -> None:
+    def __init__(self, model: 'Place', parent=None, margin=10, cwidth=10, size=100) -> None:
         super().__init__(parent=parent)
         self._neighbours = {
             key.name: None for key in Sides
@@ -28,12 +30,24 @@ class PlaceItem(QListWidget):
         self.cwidth = cwidth
         self._model = model
 
+        self.setStyleSheet("""
+            :enabled {
+                background: rgb(140, 140, 140);
+                color: black;
+            }
+            :disabled {
+                background: rgb(140, 140, 140);
+                color: black;
+            }
+        """)
+
         self.label = QLabel(self)
         self.label.resize(size, self.label.height())
         font = self.label.font()
         font.setPointSize(8)
         self.label.setFont(font)
         self.__set_title()
+        self.setContentsMargins(0, 0, 0, 0)
         self.setViewportMargins(0, self.label.height(), 0, 0)
 
         self.setAcceptDrops(True)
@@ -44,6 +58,7 @@ class PlaceItem(QListWidget):
         self.setSelectionMode(self.SelectionMode.ExtendedSelection)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.__fill_item()
+        self.setEnabled(False)
     
     def __set_title(self):
         text = self._model.name
@@ -58,7 +73,7 @@ class PlaceItem(QListWidget):
     
     def __fill_item(self):
         for obj in self._model.contains:
-            self.list_model.appendRow(obj)
+            self.model.appendRow(obj)
 
     def __relation_rect(self, side: Sides):
         geometry = self.geometry()
@@ -145,3 +160,7 @@ class PlaceItem(QListWidget):
         object_item = ObjectItem(object, self)
         self.addItem(object_item)
         #print(self.item(self.count() - 1).listWidget())
+
+    def setGeometry(self, rect: QRectF) -> None:
+        super().setGeometry(rect)
+        self.model.position = rect

@@ -1,10 +1,11 @@
-from typing import Union, List
+from typing import List
 from PyQt6.QtGui import QIcon, QStandardItem
 
 from model.utils import Description
+from model.item_node import ItemNode
 
 
-class Object(QStandardItem):
+class Object(QStandardItem, ItemNode):
 
     def __init__(
         self,
@@ -12,7 +13,7 @@ class Object(QStandardItem):
         description: Description = Description(),
         contains:List['Object'] = list(),
         pickable:bool = None,
-        container:Union['Place', 'Object', 'Player'] = None
+        container:ItemNode = None
     ) -> None:
         super().__init__()
         self.name = name
@@ -20,8 +21,11 @@ class Object(QStandardItem):
         self.contains = contains
         self.pickable = pickable
         self.container = container
-
-        self.setIcon(QIcon("icons/nodes/object.png"))
+        
+        icon = QIcon()
+        icon.addFile("icons/nodes/object.png", mode=QIcon.Mode.Active)
+        icon.addFile("icons/nodes/object.png", mode=QIcon.Mode.Disabled)
+        self.setIcon(icon)
         self.setEditable(False)
 
     @property
@@ -58,13 +62,19 @@ class Object(QStandardItem):
         self._pickable = value
 
     @property
-    def container(self) -> Union['Place', 'Object', 'Player']:
+    def container(self) -> ItemNode:
         return self._container
 
     @container.setter
-    def container(self, value: Union['Place', 'Object', 'Player']):
+    def container(self, value: ItemNode):
         self._container = value
 
+    def add_object(self, object: 'Object') -> None:
+        object.container = self
+        self._contains.append(object)
 
-from model.place import Place
-from model.player import Player
+    def get_objects(self) -> List['Object']:
+        return self.contains
+
+    def free(self):
+        self._container = None
