@@ -86,6 +86,14 @@ class Place(QStandardItem, ItemNode):
     def add_object(self, object: 'Object') -> None:
         object.container = self
         self._contains.append(object)
+
+    def remove_object(self, object: 'Object') -> None:
+        try:
+            self.contains.remove(object)
+            del object.container
+        except ValueError:
+            pass
+
     
 
 from model.object import Object

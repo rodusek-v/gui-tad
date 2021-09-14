@@ -9,5 +9,8 @@ class ItemNode(object):
     def get_objects(self) -> List['Object']:
         pass
 
+    def remove_object(self, object: 'Object') -> None:
+        pass
+
 
 from model.object import Object

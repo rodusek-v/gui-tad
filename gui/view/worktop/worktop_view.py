@@ -7,7 +7,7 @@ from view.worktop.action_selection import ActionSelector
 from view.worktop.place_item import PlaceItem, Sides
 from view.worktop.item_group import ItemGroup
 
-from model.place import Place
+from model.place import Place, Object
 
 from controller import WorldController
 
@@ -16,7 +16,8 @@ class WorktopView(QGraphicsView):
 
     viewport_change = pyqtSignal(QPoint)
     selection_change = pyqtSignal(object)
-    selection_activated = pyqtSignal(Place)
+    selection_place = pyqtSignal(Place)
+    dispatch_object = pyqtSignal(Object)
     item_remove_start = pyqtSignal()
     item_remove_end = pyqtSignal()
 
@@ -72,6 +73,9 @@ class WorktopView(QGraphicsView):
 
         self.setMouseTracking(True)
         self.setScene(QGraphicsScene())
+
+    def __dispatch(self, obj):
+        self.dispatch_object.emit(obj)
 
     def __refresh_grid(self):
         if self.action_selector.grid():
@@ -176,6 +180,7 @@ class WorktopView(QGraphicsView):
             self.scene().removeItem(self.hover_cell)
             self.hover_cell = None
             place = PlaceItem(self.controller.add_place(), margin=self.margin)
+            place.selected_object.connect(self.__dispatch)
             place.setCursor(self.action_selector.cursors["select"])
             place.setGeometry(space_rect.toRect())
             new_place = self.scene().addWidget(place)
@@ -197,7 +202,7 @@ class WorktopView(QGraphicsView):
                     points = self.selection["item"].widget().say_goodbye()
                     self.__remove_items(points)
                     self.selection["item"].moveBy(dx, dy)
-                    self.selection["item"].widget().model.position = \
+                    self.selection["item"].widget().place_model.position = \
                         self.selection["item"].sceneBoundingRect()
                     self.__check_neighbours(self.selection["item"].widget())
 
@@ -265,6 +270,18 @@ class WorktopView(QGraphicsView):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Delete:
             self.delete_selected()
+        elif event.key() == Qt.Key.Key_Escape:
+            if self.selection["item"] is not None:
+                for child in self.selection["boundries"]:
+                    self.scene().removeItem(child)
+
+                self.selection["boundries"] = []
+                self.selection["item"] = None
+
+                if self.hover_cell:
+                    self.scene().removeItem(self.hover_cell)
+                    self.hover_cell = None
+
         return super().keyPressEvent(event)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
@@ -315,36 +332,33 @@ class WorktopView(QGraphicsView):
         return super().leaveEvent(event)
     
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        if self.action_selector.drag():
-            self.dragging = True
-            self.viewport().setCursor(self.action_selector.get_cursor("grab"))
-        if self.action_selector.add_place():
-            self.__add_place_press(event)
-            self.update()
-        if self.action_selector.select():
-            select_point = self.get_scene_point(event.position())
-            self.selecting(select_point)
-            if self.selection["item"] is not None:
-                self.__moving(event)
-            self.update()
-        if self.action_selector.add_object():
-            point = self.get_scene_point(event.position())
-            if self.is_space_available(point) is None:
-                item = self.scene().itemAt(point, QTransform())
-                if isinstance(item, QGraphicsProxyWidget):
-                    place_item = item.widget()
-                    if isinstance(place_item, PlaceItem):
-                        place_item.add_object(self.controller.add_object(place_item.model))
-
-
-        # this is temporary
-        # TODO: fix this on to efficient way
-        if event.buttons() == Qt.MouseButton.RightButton \
-            and (self.selection["boundries"]) != 0 and self.action_selector.select():
-            select_point = self.get_scene_point(event.position())
-            item = self.scene().itemAt(select_point, QTransform())
-            if self.places and item in self.places.child_items():
-                self.selection_activated.emit(item.widget().model)
+        if event.buttons() == Qt.MouseButton.LeftButton:
+            if self.action_selector.drag():
+                self.dragging = True
+                self.viewport().setCursor(self.action_selector.get_cursor("grab"))
+            if self.action_selector.add_place():
+                self.__add_place_press(event)
+                self.update()
+            if self.action_selector.select():
+                select_point = self.get_scene_point(event.position())
+                self.selecting(select_point)
+                if self.selection["item"] is not None:
+                    self.__moving(event)
+                self.update()
+            if self.action_selector.add_object():
+                point = self.get_scene_point(event.position())
+                if self.is_space_available(point) is None:
+                    item = self.scene().itemAt(point, QTransform())
+                    if isinstance(item, QGraphicsProxyWidget):
+                        place_item = item.widget()
+                        if isinstance(place_item, PlaceItem):
+                            place_item.add_object(self.controller.add_object(place_item.place_model))
+        elif event.buttons() == Qt.MouseButton.RightButton:
+            if self.action_selector.select():
+                select_point = self.get_scene_point(event.position())
+                item = self.scene().itemAt(select_point, QTransform())
+                if self.places and item in self.places.child_items():
+                    self.selection_place.emit(item.widget().place_model)
                 
         return super().mousePressEvent(event)
 
@@ -393,7 +407,7 @@ class WorktopView(QGraphicsView):
                 self.scene().addRect(left_bottom_rect, pen, brush),
                 self.scene().addRect(right_bottom_rect, pen, brush)
             ]
-            self.selection_change.emit(item.widget().model)
+            self.selection_change.emit(item.widget().place_model)
 
     def delete_selected(self):
         if self.selection["item"]:
@@ -401,7 +415,7 @@ class WorktopView(QGraphicsView):
             for item in self.selection["boundries"]:
                 self.scene().removeItem(item)
             points = self.selection["item"].widget().say_goodbye()
-            self.controller.remove_place(self.selection["item"].widget().model)
+            self.controller.remove_place(self.selection["item"].widget().place_model)
             self.__remove_items(points)
             self.places.remove_from_group(self.selection["item"])
             

@@ -1,11 +1,12 @@
-from view.sidebars.place_form import PlaceForm
 from types import FunctionType
 from PyQt6.QtCore import QObject, QSize
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
 from view.buttons import ToggleButton
-from model import Place
+from view.sidebars.place_form import PlaceForm
+from view.sidebars.object_form import ObjectForm
+from model import Place, Object
 
 
 class SideBar(QObject):
@@ -24,7 +25,7 @@ class SideBar(QObject):
         self.hide_btn.setCheckable(False)
         self.hide_btn.setIcon(QIcon("icons/hide.png"))
         self.hide_btn.setIconSize(QSize(40, 40))
-        self.hide_btn.clicked.connect(hiding_func)
+        self.hide_btn.clicked.connect(lambda: hiding_func())
         self.hide_btn.setFixedWidth(60)
         self._holder.layout().addWidget(self.hide_btn)
         
@@ -43,6 +44,8 @@ class SideBar(QObject):
         form = None
         if isinstance(model, Place):
             form = PlaceForm(model)
+        elif isinstance(model, Object):
+            form = ObjectForm(model)
 
         if form is not None:
             if self.widget is not None:
@@ -59,4 +62,7 @@ class SideBar(QObject):
             self.holder.layout().removeWidget(self.widget)
         self.widget = None
         self.hide_btn.hide()
+
+    def is_model_current(self, model):
+        return self.widget.model == model if self.widget is not None else False
     

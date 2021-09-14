@@ -6,3 +6,7 @@ class ObjectItem(QListWidgetItem):
         super().__init__(parent=parent)
         self._model = model
         self.setIcon(self._model.icon())
+
+    @property
+    def model(self):
+        return self._model

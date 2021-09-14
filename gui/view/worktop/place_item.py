@@ -1,11 +1,12 @@
 from enum import Enum
 
-from PyQt6.QtCore import QPointF, QRectF, QSize, QSizeF, Qt
+from PyQt6.QtCore import QItemSelection, QPointF, QRectF, QSize, QSizeF, Qt, pyqtSignal
 from PyQt6.QtGui import QDropEvent
 from PyQt6.QtWidgets import QAbstractItemView, QLabel, QListWidget
 
 from view.worktop.object_item import ObjectItem
-from model.place import Place
+from model.place import Place, Object
+from controller import PlaceController
 
 class Sides(Enum):
     N = "N"
@@ -14,6 +15,8 @@ class Sides(Enum):
     E = "E"
 
 class PlaceItem(QListWidget):
+
+    selected_object = pyqtSignal(Object)
 
     inverse_side = {"N": "S", "S": "N", "E": "W", "W": "E"}
     directions = {
@@ -29,6 +32,7 @@ class PlaceItem(QListWidget):
         self.margin = margin
         self.cwidth = cwidth
         self._model = model
+        self.controller = PlaceController(self._model)
 
         self.setStyleSheet("""
             :enabled {
@@ -73,7 +77,7 @@ class PlaceItem(QListWidget):
     
     def __fill_item(self):
         for obj in self._model.contains:
-            self.model.appendRow(obj)
+            self.place_model.appendRow(obj)
 
     def __relation_rect(self, side: Sides):
         geometry = self.geometry()
@@ -106,13 +110,25 @@ class PlaceItem(QListWidget):
 
     def dropEvent(self, event: QDropEvent) -> None:
         if self != event.source():
-            super().dropEvent(event)
+            #super().dropEvent(event)
             source = event.source()
+            objects_to_move = []
             for i in range(len(source.selectedIndexes()) - 1, -1, -1):
-                source.takeItem(source.selectedIndexes()[i].row())
+                item = source.takeItem(source.selectedIndexes()[i].row())
+                objects_to_move.append(item)
+                self.addItem(item)
+            self.controller.assign_objects(source.place_model, [obj.model for obj in objects_to_move])
             source.clearSelection()
         else:
             event.ignore()
+
+    def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection) -> None:
+        for index in selected.indexes():
+            item = self.item(index.row())
+            if isinstance(item.model, Object):
+                self.selected_object.emit(item.model)
+                break
+        return super().selectionChanged(selected, deselected)
 
     @property
     def neighbours(self):
@@ -123,7 +139,7 @@ class PlaceItem(QListWidget):
         return self._model.name
 
     @property
-    def model(self):
+    def place_model(self):
         return self._model
 
     def set_neighbour(self, side: Sides, neighbour):
@@ -163,4 +179,4 @@ class PlaceItem(QListWidget):
 
     def setGeometry(self, rect: QRectF) -> None:
         super().setGeometry(rect)
-        self.model.position = rect
+        self.place_model.position = rect

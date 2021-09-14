@@ -69,6 +69,10 @@ class Object(QStandardItem, ItemNode):
     def container(self, value: ItemNode):
         self._container = value
 
+    @container.deleter
+    def container(self):
+        self._container = None
+
     def add_object(self, object: 'Object') -> None:
         object.container = self
         self._contains.append(object)
@@ -76,5 +80,9 @@ class Object(QStandardItem, ItemNode):
     def get_objects(self) -> List['Object']:
         return self.contains
 
-    def free(self):
-        self._container = None
+    def remove_object(self, object: 'Object') -> None:
+        try:
+            self.contains.remove(object)
+            del object.container
+        except ValueError:
+            pass

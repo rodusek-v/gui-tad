@@ -23,4 +23,11 @@ class Player(QObject, ItemNode):
         object.container = self
         self.items.append(object)
 
+    def remove_object(self, object: 'Object') -> None:
+        try:
+            self.items.remove(object)
+            del object.container
+        except ValueError:
+            pass
+
 from model.object import Object

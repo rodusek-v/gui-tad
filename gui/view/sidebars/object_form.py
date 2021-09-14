@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QWidget
 from view.sidebars.form import Form
 
 
-class PlaceForm(Form):
+class ObjectForm(Form):
     
     def __init__(self, model, parent=None) -> None:
         super().__init__(model, parent=parent)
@@ -14,4 +14,4 @@ class PlaceForm(Form):
         self.contains_widget = QWidget()
         self.props_widget = QWidget()
         self.tab_widget.addTab(self.props_widget, "Properties")
-        self.tab_widget.addTab(self.contains_widget, "Place objects")
+        self.tab_widget.addTab(self.contains_widget, "Object content")

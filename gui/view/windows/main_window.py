@@ -125,10 +125,10 @@ class MainWindow(QMainWindow):
         temp.layout().setContentsMargins(10, 10, 10, 10)
         self.working_space.viewport_change.connect(self.set_status_location)
         self.working_space.selection_change.connect(self.set_selected_place)
-        self.working_space.selection_activated.connect(self.show_form)
+        self.working_space.selection_place.connect(self.show_form)
+        self.working_space.dispatch_object.connect(self.show_form)
         self.working_space.item_remove_start.connect(self.tree_view.deactivate_selection)
         self.working_space.item_remove_end.connect(self.tree_view.activate_selection)
-        self.working_space.item_remove_end.connect(lambda: self.hide_form(deleted=True))
         
         self.tree_view.selected_place.connect(lambda x: self.working_space.selecting(x.position.center()))
         self.tree_view.remove_place_signal.connect(self.working_space.delete_selected)
@@ -136,6 +136,8 @@ class MainWindow(QMainWindow):
         self.working_space.selection_change.connect(
             lambda x: self.tree_view.setCurrentIndex(x.index()) if x else None
         )
+
+        self.controller.item_deletion.connect(self.hide_form)
 
         self.setCentralWidget(temp)
 
@@ -231,15 +233,17 @@ class MainWindow(QMainWindow):
         if title != "":
             self.selected_place.setText(f"Place: {title}")
 
-    def show_form(self, place_model):
-        self.side_bar.set_form(place_model)
+    def show_form(self, model):
+        self.side_bar.set_form(model)
         if not self.showed:
             self.__animate()
 
-    def hide_form(self, deleted=False):
-        if deleted:
-            self.side_bar.remove_form()
-        if self.showed:
+    def hide_form(self, deleted_model=None):
+        if deleted_model is not None:
+            if self.side_bar.is_model_current(deleted_model):
+                self.side_bar.remove_form()
+                self.__animate()
+        else:
             self.__animate()
 
     def resizeEvent(self, event: QResizeEvent) -> None:

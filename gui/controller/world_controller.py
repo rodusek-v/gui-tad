@@ -1,9 +1,15 @@
+from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtGui import QStandardItem
+
 from model import World, Place, Object, ItemNode
 
 
-class WorldController(object):
+class WorldController(QObject):
+
+    item_deletion = pyqtSignal(QStandardItem)
 
     def __init__(self, model: World = None) -> None:
+        super().__init__()
         self.model = model
         if self.model is None:
             self.__create_new_model()
@@ -36,3 +42,4 @@ class WorldController(object):
 
     def remove_place(self, place: Place) -> None:
         self.model.remove_place(place.row())
+        self.item_deletion.emit(place)

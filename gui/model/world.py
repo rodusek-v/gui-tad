@@ -81,7 +81,7 @@ class World(QStandardItem, TextModel):
         row = self._places.takeRow(row_num)
         if len(row) != 0 and isinstance(row[0], ItemNode):
             for obj in row[0].get_objects():
-                obj.free()
+                del obj.container
 
     def append_object(self, object):
         self._objects.appendRow(object)
