@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QEvent, QLineF, QPoint, QPointF, QRectF, QSizeF, Qt, pyqtSignal
-from PyQt6.QtGui import QBrush, QColor, QKeyEvent, QMouseEvent, QPen, QResizeEvent, QStandardItem, QTransform, QWheelEvent
+from PyQt6.QtGui import QBrush, QColor, QKeyEvent, QMouseEvent, QPen, QResizeEvent, QTransform, QWheelEvent
 from PyQt6.QtWidgets import QGraphicsProxyWidget, QGraphicsScene, QGraphicsView
 
 from view.worktop import GridScrollBar
@@ -197,6 +197,8 @@ class WorktopView(QGraphicsView):
                     points = self.selection["item"].widget().say_goodbye()
                     self.__remove_items(points)
                     self.selection["item"].moveBy(dx, dy)
+                    self.selection["item"].widget().model.position = \
+                        self.selection["item"].sceneBoundingRect()
                     self.__check_neighbours(self.selection["item"].widget())
 
                 self.selection["item"] = None

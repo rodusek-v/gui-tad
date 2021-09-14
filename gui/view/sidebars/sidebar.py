@@ -1,17 +1,33 @@
-from PyQt6.QtCore import QObject, QRect
-from PyQt6.QtWidgets import QHBoxLayout, QWidget
+from view.sidebars.place_form import PlaceForm
+from types import FunctionType
+from PyQt6.QtCore import QObject, QSize
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QVBoxLayout, QWidget
+
+from view.buttons import ToggleButton
+from model import Place
 
 
 class SideBar(QObject):
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent=None, hiding_func: FunctionType = None) -> None:
         super().__init__()    
         self._holder = QWidget(parent=parent)
         self.widget = None
-        self._holder.setLayout(QHBoxLayout())
-        self._holder.setStyleSheet("background-color: rgb(140, 140, 140);")
+        
+        self._holder.setLayout(QVBoxLayout())
+        self._holder.setStyleSheet("background-color: #262626;")
         self._holder.resize(0, 0)
 
+        self.hide_btn = ToggleButton("")
+        self.hide_btn.setFixedHeight(30)
+        self.hide_btn.setCheckable(False)
+        self.hide_btn.setIcon(QIcon("icons/hide.png"))
+        self.hide_btn.setIconSize(QSize(40, 40))
+        self.hide_btn.clicked.connect(hiding_func)
+        self.hide_btn.setFixedWidth(60)
+        self._holder.layout().addWidget(self.hide_btn)
+        
     @property
     def holder(self):
         return self._holder
@@ -19,11 +35,28 @@ class SideBar(QObject):
     def width(self):
         return self.holder.width()
 
-    def setGeometry(self, rect: QRect):
-        self.holder.setGeometry(rect)
-
     def setGeometry(self, x: int, y: int, width: int, height: int):
         self.holder.setGeometry(x, y, width, height)
 
     def set_form(self, model):
-        pass
+        self.hide_btn.show()
+        form = None
+        if isinstance(model, Place):
+            form = PlaceForm(model)
+
+        if form is not None:
+            if self.widget is not None:
+                if self.widget.model != model:
+                    self.holder.layout().removeWidget(self.widget)
+                    self.widget = form
+                    self.holder.layout().addWidget(form)
+            else:
+                self.widget = form
+                self.holder.layout().addWidget(form)
+
+    def remove_form(self):
+        if self.widget is not None:
+            self.holder.layout().removeWidget(self.widget)
+        self.widget = None
+        self.hide_btn.hide()
+    

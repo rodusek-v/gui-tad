@@ -1,53 +1,13 @@
-from PyQt6.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QStatusBar, QWidget
-from PyQt6.QtCore import QEvent, QObject, QPoint, QPropertyAnimation, QRect, QSize, Qt
-from PyQt6.QtGui import QEnterEvent, QIcon, QResizeEvent, QStandardItemModel
+from PyQt6.QtWidgets import QApplication, QButtonGroup, QHBoxLayout, QLabel, QStatusBar, QWidget
+from PyQt6.QtCore import QPoint, QPropertyAnimation, QRect, QSize, Qt
+from PyQt6.QtGui import QIcon, QResizeEvent, QStandardItemModel
 from PyQt6.QtWidgets import QDockWidget, QMainWindow, QMenu, QMenuBar
 
+from view.buttons import ToggleButton
 from view.worktop import WorktopView, ActionSelector
 from view.worldtree import WorldTreeView
 from view.sidebars import SideBar
 from controller import WorldController
-
-
-class ToggleButton(QPushButton):
-    def __init__(self, text: str = None, parent: QObject = None):
-        super().__init__(text, parent)
-        self.styles = {
-            "border": "none",
-            "padding": "10px",
-            "margin": "0px",
-            "background": "transparent"
-        }
-        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.setStyleSheet(self.__get_style())
-        self.setCheckable(True)
-
-    def __get_style(self):
-        return " ".join([f"{key}: {value};" for key, value in self.styles.items()])
-
-    def select(self):
-        if self.isChecked():
-            self.styles["background"] = "#393f4f"
-        else:
-            self.styles["background"] = "transparent"
-        self.setStyleSheet(self.__get_style())
-
-    def enterEvent(self, event: QEnterEvent) -> None:
-        if not self.isChecked():
-            self.styles["background"] = "#363636"
-            self.setStyleSheet(self.__get_style())
-        return super().enterEvent(event)
-
-    def leaveEvent(self, event: QEvent) -> None:
-        if not self.isChecked():
-            self.styles["background"] = "transparent"
-            self.setStyleSheet(self.__get_style())
-        return super().leaveEvent(event)
-
-    def setStyle(self, key, value):
-        self.styles[key] = value
-        self.setStyleSheet(self.__get_style())
-        self.repaint()
 
 
 class MainWindow(QMainWindow):
@@ -111,7 +71,7 @@ class MainWindow(QMainWindow):
         self.status_bar.addPermanentWidget(self.selected_place)
         self.status_bar.addPermanentWidget(self.location_label)
 
-        self.side_bar = SideBar(self)
+        self.side_bar = SideBar(self, self.hide_form)
         self.showed = False
 
     def __animate(self):
@@ -123,10 +83,11 @@ class MainWindow(QMainWindow):
             width = 300
             self.showed = True
         self.animation = QPropertyAnimation(self.side_bar.holder, b'geometry')
-        self.animation.setDuration(500)
+        self.animation.setDuration(300)
         self.animation.setStartValue(QRect(self.width() - current_width, 0, current_width, self.height()))
         self.animation.setEndValue(QRect(self.width() - width, 0, width, self.height()))
         self.animation.start()
+        self.animation.finished.connect(self.update)
 
     def __init_tree_view(self):
         self.side_dock = QDockWidget()
@@ -164,9 +125,10 @@ class MainWindow(QMainWindow):
         temp.layout().setContentsMargins(10, 10, 10, 10)
         self.working_space.viewport_change.connect(self.set_status_location)
         self.working_space.selection_change.connect(self.set_selected_place)
-        self.working_space.selection_activated.connect(self.open_place)
+        self.working_space.selection_activated.connect(self.show_form)
         self.working_space.item_remove_start.connect(self.tree_view.deactivate_selection)
         self.working_space.item_remove_end.connect(self.tree_view.activate_selection)
+        self.working_space.item_remove_end.connect(lambda: self.hide_form(deleted=True))
         
         self.tree_view.selected_place.connect(lambda x: self.working_space.selecting(x.position.center()))
         self.tree_view.remove_place_signal.connect(self.working_space.delete_selected)
@@ -269,9 +231,15 @@ class MainWindow(QMainWindow):
         if title != "":
             self.selected_place.setText(f"Place: {title}")
 
-    def open_place(self, place_model):
+    def show_form(self, place_model):
         self.side_bar.set_form(place_model)
         if not self.showed:
+            self.__animate()
+
+    def hide_form(self, deleted=False):
+        if deleted:
+            self.side_bar.remove_form()
+        if self.showed:
             self.__animate()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
