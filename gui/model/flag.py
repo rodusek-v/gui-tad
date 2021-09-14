@@ -1,6 +1,6 @@
-from PyQt6.QtGui import QStandardItem
+from model.item_node import ItemNode
 
-class Flag(QStandardItem):
+class Flag(ItemNode):
 
     def __init__(
         self,

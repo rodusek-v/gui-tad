@@ -1,8 +1,7 @@
 from typing import List
-from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtGui import QStandardItem
+from PyQt6.QtCore import QObject
 
-from model import World, Place, Object, ItemNode
+from model import Place, Object
 
 
 class PlaceController(QObject):
@@ -23,5 +22,4 @@ class PlaceController(QObject):
         for obj in objects:
             old.remove_object(obj)
             self.model.add_object(obj)
-
-    
+            

@@ -7,7 +7,7 @@ from view.worktop.action_selection import ActionSelector
 from view.worktop.place_item import PlaceItem, Sides
 from view.worktop.item_group import ItemGroup
 
-from model.place import Place, Object
+from model import Container
 
 from controller import WorldController
 
@@ -16,10 +16,10 @@ class WorktopView(QGraphicsView):
 
     viewport_change = pyqtSignal(QPoint)
     selection_change = pyqtSignal(object)
-    selection_place = pyqtSignal(Place)
-    dispatch_object = pyqtSignal(Object)
+    dispatch_event = pyqtSignal(Container)
     item_remove_start = pyqtSignal()
     item_remove_end = pyqtSignal()
+    deselect = pyqtSignal()
 
     def __init__(
         self,
@@ -75,7 +75,7 @@ class WorktopView(QGraphicsView):
         self.setScene(QGraphicsScene())
 
     def __dispatch(self, obj):
-        self.dispatch_object.emit(obj)
+        self.dispatch_event.emit(obj)
 
     def __refresh_grid(self):
         if self.action_selector.grid():
@@ -181,6 +181,7 @@ class WorktopView(QGraphicsView):
             self.hover_cell = None
             place = PlaceItem(self.controller.add_place(), margin=self.margin)
             place.selected_object.connect(self.__dispatch)
+            place.selected_place.connect(self.__dispatch)
             place.setCursor(self.action_selector.cursors["select"])
             place.setGeometry(space_rect.toRect())
             new_place = self.scene().addWidget(place)
@@ -281,6 +282,7 @@ class WorktopView(QGraphicsView):
                 if self.hover_cell:
                     self.scene().removeItem(self.hover_cell)
                     self.hover_cell = None
+                self.deselect.emit()
 
         return super().keyPressEvent(event)
 
@@ -353,12 +355,6 @@ class WorktopView(QGraphicsView):
                         place_item = item.widget()
                         if isinstance(place_item, PlaceItem):
                             place_item.add_object(self.controller.add_object(place_item.place_model))
-        elif event.buttons() == Qt.MouseButton.RightButton:
-            if self.action_selector.select():
-                select_point = self.get_scene_point(event.position())
-                item = self.scene().itemAt(select_point, QTransform())
-                if self.places and item in self.places.child_items():
-                    self.selection_place.emit(item.widget().place_model)
                 
         return super().mousePressEvent(event)
 

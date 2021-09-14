@@ -1,7 +1,8 @@
 from enum import Enum
+from time import time
 
 from PyQt6.QtCore import QItemSelection, QPointF, QRectF, QSize, QSizeF, Qt, pyqtSignal
-from PyQt6.QtGui import QDropEvent
+from PyQt6.QtGui import QDropEvent, QMouseEvent
 from PyQt6.QtWidgets import QAbstractItemView, QLabel, QListWidget
 
 from view.worktop.object_item import ObjectItem
@@ -17,6 +18,7 @@ class Sides(Enum):
 class PlaceItem(QListWidget):
 
     selected_object = pyqtSignal(Object)
+    selected_place = pyqtSignal(Place)
 
     inverse_side = {"N": "S", "S": "N", "E": "W", "W": "E"}
     directions = {
@@ -33,6 +35,7 @@ class PlaceItem(QListWidget):
         self.cwidth = cwidth
         self._model = model
         self.controller = PlaceController(self._model)
+        self.click_interval = -1
 
         self.setStyleSheet("""
             :enabled {
@@ -63,7 +66,7 @@ class PlaceItem(QListWidget):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.__fill_item()
         self.setEnabled(False)
-    
+
     def __set_title(self):
         text = self._model.name
         title_size = len(text) * self.label.font().pointSize()
@@ -108,6 +111,18 @@ class PlaceItem(QListWidget):
 
         return QRectF(point, size)
 
+    def __double_click(self):
+        if self.click_interval == -1:
+            self.click_interval = time()
+        else:
+            now = time()
+            diff = now - self.click_interval
+            if diff <= 0.2:
+                return True
+            self.click_interval = now
+
+        return False
+
     def dropEvent(self, event: QDropEvent) -> None:
         if self != event.source():
             #super().dropEvent(event)
@@ -122,13 +137,15 @@ class PlaceItem(QListWidget):
         else:
             event.ignore()
 
-    def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection) -> None:
-        for index in selected.indexes():
-            item = self.item(index.row())
-            if isinstance(item.model, Object):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        double_click = self.__double_click()
+        if double_click:
+            item = self.itemAt(event.position().toPoint())
+            if item is not None:
                 self.selected_object.emit(item.model)
-                break
-        return super().selectionChanged(selected, deselected)
+            else:
+                self.selected_place.emit(self.place_model)
+        return super().mousePressEvent(event)
 
     @property
     def neighbours(self):

@@ -6,3 +6,4 @@ from . flag import Flag
 from . player import Player
 from . finish import Finish
 from . item_node import ItemNode
+from . container import Container

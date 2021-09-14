@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QStandardItem
 
-from model import World, Place, Object, ItemNode
+from model import World, Place, Object, Container
 
 
 class WorldController(QObject):
@@ -32,7 +32,7 @@ class WorldController(QObject):
         self.model.append_place(place)
         return place
 
-    def add_object(self, container: ItemNode = None) -> Object:
+    def add_object(self, container: Container = None) -> Object:
         count = self.model.objects_count()
         object = Object(f"new_object{f'_{count}' if count != 0 else ''}")
         if container is not None:

@@ -1,13 +1,15 @@
-from PyQt6.QtGui import QKeyEvent
-from model.place import Place
-
+from PyQt6.QtGui import QKeyEvent, QMouseEvent
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal
 from PyQt6.QtWidgets import QTreeView
+
+from model import Place, ItemNode
 
 class WorldTreeView(QTreeView):
 
     selected_place = pyqtSignal(Place)
     remove_place_signal = pyqtSignal()
+    selected_item = pyqtSignal(ItemNode)
+    deselect = pyqtSignal()
     
     def __init__(self, parent=None) -> None:
         super().__init__(parent=parent)
@@ -25,7 +27,17 @@ class WorldTreeView(QTreeView):
             item = self.model().itemFromIndex(self.currentIndex())
             if isinstance(item, Place):
                 self.remove_place_signal.emit()
+        elif event.key() == Qt.Key.Key_Escape:
+            self.clearSelection()
+            self.deselect.emit()
         return super().keyPressEvent(event)
+
+    def mouseDoubleClickEvent(self, e: QMouseEvent) -> None:
+        item = self.model().itemFromIndex(self.currentIndex())
+        if isinstance(item, ItemNode):
+            self.selected_item.emit(item)
+
+        return super().mouseDoubleClickEvent(e)
 
     def activate_selection(self):
         self.setSelectionMode(self.SelectionMode.SingleSelection)

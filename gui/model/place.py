@@ -1,13 +1,14 @@
 
 from typing import List
 from PyQt6.QtCore import QRectF
-from PyQt6.QtGui import QIcon, QStandardItem
+from PyQt6.QtGui import QIcon
 
 from model.utils import Block, Description
+from model.container import Container
 from model.item_node import ItemNode
 
 
-class Place(QStandardItem, ItemNode):
+class Place(ItemNode, Container):
 
     def __init__(
         self,

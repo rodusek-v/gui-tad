@@ -1,16 +1,7 @@
 
-from typing import List
+from PyQt6.QtGui import QStandardItem
 
-class ItemNode(object):
+class ItemNode(QStandardItem):
 
-    def add_object(self, object: 'Object') -> None:
-        pass
-
-    def get_objects(self) -> List['Object']:
-        pass
-
-    def remove_object(self, object: 'Object') -> None:
-        pass
-
-
-from model.object import Object
+    def __init__(self) -> None:
+        super().__init__()

@@ -1,4 +1,4 @@
-from model.item_node import ItemNode
+from model.container import Container
 from model.utils import TextModel
 from PyQt6.QtGui import QIcon, QStandardItem
 
@@ -79,7 +79,7 @@ class World(QStandardItem, TextModel):
 
     def remove_place(self, row_num):
         row = self._places.takeRow(row_num)
-        if len(row) != 0 and isinstance(row[0], ItemNode):
+        if len(row) != 0 and isinstance(row[0], Container):
             for obj in row[0].get_objects():
                 del obj.container
 

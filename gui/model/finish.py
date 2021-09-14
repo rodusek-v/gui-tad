@@ -1,6 +1,6 @@
-from PyQt6.QtCore import QObject
+from model.item_node import ItemNode
 
-class Finish(QObject):
+class Finish(ItemNode):
 
     def __init__(
         self,

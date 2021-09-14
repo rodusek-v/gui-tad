@@ -1,11 +1,12 @@
 from typing import List
-from PyQt6.QtGui import QIcon, QStandardItem
+from PyQt6.QtGui import QIcon
 
 from model.utils import Description
+from model.container import Container
 from model.item_node import ItemNode
 
 
-class Object(QStandardItem, ItemNode):
+class Object(ItemNode, Container):
 
     def __init__(
         self,
@@ -13,7 +14,7 @@ class Object(QStandardItem, ItemNode):
         description: Description = Description(),
         contains:List['Object'] = list(),
         pickable:bool = None,
-        container:ItemNode = None
+        container:Container = None
     ) -> None:
         super().__init__()
         self.name = name
@@ -62,11 +63,11 @@ class Object(QStandardItem, ItemNode):
         self._pickable = value
 
     @property
-    def container(self) -> ItemNode:
+    def container(self) -> Container:
         return self._container
 
     @container.setter
-    def container(self, value: ItemNode):
+    def container(self, value: Container):
         self._container = value
 
     @container.deleter

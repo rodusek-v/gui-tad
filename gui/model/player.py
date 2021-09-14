@@ -1,9 +1,10 @@
 from typing import List
-from PyQt6.QtCore import QObject
 
+from model.container import Container
 from model.item_node import ItemNode
 
-class Player(QObject, ItemNode):
+
+class Player(ItemNode, Container):
 
     def __init__(
         self,

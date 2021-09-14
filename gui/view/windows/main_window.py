@@ -125,17 +125,20 @@ class MainWindow(QMainWindow):
         temp.layout().setContentsMargins(10, 10, 10, 10)
         self.working_space.viewport_change.connect(self.set_status_location)
         self.working_space.selection_change.connect(self.set_selected_place)
-        self.working_space.selection_place.connect(self.show_form)
-        self.working_space.dispatch_object.connect(self.show_form)
+        self.working_space.dispatch_event.connect(self.show_form)
         self.working_space.item_remove_start.connect(self.tree_view.deactivate_selection)
         self.working_space.item_remove_end.connect(self.tree_view.activate_selection)
         
         self.tree_view.selected_place.connect(lambda x: self.working_space.selecting(x.position.center()))
         self.tree_view.remove_place_signal.connect(self.working_space.delete_selected)
+        self.tree_view.selected_item.connect(self.show_form)
 
         self.working_space.selection_change.connect(
             lambda x: self.tree_view.setCurrentIndex(x.index()) if x else None
         )
+        
+        self.working_space.deselect.connect(self.hide_form)
+        self.tree_view.deselect.connect(self.hide_form)
 
         self.controller.item_deletion.connect(self.hide_form)
 
