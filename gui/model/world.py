@@ -29,13 +29,13 @@ class World(QStandardItem, TextModel):
         flags=list(),
         commands=list()
     ):
-        self._places = World.__create_folder_item(QIcon("icons/box.png"), 'Places')
+        self._places = World.__create_folder_item(self.__create_icon("icons/box.png"), 'Places')
         self._places.appendRows(places)
-        self._objects = World.__create_folder_item(QIcon("icons/object.png"), 'Objects')
+        self._objects = World.__create_folder_item(self.__create_icon("icons/object.png"), 'Objects')
         self._objects.appendRows(objects)
-        self._commands = World.__create_folder_item(QIcon("icons/command.png"), 'Commands')
+        self._commands = World.__create_folder_item(self.__create_icon("icons/command.png"), 'Commands')
         self._commands.appendRows(commands)
-        self._flags = World.__create_folder_item(QIcon("icons/flag.png"), 'Flags')
+        self._flags = World.__create_folder_item(self.__create_icon("icons/flag.png"), 'Flags')
         self._flags.appendRows(flags)
         self.appendRows([
             self._places, 
@@ -114,3 +114,12 @@ class World(QStandardItem, TextModel):
         item.setEditable(False)
 
         return item
+
+    @staticmethod
+    def __create_icon(path: str) -> QIcon:
+        icon = QIcon()
+        icon.addFile(path, mode=QIcon.Mode.Active)
+        icon.addFile(path, mode=QIcon.Mode.Selected)
+        icon.addFile(path, mode=QIcon.Mode.Disabled)
+
+        return icon

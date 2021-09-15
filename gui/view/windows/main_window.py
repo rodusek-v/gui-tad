@@ -124,13 +124,15 @@ class MainWindow(QMainWindow):
         temp.layout().addWidget(self.working_space)
         temp.layout().setContentsMargins(10, 10, 10, 10)
         self.working_space.viewport_change.connect(self.set_status_location)
-        self.working_space.selection_change.connect(self.set_selected_place)
+        self.working_space.selection_change.connect(self.set_selected_text)
         self.working_space.dispatch_event.connect(self.show_form)
         self.working_space.item_remove_start.connect(self.tree_view.deactivate_selection)
         self.working_space.item_remove_end.connect(self.tree_view.activate_selection)
         
-        self.tree_view.selected_place.connect(lambda x: self.working_space.selecting(x.position.center()))
+        self.tree_view.selected_place.connect(lambda x: self.working_space.selecting_place(x.position.center()))
+        self.tree_view.selected_object.connect(lambda x: self.working_space.selecting_object(x))
         self.tree_view.remove_place_signal.connect(self.working_space.delete_selected)
+        self.tree_view.remove_object_signal.connect(lambda x: self.working_space.delete_object(x))
         self.tree_view.selected_item.connect(self.show_form)
 
         self.working_space.selection_change.connect(
@@ -138,7 +140,9 @@ class MainWindow(QMainWindow):
         )
         
         self.working_space.deselect.connect(self.hide_form)
+        self.working_space.deselect.connect(self.tree_view.clearSelection)
         self.tree_view.deselect.connect(self.hide_form)
+        self.tree_view.deselect.connect(self.working_space.clear_selection)
 
         self.controller.item_deletion.connect(self.hide_form)
 
@@ -230,11 +234,12 @@ class MainWindow(QMainWindow):
     def set_status_location(self, point):
         self.location_label.setText(f"X: {point.x()} Y: {point.y()}")
 
-    def set_selected_place(self, item):
+    def set_selected_text(self, item):
         title = "" if item is None else item.name
+        class_name = item.__class__.__name__
         self.selected_place.setText(title)
         if title != "":
-            self.selected_place.setText(f"Place: {title}")
+            self.selected_place.setText(f"{class_name}: {title}")
 
     def show_form(self, model):
         self.side_bar.set_form(model)

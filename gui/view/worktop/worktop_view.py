@@ -77,6 +77,9 @@ class WorktopView(QGraphicsView):
     def __dispatch(self, obj):
         self.dispatch_event.emit(obj)
 
+    def __procced_signal(self, obj):
+        self.selection_change.emit(obj)
+
     def __refresh_grid(self):
         if self.action_selector.grid():
             self.__delete_grid()
@@ -184,6 +187,7 @@ class WorktopView(QGraphicsView):
             place.selected_place.connect(self.__dispatch)
             place.removed_object.connect(self.__remove_object)
             place.removed_place.connect(self.delete_selected)
+            place.current_item.connect(self.__procced_signal)
 
             place.setCursor(self.action_selector.cursors["select"])
             place.setGeometry(space_rect.toRect())
@@ -279,11 +283,7 @@ class WorktopView(QGraphicsView):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape:
             if self.selection["item"] is not None:
-                for child in self.selection["boundries"]:
-                    self.scene().removeItem(child)
-
-                self.selection["boundries"] = []
-                self.selection["item"] = None
+                self.clear_selection()
 
                 if self.hover_cell:
                     self.scene().removeItem(self.hover_cell)
@@ -349,7 +349,7 @@ class WorktopView(QGraphicsView):
                 self.update()
             if self.action_selector.select():
                 select_point = self.get_scene_point(event.position())
-                self.selecting(select_point)
+                self.selecting_place(select_point)
                 if self.selection["item"] is not None:
                     self.__moving(event)
                 self.update()
@@ -380,14 +380,13 @@ class WorktopView(QGraphicsView):
             self.viewport().height() + 1
         )
 
-    def selecting(self, select_point: QPointF):
+    def selecting_place(self, select_point: QPointF):
         item = self.scene().itemAt(QPointF(select_point), QTransform())
 
-        if self.selection["item"] is not None:
-            for child in self.selection["boundries"]:
-                self.scene().removeItem(child)
-
-            self.selection["boundries"] = []
+        if self.selection["item"] != item:
+            self.clear_selection()
+        else:
+            return
         if self.places and item in self.places.child_items():
             item_rect = item.sceneBoundingRect()
             left_top_rect = self.create_selection_frame(item_rect.topLeft(), 4)
@@ -411,11 +410,22 @@ class WorktopView(QGraphicsView):
             ]
             self.selection_change.emit(item.widget().place_model)
 
+    def selecting_object(self, object_model):
+        container = object_model.container
+        item = self.scene().itemAt(QPointF(container.position.center()), QTransform())
+        for child in self.places.child_items():
+            child.widget().clearSelection()
+        if item is not None:
+            item.widget().select_item(object_model)
+
+    def delete_object(self, place_model):
+        item = self.scene().itemAt(QPointF(place_model.position.center()), QTransform())
+        if item is not None:
+            item.widget().remove_selected()
+
     def delete_selected(self):
         if self.selection["item"]:
             self.item_remove_start.emit()
-            for item in self.selection["boundries"]:
-                self.scene().removeItem(item)
             points = self.selection["item"].widget().say_goodbye()
             self.controller.remove_place(self.selection["item"].widget().place_model)
             self.__remove_items(points)
@@ -424,13 +434,20 @@ class WorktopView(QGraphicsView):
             self.selection["item"].widget().selected_place.disconnect(self.__dispatch)
             self.selection["item"].widget().removed_object.disconnect(self.__remove_object)
             self.selection["item"].widget().removed_place.disconnect(self.delete_selected)
+            self.selection["item"].widget().current_item.disconnect(self.__procced_signal)
 
-            self.selection["item"] = None
-            self.selection["boundries"] = []
+            self.clear_selection()
             self.selection_change.emit(None)
             self.__resize_scene()
             self.update()
             self.item_remove_end.emit()
+
+    def clear_selection(self):
+        for child in self.places.child_items():
+            child.widget().clearSelection()
+        for item in self.selection["boundries"]:
+            self.scene().removeItem(item)
+        self.selection["boundries"] = []
 
     @staticmethod
     def create_selection_frame(center_point, offset):

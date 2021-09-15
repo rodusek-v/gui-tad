@@ -29,8 +29,21 @@ class Place(ItemNode, Container):
 
         self.position = None
 
-        self.setIcon(QIcon("icons/nodes/box.png"))
         self.setEditable(False)
+
+    @property
+    def q_icon(self) -> QIcon:
+        if self._q_icon is None:
+            icon = QIcon()
+            icon.addFile("icons/nodes/box.png", mode=QIcon.Mode.Active)
+            icon.addFile("icons/nodes/box.png", mode=QIcon.Mode.Selected)
+            icon.addFile("icons/nodes/box.png", mode=QIcon.Mode.Disabled)
+            self._q_icon = icon
+        return self._q_icon
+
+    @q_icon.setter
+    def q_icon(self, icon: QIcon) -> None:
+        self._q_icon = icon
         
     @property
     def name(self) -> str:

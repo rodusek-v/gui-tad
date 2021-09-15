@@ -3,18 +3,36 @@ from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal
 from PyQt6.QtWidgets import QTreeView
 
 from view.worktop import GridScrollBar
-from model import Place, ItemNode
+from model import Place, Object, ItemNode
 
 class WorldTreeView(QTreeView):
 
     selected_place = pyqtSignal(Place)
+    selected_object = pyqtSignal(Object)
     remove_place_signal = pyqtSignal()
+    remove_object_signal = pyqtSignal(Place)
     selected_item = pyqtSignal(ItemNode)
     deselect = pyqtSignal()
     
     def __init__(self, parent=None) -> None:
         super().__init__(parent=parent)
-        self.setStyleSheet("border: none; background-color: transparent; color: #bfbfbf;")
+        self.setStyleSheet("""
+            QTreeView {
+                border: none; 
+                background-color: transparent; 
+                color: #bfbfbf;
+                outline: 0;
+            }
+            :item {
+                border: none;
+            }
+            :item::selected {
+                background-color: rgb(61, 61, 61);
+            }
+            :item::hover {
+                background-color: rgb(70, 70, 70);
+            }
+        """)
         self.setVerticalScrollBar(GridScrollBar(vertical_color=QColor("#bfbfbf")))
 
     def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection) -> None:
@@ -22,6 +40,11 @@ class WorldTreeView(QTreeView):
             item = self.model().itemFromIndex(i)
             if isinstance(item, Place):
                 self.selected_place.emit(item)
+            elif isinstance(item, Object):
+                if isinstance(item.container, Place):
+                    self.selected_object.emit(item)
+            else:
+                self.deselect.emit()
         return super().selectionChanged(selected, deselected)
     
     def keyPressEvent(self, event: QKeyEvent) -> None:
@@ -29,6 +52,9 @@ class WorldTreeView(QTreeView):
             item = self.model().itemFromIndex(self.currentIndex())
             if isinstance(item, Place):
                 self.remove_place_signal.emit()
+            elif isinstance(item, Object):
+                if isinstance(item.container, Place):
+                    self.remove_object_signal.emit(item.container)
         elif event.key() == Qt.Key.Key_Escape:
             self.clearSelection()
             self.deselect.emit()

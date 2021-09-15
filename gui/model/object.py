@@ -22,13 +22,21 @@ class Object(ItemNode, Container):
         self.contains = contains
         self.pickable = pickable
         self.container = container
-        
-        icon = QIcon()
-        icon.addFile("icons/nodes/object.png", mode=QIcon.Mode.Active)
-        icon.addFile("icons/nodes/object.png", mode=QIcon.Mode.Selected)
-        icon.addFile("icons/nodes/object.png", mode=QIcon.Mode.Disabled)
-        self.setIcon(icon)
         self.setEditable(False)
+
+    @property
+    def q_icon(self) -> QIcon:
+        if self._q_icon is None:
+            icon = QIcon()
+            icon.addFile("icons/nodes/object.png", mode=QIcon.Mode.Active)
+            icon.addFile("icons/nodes/object.png", mode=QIcon.Mode.Selected)
+            icon.addFile("icons/nodes/object.png", mode=QIcon.Mode.Disabled)
+            self._q_icon = icon
+        return self._q_icon
+
+    @q_icon.setter
+    def q_icon(self, icon: QIcon) -> None:
+        self._q_icon = icon
 
     @property
     def name(self) -> str:

@@ -46,6 +46,7 @@ class PlaceItem(QListWidget):
     selected_place = pyqtSignal(Place)
     removed_object = pyqtSignal(Object)
     removed_place = pyqtSignal()
+    current_item = pyqtSignal(Object)
 
     inverse_side = {"N": "S", "S": "N", "E": "W", "W": "E"}
     directions = {
@@ -178,21 +179,29 @@ class PlaceItem(QListWidget):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         double_click = self.__double_click()
+        item = self.itemAt(event.position().toPoint())
         if double_click:
-            item = self.itemAt(event.position().toPoint())
             if item is not None:
                 self.selected_object.emit(item.model)
             else:
                 self.selected_place.emit(self.place_model)
         return super().mousePressEvent(event)
 
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        item = self.itemAt(event.position().toPoint())
+        selected_indexes = len(self.selectedIndexes())
+        if item is not None and selected_indexes == 1:
+            self.current_item.emit(item.model)
+        return super().mouseReleaseEvent(event)
+
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Delete:
             if len(self.selectedIndexes()) == 1:
-                item = self.takeItem(self.selectedIndexes()[0].row())
-                self.removed_object.emit(item.model)
+                self.remove_selected()
             elif len(self.selectedIndexes()) == 0:
                 self.removed_place.emit()
+        else:
+            super().keyPressEvent(event)
 
     @property
     def neighbours(self):
@@ -236,9 +245,20 @@ class PlaceItem(QListWidget):
 
         return rel_centers
 
+    def select_item(self, model):
+        for i in range(self.count()):
+            if self.item(i).model == model:
+                self.setCurrentItem(self.item(i))
+                break
+
     def add_object(self, object):
         object_item = ObjectItem(object, self)
         self.addItem(object_item)
+
+    def remove_selected(self):
+        if len(self.selectedIndexes()) != 0:
+            item = self.takeItem(self.selectedIndexes()[0].row())
+            self.removed_object.emit(item.model)
 
     def setGeometry(self, rect: QRectF) -> None:
         super().setGeometry(rect)
