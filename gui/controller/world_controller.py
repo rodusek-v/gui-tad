@@ -40,6 +40,10 @@ class WorldController(QObject):
         self.model.append_object(object)
         return object
 
+    def remove_object(self, object: Object) -> None:
+        self.model.remove_object(object.row())
+        self.item_deletion.emit(object)
+
     def remove_place(self, place: Place) -> None:
         self.model.remove_place(place.row())
         self.item_deletion.emit(place)

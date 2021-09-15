@@ -25,6 +25,7 @@ class Object(ItemNode, Container):
         
         icon = QIcon()
         icon.addFile("icons/nodes/object.png", mode=QIcon.Mode.Active)
+        icon.addFile("icons/nodes/object.png", mode=QIcon.Mode.Selected)
         icon.addFile("icons/nodes/object.png", mode=QIcon.Mode.Disabled)
         self.setIcon(icon)
         self.setEditable(False)

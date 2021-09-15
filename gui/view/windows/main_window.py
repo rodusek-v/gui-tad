@@ -245,9 +245,11 @@ class MainWindow(QMainWindow):
         if deleted_model is not None:
             if self.side_bar.is_model_current(deleted_model):
                 self.side_bar.remove_form()
-                self.__animate()
+                if self.showed:
+                    self.__animate()
         else:
-            self.__animate()
+            if self.showed:
+                self.__animate()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         current_width = self.side_bar.width()

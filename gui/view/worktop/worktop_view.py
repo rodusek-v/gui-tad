@@ -179,9 +179,12 @@ class WorktopView(QGraphicsView):
         if space_rect:
             self.scene().removeItem(self.hover_cell)
             self.hover_cell = None
-            place = PlaceItem(self.controller.add_place(), margin=self.margin)
+            place = PlaceItem(self.controller.add_place(), margin=self.margin, size=self.side)
             place.selected_object.connect(self.__dispatch)
             place.selected_place.connect(self.__dispatch)
+            place.removed_object.connect(self.__remove_object)
+            place.removed_place.connect(self.delete_selected)
+
             place.setCursor(self.action_selector.cursors["select"])
             place.setGeometry(space_rect.toRect())
             new_place = self.scene().addWidget(place)
@@ -243,6 +246,11 @@ class WorktopView(QGraphicsView):
                 bar = self.scene().addRect(rel_rect, pen, brush)
                 bar.setZValue(-10)
 
+    def __remove_object(self, object):
+        self.item_remove_start.emit()
+        self.controller.remove_object(object)
+        self.item_remove_end.emit()
+
     def get_scene_point(self, point: QPointF):
         return QPointF(
             point.x() + self.h_scroll.value(),
@@ -269,9 +277,7 @@ class WorktopView(QGraphicsView):
             return None
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Delete:
-            self.delete_selected()
-        elif event.key() == Qt.Key.Key_Escape:
+        if event.key() == Qt.Key.Key_Escape:
             if self.selection["item"] is not None:
                 for child in self.selection["boundries"]:
                     self.scene().removeItem(child)
@@ -414,7 +420,11 @@ class WorktopView(QGraphicsView):
             self.controller.remove_place(self.selection["item"].widget().place_model)
             self.__remove_items(points)
             self.places.remove_from_group(self.selection["item"])
-            
+            self.selection["item"].widget().selected_object.disconnect(self.__dispatch)
+            self.selection["item"].widget().selected_place.disconnect(self.__dispatch)
+            self.selection["item"].widget().removed_object.disconnect(self.__remove_object)
+            self.selection["item"].widget().removed_place.disconnect(self.delete_selected)
+
             self.selection["item"] = None
             self.selection["boundries"] = []
             self.selection_change.emit(None)

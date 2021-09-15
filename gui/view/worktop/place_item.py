@@ -2,7 +2,7 @@ from enum import Enum
 from time import time
 
 from PyQt6.QtCore import QItemSelection, QPointF, QRectF, QSize, QSizeF, Qt, pyqtSignal
-from PyQt6.QtGui import QDropEvent, QMouseEvent
+from PyQt6.QtGui import QDropEvent, QKeyEvent, QMouseEvent
 from PyQt6.QtWidgets import QAbstractItemView, QLabel, QListWidget
 
 from view.worktop.object_item import ObjectItem
@@ -15,10 +15,37 @@ class Sides(Enum):
     W = "W"
     E = "E"
 
+class Title(QLabel):
+
+    def __init__(self, parent: 'PlaceItem') -> None:
+        super().__init__(parent)
+        self._parent = parent
+        self.click_interval = -1
+
+    def __double_click(self):
+        if self.click_interval == -1:
+            self.click_interval = time()
+        else:
+            now = time()
+            diff = now - self.click_interval
+            if diff <= 0.2:
+                return True
+            self.click_interval = now
+
+        return False
+
+    def mousePressEvent(self, event) -> None:
+        self._parent.clearSelection()
+        if self.__double_click():
+            self._parent.selected_place.emit(self._parent.place_model)
+        super().mousePressEvent(event)
+
 class PlaceItem(QListWidget):
 
     selected_object = pyqtSignal(Object)
     selected_place = pyqtSignal(Place)
+    removed_object = pyqtSignal(Object)
+    removed_place = pyqtSignal()
 
     inverse_side = {"N": "S", "S": "N", "E": "W", "W": "E"}
     directions = {
@@ -26,18 +53,21 @@ class PlaceItem(QListWidget):
         "S": QPointF(0, 1), "W": QPointF(-1, 0)
     }
 
-    def __init__(self, model: 'Place', parent=None, margin=10, cwidth=10, size=100) -> None:
+    def __init__(self, model: 'Place', parent=None, margin=10, size=100) -> None:
         super().__init__(parent=parent)
         self._neighbours = {
             key.name: None for key in Sides
         }
         self.margin = margin
-        self.cwidth = cwidth
+        self.cwidth = size * 0.1
         self._model = model
         self.controller = PlaceController(self._model)
         self.click_interval = -1
 
         self.setStyleSheet("""
+            QListWidget {
+                outline: 0;
+            }
             :enabled {
                 background: rgb(140, 140, 140);
                 color: black;
@@ -46,9 +76,17 @@ class PlaceItem(QListWidget):
                 background: rgb(140, 140, 140);
                 color: black;
             }
+            :item {
+                margin: 0px;
+                padding: 0px;
+                border: none;
+            }
+            :item::selected {
+                background-color: rgba(61, 61, 61, 0.7);
+            }
         """)
 
-        self.label = QLabel(self)
+        self.label = Title(self)
         self.label.resize(size, self.label.height())
         font = self.label.font()
         font.setPointSize(8)
@@ -58,7 +96,8 @@ class PlaceItem(QListWidget):
         self.setViewportMargins(0, self.label.height(), 0, 0)
 
         self.setAcceptDrops(True)
-        self.setIconSize(QSize(size / 4.54, size / 4.54))
+        self.setIconSize(QSize(size / 3.5, size / 3.5))
+        self.setGridSize(QSize(size / 3.5, size / 3.5))
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.setResizeMode(self.ResizeMode.Adjust)
         self.setViewMode(self.ViewMode.IconMode)
@@ -147,6 +186,14 @@ class PlaceItem(QListWidget):
                 self.selected_place.emit(self.place_model)
         return super().mousePressEvent(event)
 
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Delete:
+            if len(self.selectedIndexes()) == 1:
+                item = self.takeItem(self.selectedIndexes()[0].row())
+                self.removed_object.emit(item.model)
+            elif len(self.selectedIndexes()) == 0:
+                self.removed_place.emit()
+
     @property
     def neighbours(self):
         return self._neighbours
@@ -192,7 +239,6 @@ class PlaceItem(QListWidget):
     def add_object(self, object):
         object_item = ObjectItem(object, self)
         self.addItem(object_item)
-        #print(self.item(self.count() - 1).listWidget())
 
     def setGeometry(self, rect: QRectF) -> None:
         super().setGeometry(rect)

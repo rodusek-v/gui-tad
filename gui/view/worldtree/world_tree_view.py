@@ -1,7 +1,8 @@
-from PyQt6.QtGui import QKeyEvent, QMouseEvent
+from PyQt6.QtGui import QColor, QKeyEvent, QMouseEvent
 from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal
 from PyQt6.QtWidgets import QTreeView
 
+from view.worktop import GridScrollBar
 from model import Place, ItemNode
 
 class WorldTreeView(QTreeView):
@@ -14,6 +15,7 @@ class WorldTreeView(QTreeView):
     def __init__(self, parent=None) -> None:
         super().__init__(parent=parent)
         self.setStyleSheet("border: none; background-color: transparent; color: #bfbfbf;")
+        self.setVerticalScrollBar(GridScrollBar(vertical_color=QColor("#bfbfbf")))
 
     def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection) -> None:
         for i in selected.indexes():

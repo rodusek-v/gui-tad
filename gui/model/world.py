@@ -1,6 +1,9 @@
-from model.container import Container
-from model.utils import TextModel
 from PyQt6.QtGui import QIcon, QStandardItem
+
+from model.place import Place
+from model.object import Object
+from model.utils import TextModel
+
 
 class World(QStandardItem, TextModel):
 
@@ -79,13 +82,19 @@ class World(QStandardItem, TextModel):
 
     def remove_place(self, row_num):
         row = self._places.takeRow(row_num)
-        if len(row) != 0 and isinstance(row[0], Container):
+        if len(row) != 0 and isinstance(row[0], Place):
             for obj in row[0].get_objects():
                 del obj.container
 
     def append_object(self, object):
         self._objects.appendRow(object)
         self._objects_count += 1
+
+    def remove_object(self, row_num):
+        row = self._objects.takeRow(row_num)
+        if len(row) != 0 and isinstance(row[0], Object):
+            if row[0].container is not None:
+                row[0].container.remove_object(row[0])
 
     def append_command(self, command):
         self._commands.appendRow(command)
