@@ -215,10 +215,7 @@ class WorktopView(QGraphicsView):
                     self.__check_neighbours(self.selection["item"].widget())
 
                 self.selection["item"] = None
-                self.selection["boundries"] = []
-
-                self.scene().removeItem(self.hover_cell)
-                self.hover_cell = None
+                self.places.recalculate_rect()
                 self.__resize_scene()
                 self.selection_change.emit(None)
                 
@@ -283,11 +280,9 @@ class WorktopView(QGraphicsView):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape:
             if self.selection["item"] is not None:
+                self.selection["item"] = None
                 self.clear_selection()
-
-                if self.hover_cell:
-                    self.scene().removeItem(self.hover_cell)
-                    self.hover_cell = None
+                
                 self.deselect.emit()
 
         return super().keyPressEvent(event)
@@ -384,7 +379,7 @@ class WorktopView(QGraphicsView):
         item = self.scene().itemAt(QPointF(select_point), QTransform())
 
         if self.selection["item"] != item:
-            self.clear_selection()
+            self.clear_selection(deselect_item=False)
         else:
             return
         if self.places and item in self.places.child_items():
@@ -442,12 +437,17 @@ class WorktopView(QGraphicsView):
             self.update()
             self.item_remove_end.emit()
 
-    def clear_selection(self):
+    def clear_selection(self, deselect_item=True):
+        if self.hover_cell:
+            self.scene().removeItem(self.hover_cell)
+            self.hover_cell = None
         for child in self.places.child_items():
             child.widget().clearSelection()
         for item in self.selection["boundries"]:
             self.scene().removeItem(item)
         self.selection["boundries"] = []
+        if deselect_item:
+            self.selection["item"] = None
 
     @staticmethod
     def create_selection_frame(center_point, offset):

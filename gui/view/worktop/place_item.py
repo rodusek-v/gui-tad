@@ -62,6 +62,7 @@ class PlaceItem(QListWidget):
         self.margin = margin
         self.cwidth = size * 0.1
         self._model = model
+        self._model.rename_signal.connect(self.__set_title)
         self.controller = PlaceController(self._model)
         self.click_interval = -1
 

@@ -53,6 +53,7 @@ class Place(ItemNode, Container):
     def name(self, value: str) -> None:
         self._name = value
         self.setText(self._name)
+        self.rename_signal.emit()
 
     @property
     def description(self) -> Description:

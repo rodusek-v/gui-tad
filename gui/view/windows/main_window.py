@@ -123,6 +123,7 @@ class MainWindow(QMainWindow):
         temp.setLayout(QHBoxLayout())
         temp.layout().addWidget(self.working_space)
         temp.layout().setContentsMargins(10, 10, 10, 10)
+
         self.working_space.viewport_change.connect(self.set_status_location)
         self.working_space.selection_change.connect(self.set_selected_text)
         self.working_space.dispatch_event.connect(self.show_form)
@@ -136,7 +137,7 @@ class MainWindow(QMainWindow):
         self.tree_view.selected_item.connect(self.show_form)
 
         self.working_space.selection_change.connect(
-            lambda x: self.tree_view.setCurrentIndex(x.index()) if x else None
+            lambda x: self.tree_view.setCurrentIndex(x.index()) if x else self.tree_view.clearSelection()
         )
         
         self.working_space.deselect.connect(self.hide_form)

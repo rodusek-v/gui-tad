@@ -89,6 +89,7 @@ class Form(QWidget):
         self.tab_widget = QTabWidget()
         self.tab_widget.setStyleSheet(style)
         self._model = model
+        self.setStyleSheet("color: #bfbfbf;")
 
     @property
     def model(self):

@@ -1,5 +1,12 @@
 
+from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QIcon, QStandardItem
+
+
+class Signaler(QObject):
+
+    rename_signal = pyqtSignal()
+
 
 class ItemNode(QStandardItem):
 
@@ -7,6 +14,7 @@ class ItemNode(QStandardItem):
         super().__init__()
         self._q_icon = None
         self.setIcon(self.q_icon)
+        self.__signaler = Signaler()
     
     @property
     def q_icon(self) -> QIcon:
@@ -17,3 +25,7 @@ class ItemNode(QStandardItem):
     @q_icon.setter
     def q_icon(self, icon: QIcon) -> None:
         self._q_icon = icon
+
+    @property
+    def rename_signal(self) -> pyqtSignal:
+        return self.__signaler.rename_signal

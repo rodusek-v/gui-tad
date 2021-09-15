@@ -25,6 +25,9 @@ class ItemGroup(object):
         item.scene().removeItem(item)
         self.__calculate_rect()
 
+    def recalculate_rect(self):
+        self.__calculate_rect()
+
     def child_items(self):
         return self.items
 
