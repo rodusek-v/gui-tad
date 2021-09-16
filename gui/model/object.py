@@ -13,7 +13,7 @@ class Object(ItemNode, Container):
         name:str = "new_object",
         description: Description = None,
         contains:List['Object'] = [],
-        pickable:bool = None,
+        pickable:bool = True,
         container:Container = None
     ) -> None:
         super().__init__()
@@ -82,10 +82,12 @@ class Object(ItemNode, Container):
     @container.setter
     def container(self, value: Container):
         self._container = value
+        self.container_chaged.emit()
 
     @container.deleter
     def container(self):
         self._container = None
+        self.container_chaged.emit()
 
     def add_object(self, object: 'Object') -> None:
         object.container = self

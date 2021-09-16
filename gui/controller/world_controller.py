@@ -35,7 +35,7 @@ class WorldController(QObject):
         count = self.model.places_count()
         place = Place(f"new_place{f'_{count}' if count != 0 else ''}")
         self.model.append_place(place)
-        place.container_changed.connect(self.__container_change)
+        place.children_changed.connect(self.__container_change)
         return place
 
     def add_object(self, container: Container = None) -> Object:
@@ -54,8 +54,18 @@ class WorldController(QObject):
 
     def remove_place(self, place: Place) -> None:
         self.model.remove_place(place.row())
-        place.container_changed.disconnect(self.__container_change)
+        place.children_changed.disconnect(self.__container_change)
         self.item_deletion.emit(place)
 
     def get_objects(self) -> List['Object']:
         return self.model.objects
+
+    def get_places(self) -> List['Place']:
+        return self.model.places
+
+    def get_containers(self) -> List['Container']:
+        containers = []
+        containers.extend(self.model.places)
+        containers.extend(self.model.objects)
+        # containers.append(self.model.player) TODO: initialize player
+        return containers

@@ -1,21 +1,21 @@
 from typing import List
 from PyQt6.QtCore import QObject
 
-from model import Place, Object
+from model import Object, Container
 
 
-class PlaceController(QObject):
+class ObjectController(QObject):
 
-    def __init__(self, model: Place) -> None:
+    def __init__(self, model: Object) -> None:
         super().__init__()
         self._model = model
 
     @property
-    def model(self) -> Place:
+    def model(self) -> Object:
         return self._model
 
     @model.setter
-    def model(self, value: Place) -> None:
+    def model(self, value: Object) -> None:
         self._model = value
 
     def assign_objects(self, objects: List['Object']) -> None:
@@ -53,16 +53,25 @@ class PlaceController(QObject):
     def get_description(self) -> str:
         return self.model.description.description
 
-    def set_turns_in(self, turns_in: str) -> None:
-        num = None
-        try:
-            num = int(turns_in)
-        except:
-            pass
-        self.model.turns_in = num
+    def set_pickable(self, pickable: bool) -> None:
+        self.model.pickable = pickable
 
-    def get_turns_in(self) -> str:
-        return "" if self.model.turns_in is None else str(self.model.turns_in)
+    def get_pickable(self) -> bool:
+        return self.model.pickable
+
+    def set_container(self, new: Container) -> None:
+        old = self.model.container
+        if old is not None:
+            old.remove_object(self.model)
+            old.children_changed.emit()
+        if new is not None:
+            new.add_object(self.model)
+            new.children_changed.emit()
+        else:
+            self.model.container = None
+            
+    def get_container(self) -> Container:
+        return self.model.container
 
     def get_contains(self) -> List['Object']:
         return self.model.contains

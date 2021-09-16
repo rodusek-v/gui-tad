@@ -73,6 +73,10 @@ class World(QStandardItem, TextModel):
         temp = self._flags
         return [temp.child(i) for i in range(temp.rowCount())]
 
+    @property
+    def player(self):
+        return self._player
+
     def save(self):
         pass
 

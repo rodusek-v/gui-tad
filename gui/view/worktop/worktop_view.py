@@ -73,6 +73,27 @@ class WorktopView(QGraphicsView):
 
         self.setMouseTracking(True)
         self.setScene(QGraphicsScene())
+        self.__fill_view()
+
+    def __add_place(self, model, space_rect):
+        place = PlaceItem(model, margin=self.margin, size=self.side)
+        place.selected_object.connect(self.__dispatch)
+        place.selected_place.connect(self.__dispatch)
+        place.removed_object.connect(self.__remove_object)
+        place.removed_place.connect(self.delete_selected)
+        place.current_item.connect(self.__procced_signal)
+
+        place.setCursor(self.action_selector.cursors["select"])
+        place.setGeometry(space_rect.toRect())
+        new_place = self.scene().addWidget(place)
+
+        self.places.add_to_group(new_place)
+        
+        self.__check_neighbours(place)
+
+    def __fill_view(self):
+        for place in self.controller.get_places():
+            self.__add_place(place, place.position)
 
     def __dispatch(self, obj):
         self.dispatch_event.emit(obj)
@@ -182,20 +203,7 @@ class WorktopView(QGraphicsView):
         if space_rect:
             self.scene().removeItem(self.hover_cell)
             self.hover_cell = None
-            place = PlaceItem(self.controller.add_place(), margin=self.margin, size=self.side)
-            place.selected_object.connect(self.__dispatch)
-            place.selected_place.connect(self.__dispatch)
-            place.removed_object.connect(self.__remove_object)
-            place.removed_place.connect(self.delete_selected)
-            place.current_item.connect(self.__procced_signal)
-
-            place.setCursor(self.action_selector.cursors["select"])
-            place.setGeometry(space_rect.toRect())
-            new_place = self.scene().addWidget(place)
-
-            self.places.add_to_group(new_place)
-            
-            self.__check_neighbours(place)
+            self.__add_place(self.controller.add_place(), space_rect)
             self.__resize_scene()
 
     def __moving(self, event: QMouseEvent):

@@ -6,7 +6,8 @@ from PyQt6.QtGui import QIcon, QStandardItem
 class Signaler(QObject):
 
     rename_signal = pyqtSignal()
-    container_changed = pyqtSignal()
+    children_changed = pyqtSignal()
+    container_chaged = pyqtSignal()
 
 
 class ItemNode(QStandardItem):
@@ -32,5 +33,9 @@ class ItemNode(QStandardItem):
         return self.__signaler.rename_signal
 
     @property
-    def container_changed(self) -> pyqtSignal:
-        return self.__signaler.container_changed
+    def children_changed(self) -> pyqtSignal:
+        return self.__signaler.children_changed
+
+    @property
+    def container_chaged(self) -> pyqtSignal:
+        return self.__signaler.container_chaged

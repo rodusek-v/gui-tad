@@ -1,7 +1,12 @@
-
-from PyQt6.QtWidgets import QHBoxLayout, QWidget
+from typing import List
+from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtGui import QRegularExpressionValidator
+from PyQt6.QtWidgets import QFormLayout, QHBoxLayout, QLabel, QWidget
 
 from view.sidebars.form import Form
+from view.fields import TextField, TextArea, CheckBox, ComboBox
+from controller import ObjectController
+from model import Container, Object
 
 
 class ObjectForm(Form):
@@ -15,3 +20,73 @@ class ObjectForm(Form):
         self.props_widget = QWidget()
         self.tab_widget.addTab(self.props_widget, "Properties")
         self.tab_widget.addTab(self.contains_widget, "Object content")
+
+        self.controller = ObjectController(model)
+        self.__init_prop_form()
+        #self.__init_contains_form()
+
+    def __init_prop_form(self):
+        layout = QFormLayout()
+        self.props_widget.setLayout(layout)
+
+        font = self.font()
+        font.setPointSize(13)
+        font.setBold(True)
+        
+        name_desc_txt_box = TextField(self.controller.get_descriptive_name())
+        name_desc_txt_box.editing_done.connect(self.controller.set_descriptive_name)
+        layout.addWidget(QLabel("Descriptive name", font=font))
+        layout.addWidget(name_desc_txt_box)
+
+        id_reg = QRegularExpressionValidator(QRegularExpression(r"[^\d\W]\w*\b"))
+        name_txt_box = TextField(self.controller.get_name())
+        name_txt_box.setValidator(id_reg)
+        name_txt_box.editing_done.connect(self.controller.set_name)
+        layout.addWidget(QLabel("Identification name", font=font))
+        layout.addWidget(name_txt_box)
+
+        name_desc_txt_box.editingFinished.connect(
+            lambda: name_txt_box.editingFinished.emit()
+        )
+        name_desc_txt_box.textChanged.connect(
+            lambda x: name_txt_box.setText(x.lower())
+        )
+        
+        desc_txt_box = TextArea(self.controller.get_description())
+        desc_txt_box.text_modified.connect(self.controller.set_description)
+        layout.addWidget(QLabel("Description", font=font))
+        layout.addWidget(desc_txt_box)
+
+        pickable_chkbox = CheckBox()
+        pickable_chkbox.setChecked(self.controller.get_pickable())
+        pickable_chkbox.stateChanged.connect(lambda x: self.controller.set_pickable(bool(x)))
+        layout.addWidget(QLabel("Pickable", font=font))
+        layout.addWidget(pickable_chkbox)
+
+        self.container_combo_box = ComboBox()
+        self.container_combo_box.currentIndexChanged.connect(self.__change_container)
+        self.__reload_combo_box()
+        layout.addWidget(QLabel("Container", font=font))
+        layout.addWidget(self.container_combo_box)
+        self.controller.model.container_chaged.connect(self.__reload_combo_box)
+        self.sidebar.main_controller.item_deletion.connect(self.__reload_combo_box)
+
+    def __change_container(self):
+        self.controller.set_container(self.container_combo_box.currentData())
+
+    def __reload_combo_box(self):
+        self.container_combo_box.currentIndexChanged.disconnect(self.__change_container)
+        self.__fill_combo_box(self.sidebar.main_controller.get_containers(), self.controller.model)
+        self.__set_current_container(self.controller.get_container())
+        self.container_combo_box.currentIndexChanged.connect(self.__change_container)
+
+    def __fill_combo_box(self, containers: List['Container'], object: Object):
+        self.container_combo_box.clear()
+        self.container_combo_box.addItem("", None)
+        if object in containers:
+            containers.remove(object)
+        for container in containers:
+            self.container_combo_box.addItem(container.name, container)
+
+    def __set_current_container(self, container: Container):
+        self.container_combo_box.setCurrentText(container.name if container else None)

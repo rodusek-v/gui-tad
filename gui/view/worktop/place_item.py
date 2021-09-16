@@ -63,7 +63,7 @@ class PlaceItem(QListWidget):
         self.cwidth = size * 0.1
         self._model = model
         self._model.rename_signal.connect(self.__set_title)
-        self._model.container_changed.connect(self.__fill_item)
+        self._model.children_changed.connect(self.__fill_item)
         self.controller = PlaceController(self._model)
         self.click_interval = -1
 

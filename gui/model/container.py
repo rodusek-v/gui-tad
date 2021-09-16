@@ -3,6 +3,10 @@ from typing import List
 
 class Container(object):
 
+    @property
+    def name(self) -> str:
+        pass
+
     def add_object(self, object: 'Object') -> None:
         pass
 
