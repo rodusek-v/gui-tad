@@ -1,5 +1,7 @@
+import re
+
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtGui import QKeyEvent, QRegularExpressionValidator
 from PyQt6.QtWidgets import QLineEdit
 
 
@@ -35,6 +37,22 @@ class TextField(QLineEdit):
     def reject(self):
         self.setText(self.current_value)
         self.clearFocus()
+
+    def setText(self, text: str) -> None:
+        validator = self.validator()
+        if isinstance(validator, QRegularExpressionValidator):
+            step = 0
+            regex = validator.regularExpression().pattern()
+            while validator.validate(text, 0)[0] != validator.State.Acceptable:
+                if step == 0:
+                    text = "_".join(text.split())
+                elif step == 1:
+                    text = f"_{text}"
+                else:
+                    text = "".join(re.findall(regex, text))
+
+                step += 1
+        super().setText(text)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape:

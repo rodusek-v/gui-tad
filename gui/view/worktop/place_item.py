@@ -63,6 +63,7 @@ class PlaceItem(QListWidget):
         self.cwidth = size * 0.1
         self._model = model
         self._model.rename_signal.connect(self.__set_title)
+        self._model.container_changed.connect(self.__fill_item)
         self.controller = PlaceController(self._model)
         self.click_interval = -1
 
@@ -120,8 +121,9 @@ class PlaceItem(QListWidget):
         self.label.setStyleSheet("border-bottom: 1px solid black;")
     
     def __fill_item(self):
+        self.clear()
         for obj in self._model.contains:
-            self.place_model.appendRow(obj)
+            self.add_object(obj)
 
     def __relation_rect(self, side: Sides):
         geometry = self.geometry()
@@ -165,7 +167,7 @@ class PlaceItem(QListWidget):
         return False
 
     def dropEvent(self, event: QDropEvent) -> None:
-        if self != event.source():
+        if self != event.source() and isinstance(event.source(), PlaceItem):
             #super().dropEvent(event)
             source = event.source()
             objects_to_move = []
@@ -173,7 +175,7 @@ class PlaceItem(QListWidget):
                 item = source.takeItem(source.selectedIndexes()[i].row())
                 objects_to_move.append(item)
                 self.addItem(item)
-            self.controller.assign_objects(source.place_model, [obj.model for obj in objects_to_move])
+            self.controller.assign_objects([obj.model for obj in objects_to_move])
             source.clearSelection()
         else:
             event.ignore()

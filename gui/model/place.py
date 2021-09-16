@@ -13,13 +13,15 @@ class Place(ItemNode, Container):
     def __init__(
         self,
         name:str = "new_place",
-        description: Description = Description(),
+        description: Description = None,
         contains:List['Object'] = None,
         turns_in:int = None,
         blockade:List['Block'] = None,
     ) -> None:
         super().__init__()
         self.name = name
+        if description is None:
+            description = Description()
         self.description = description
         if contains is None:
             contains = []

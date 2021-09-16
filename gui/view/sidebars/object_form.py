@@ -6,8 +6,8 @@ from view.sidebars.form import Form
 
 class ObjectForm(Form):
     
-    def __init__(self, model, parent=None) -> None:
-        super().__init__(model, parent=parent)
+    def __init__(self, model, sidebar) -> None:
+        super().__init__(model, sidebar=sidebar)
         layout = QHBoxLayout()
         self.setLayout(layout)
         layout.addWidget(self.tab_widget)

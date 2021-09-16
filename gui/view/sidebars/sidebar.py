@@ -6,16 +6,23 @@ from PyQt6.QtWidgets import QVBoxLayout, QWidget
 from view.buttons import ToggleButton
 from view.sidebars.place_form import PlaceForm
 from view.sidebars.object_form import ObjectForm
+from controller import WorldController
 from model import Place, Object
 
 
 class SideBar(QObject):
 
-    def __init__(self, parent=None, hiding_func: FunctionType = None) -> None:
+    def __init__(
+        self,
+        main_controller: WorldController,
+        parent = None,
+        hiding_func: FunctionType = None,
+    ) -> None:
         super().__init__()    
         self._holder = QWidget(parent=parent)
         self.widget = None
-        
+        self.main_controller = main_controller
+
         self._holder.setLayout(QVBoxLayout())
         self._holder.setStyleSheet("background-color: #262626;")
         self._holder.resize(0, 0)
@@ -43,14 +50,15 @@ class SideBar(QObject):
         self.hide_btn.show()
         form = None
         if isinstance(model, Place):
-            form = PlaceForm(model)
+            form = PlaceForm(model, self)
         elif isinstance(model, Object):
-            form = ObjectForm(model)
+            form = ObjectForm(model, self)
 
         if form is not None:
             if self.widget is not None:
                 if self.widget.model != model:
                     self.holder.layout().removeWidget(self.widget)
+                    self.widget.disconnect_all_signals()
                     self.widget = form
                     self.holder.layout().addWidget(form)
             else:

@@ -18,10 +18,22 @@ class PlaceController(QObject):
     def model(self, value: Place) -> None:
         self._model = value
 
-    def assign_objects(self, old: Place, objects: List['Object']) -> None:
+    def assign_objects(self, objects: List['Object']) -> None:
         for obj in objects:
-            old.remove_object(obj)
+            old = obj.container
+            if old is not None:
+                old.remove_object(obj)
+                old.container_changed.emit()
             self.model.add_object(obj)
+        self.model.container_changed.emit()
+
+    def free_objects(self, objects: List['Object']) -> None:
+        for obj in objects:
+            old = obj.container
+            if old is not None:
+                old.remove_object(obj)
+                old.container_changed.emit()
+        self.model.container_changed.emit()
 
     def set_name(self, name: str) -> None:
         self.model.name = name
@@ -51,4 +63,7 @@ class PlaceController(QObject):
 
     def get_turns_in(self) -> str:
         return "" if self.model.turns_in is None else str(self.model.turns_in)
+
+    def get_contains(self) -> List['Object']:
+        return self.model.contains
             

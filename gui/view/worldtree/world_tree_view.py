@@ -10,7 +10,8 @@ class WorldTreeView(QTreeView):
     selected_place = pyqtSignal(Place)
     selected_object = pyqtSignal(Object)
     remove_place_signal = pyqtSignal()
-    remove_object_signal = pyqtSignal(Place)
+    remove_container_object_signal = pyqtSignal(Place)
+    remove_object_signal = pyqtSignal(Object)
     selected_item = pyqtSignal(ItemNode)
     deselect = pyqtSignal()
     
@@ -54,7 +55,9 @@ class WorldTreeView(QTreeView):
                 self.remove_place_signal.emit()
             elif isinstance(item, Object):
                 if isinstance(item.container, Place):
-                    self.remove_object_signal.emit(item.container)
+                    self.remove_container_object_signal.emit(item.container)
+                elif item.container is None:
+                    self.remove_object_signal.emit(item)
         elif event.key() == Qt.Key.Key_Escape:
             self.clearSelection()
             self.deselect.emit()

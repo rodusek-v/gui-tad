@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
         self.status_bar.addPermanentWidget(self.selected_place)
         self.status_bar.addPermanentWidget(self.location_label)
 
-        self.side_bar = SideBar(self, self.hide_form)
+        self.side_bar = SideBar(self.controller, self, self.hide_form)
         self.showed = False
 
     def __animate(self):
@@ -133,7 +133,10 @@ class MainWindow(QMainWindow):
         self.tree_view.selected_place.connect(lambda x: self.working_space.selecting_place(x.position.center()))
         self.tree_view.selected_object.connect(lambda x: self.working_space.selecting_object(x))
         self.tree_view.remove_place_signal.connect(self.working_space.delete_selected)
-        self.tree_view.remove_object_signal.connect(lambda x: self.working_space.delete_object(x))
+        self.tree_view.remove_container_object_signal.connect(
+            lambda x: self.working_space.delete_object(x))
+        self.tree_view.remove_object_signal.connect(
+            lambda x: self.controller.remove_object(x))
         self.tree_view.selected_item.connect(self.show_form)
 
         self.working_space.selection_change.connect(

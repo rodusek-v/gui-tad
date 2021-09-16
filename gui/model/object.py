@@ -11,14 +11,18 @@ class Object(ItemNode, Container):
     def __init__(
         self,
         name:str = "new_object",
-        description: Description = Description(),
-        contains:List['Object'] = list(),
+        description: Description = None,
+        contains:List['Object'] = [],
         pickable:bool = None,
         container:Container = None
     ) -> None:
         super().__init__()
         self.name = name
+        if description is None:
+            description = Description()
         self.description = description
+        if contains is None:
+            contains = []
         self.contains = contains
         self.pickable = pickable
         self.container = container

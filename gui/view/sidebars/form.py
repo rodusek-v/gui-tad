@@ -84,8 +84,9 @@ style = """
 
 class Form(QWidget):
     
-    def __init__(self, model, parent=None) -> None:
-        super().__init__(parent=parent)
+    def __init__(self, model, sidebar=None) -> None:
+        super().__init__()
+        self.sidebar = sidebar
         self.tab_widget = QTabWidget()
         self.tab_widget.setStyleSheet(style)
         self._model = model
@@ -94,3 +95,6 @@ class Form(QWidget):
     @property
     def model(self):
         return self._model
+
+    def disconnect_all_signals(self):
+        pass

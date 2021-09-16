@@ -1,3 +1,4 @@
+from typing import List
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QStandardItem
 
@@ -7,6 +8,7 @@ from model import World, Place, Object, Container
 class WorldController(QObject):
 
     item_deletion = pyqtSignal(QStandardItem)
+    object_changes = pyqtSignal()
 
     def __init__(self, model: World = None) -> None:
         super().__init__()
@@ -17,6 +19,9 @@ class WorldController(QObject):
     def __create_new_model(self, name: str = "New world") -> None:
         self.model = World()
         self.model.name = name
+
+    def __container_change(self):
+        self.object_changes.emit()
 
     @property
     def model(self) -> World:
@@ -30,6 +35,7 @@ class WorldController(QObject):
         count = self.model.places_count()
         place = Place(f"new_place{f'_{count}' if count != 0 else ''}")
         self.model.append_place(place)
+        place.container_changed.connect(self.__container_change)
         return place
 
     def add_object(self, container: Container = None) -> Object:
@@ -38,12 +44,18 @@ class WorldController(QObject):
         if container is not None:
             container.add_object(object)
         self.model.append_object(object)
+        self.object_changes.emit()
         return object
 
     def remove_object(self, object: Object) -> None:
         self.model.remove_object(object.row())
+        self.object_changes.emit()
         self.item_deletion.emit(object)
 
     def remove_place(self, place: Place) -> None:
         self.model.remove_place(place.row())
+        place.container_changed.disconnect(self.__container_change)
         self.item_deletion.emit(place)
+
+    def get_objects(self) -> List['Object']:
+        return self.model.objects

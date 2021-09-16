@@ -1,5 +1,8 @@
+from PyQt6.QtGui import QColor
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QPlainTextEdit
+
+from view.worktop import GridScrollBar
 
 
 class TextArea(QPlainTextEdit):
@@ -10,15 +13,16 @@ class TextArea(QPlainTextEdit):
         super().__init__(parent=parent)
         self.setPlainText(text)
         self.setStyleSheet("""
-            QTextEdit {
+            QPlainTextEdit {
                 border: 2px solid #545454;
             }
-            :hover {
+            QPlainTextEdit:hover {
                 border: 2px solid #545454;
             }
-            :focus {
+            QPlainTextEdit:focus {
                 border: 2px solid #b0b0b0;
             }
         """)
         self.textChanged.connect(lambda: self.text_modified.emit(self.toPlainText()))
+        self.setVerticalScrollBar(GridScrollBar(vertical_color=QColor("#bfbfbf")))
 

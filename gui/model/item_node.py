@@ -6,6 +6,7 @@ from PyQt6.QtGui import QIcon, QStandardItem
 class Signaler(QObject):
 
     rename_signal = pyqtSignal()
+    container_changed = pyqtSignal()
 
 
 class ItemNode(QStandardItem):
@@ -29,3 +30,7 @@ class ItemNode(QStandardItem):
     @property
     def rename_signal(self) -> pyqtSignal:
         return self.__signaler.rename_signal
+
+    @property
+    def container_changed(self) -> pyqtSignal:
+        return self.__signaler.container_changed
