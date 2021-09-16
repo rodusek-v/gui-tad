@@ -25,6 +25,7 @@ class ComboBox(QComboBox):
             }
         """)
         self.view().setVerticalScrollBar(GridScrollBar(vertical_color=QColor("#bfbfbf")))
+        self.view().setHorizontalScrollBar(GridScrollBar(vertical_color=QColor("#bfbfbf")))
 
     def setCurrentText(self, text: str) -> None:
         if text is None:

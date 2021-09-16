@@ -35,6 +35,7 @@ class WorldTreeView(QTreeView):
             }
         """)
         self.setVerticalScrollBar(GridScrollBar(vertical_color=QColor("#bfbfbf")))
+        self.setHorizontalScrollBar(GridScrollBar(vertical_color=QColor("#bfbfbf")))
 
     def selectionChanged(self, selected: QItemSelection, deselected: QItemSelection) -> None:
         for i in selected.indexes():

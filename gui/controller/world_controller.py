@@ -45,10 +45,12 @@ class WorldController(QObject):
             container.add_object(object)
         self.model.append_object(object)
         self.object_changes.emit()
+        object.children_changed.connect(self.__container_change)
         return object
 
     def remove_object(self, object: Object) -> None:
         self.model.remove_object(object.row())
+        object.children_changed.disconnect(self.__container_change)
         self.object_changes.emit()
         self.item_deletion.emit(object)
 

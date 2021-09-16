@@ -35,6 +35,7 @@ class ContainsList(QListWidget):
         self.setStyleSheet(list_style)
         self.setIconSize(QSize(50, 50))
         self.setVerticalScrollBar(GridScrollBar(vertical_color=QColor("#bfbfbf")))
+        self.setHorizontalScrollBar(GridScrollBar(vertical_color=QColor("#bfbfbf")))
         self.setAcceptDrops(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.setResizeMode(self.ResizeMode.Adjust)

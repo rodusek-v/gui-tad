@@ -1,7 +1,7 @@
 from typing import List
 from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
-from PyQt6.QtWidgets import QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QListWidget, QSpinBox, QWidget
+from PyQt6.QtWidgets import QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QListWidget, QSizePolicy, QSpinBox, QWidget
 
 from view.sidebars.form import Form
 from view.sidebars.contains_list import ContainsList
@@ -55,6 +55,7 @@ class PlaceForm(Form):
         )
         
         desc_txt_box = TextArea(self.controller.get_description())
+        desc_txt_box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
         desc_txt_box.text_modified.connect(self.controller.set_description)
         layout.addWidget(QLabel("Description", font=font))
         layout.addWidget(desc_txt_box)
@@ -74,7 +75,7 @@ class PlaceForm(Form):
         font.setBold(True)
 
         model_object_group = QGroupBox("Place objects", font=font)
-        rest_object_group = QGroupBox("Rest objects", font=font)
+        rest_object_group = QGroupBox("Remaining objects", font=font)
         model_object_group.setLayout(QHBoxLayout())
         rest_object_group.setLayout(QHBoxLayout())
         

@@ -193,7 +193,8 @@ class WorktopView(QGraphicsView):
         space_rect = self.is_space_available(adding_point)
         if space_rect:
             pen = QPen(Qt.GlobalColor.black)
-            pen.setDashPattern(self.dash_pattern)
+            rect_side = space_rect.width()
+            pen.setDashPattern([0, rect_side / 20, rect_side / 10, rect_side / 20])
             self.hover_cell = self.scene().addRect(space_rect, pen, QColor(212, 212, 212))
 
     def __add_place_press(self, event: QMouseEvent):
