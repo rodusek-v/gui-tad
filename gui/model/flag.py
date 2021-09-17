@@ -8,14 +8,12 @@ class Flag(ItemNode):
         self,
         name: str = None,
         activated: bool = False,
-        action_on_true: Action = None,
-        action_on_false: Action = None
     ) -> None:
         super().__init__()
         self.name = name
         self.activated = activated
-        self.action_on_true = action_on_true
-        self.action_on_false = action_on_false
+        self.action_on_true = Action()
+        self.action_on_false = Action()
 
     @property
     def q_icon(self) -> QIcon:

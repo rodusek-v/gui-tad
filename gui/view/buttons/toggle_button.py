@@ -6,11 +6,12 @@ from PyQt6.QtGui import QEnterEvent
 class ToggleButton(QPushButton):
     def __init__(self, text: str = None, parent: QObject = None):
         super().__init__(text, parent)
+        self.bg_color = "transparent"
         self.styles = {
             "border": "none",
             "padding": "10px",
             "margin": "0px",
-            "background": "transparent"
+            "background": self.bg_color
         }
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.setStyleSheet(self.__get_style())
@@ -23,22 +24,26 @@ class ToggleButton(QPushButton):
         if self.isChecked():
             self.styles["background"] = "#393f4f"
         else:
-            self.styles["background"] = "transparent"
+            self.styles["background"] = self.bg_color
         self.setStyleSheet(self.__get_style())
 
     def enterEvent(self, event: QEnterEvent) -> None:
-        if not self.isChecked():
-            self.styles["background"] = "#363636"
-            self.setStyleSheet(self.__get_style())
+        if self.isEnabled():
+            if not self.isChecked():
+                self.styles["background"] = "#363636"
+                self.setStyleSheet(self.__get_style())
         return super().enterEvent(event)
 
     def leaveEvent(self, event: QEvent) -> None:
-        if not self.isChecked():
-            self.styles["background"] = "transparent"
-            self.setStyleSheet(self.__get_style())
+        if self.isEnabled():
+            if not self.isChecked():
+                self.styles["background"] = self.bg_color
+                self.setStyleSheet(self.__get_style())
         return super().leaveEvent(event)
 
     def setStyle(self, key, value):
+        if key == "background": 
+            self.bg_color = value
         self.styles[key] = value
         self.setStyleSheet(self.__get_style())
         self.repaint()

@@ -4,8 +4,7 @@ from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
 from PyQt6.QtWidgets import QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QListWidget, QSizePolicy, QSpinBox, QWidget
 
 from view.sidebars.form import Form
-from view.sidebars.contains_list import ContainsList
-from view.fields import TextField, TextArea
+from view.fields import TextField, TextArea, ContainsList
 from view.worktop import ObjectItem
 from controller import PlaceController
 from model import Object
@@ -14,10 +13,8 @@ from model import Object
 class PlaceForm(Form):
     
     def __init__(self, model, sidebar) -> None:
-        super().__init__(model, sidebar=sidebar)
-        layout = QHBoxLayout()
-        self.setLayout(layout)
-        layout.addWidget(self.tab_widget)
+        super().__init__(model, sidebar.side_bar_width, sidebar=sidebar)
+        self.layout().addWidget(self.tab_widget)
         self.contains_widget = QWidget()
         self.props_widget = QWidget()
         self.tab_widget.addTab(self.props_widget, "Properties")

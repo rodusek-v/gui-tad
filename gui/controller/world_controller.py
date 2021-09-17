@@ -75,6 +75,9 @@ class WorldController(QObject):
     def get_places(self) -> List['Place']:
         return self.model.places
 
+    def get_flags(self) -> List['Flag']:
+        return self.model.flags
+
     def get_containers(self) -> List['Container']:
         containers = []
         containers.extend(self.model.places)

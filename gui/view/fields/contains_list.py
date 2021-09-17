@@ -1,45 +1,21 @@
 from PyQt6.QtCore import QSize
-from PyQt6.QtGui import QColor, QDropEvent
-from PyQt6.QtWidgets import QAbstractItemView, QListWidget
+from PyQt6.QtGui import QDropEvent
+from PyQt6.QtWidgets import QAbstractItemView
 
-from view.worktop import GridScrollBar
+from view.fields.basic_list import BasicList
 
 
-class ContainsList(QListWidget):
+class ContainsList(BasicList):
 
     def __init__(self, controller, has_model=True) -> None:
         super().__init__()
-
-        list_style = """
-            QListWidget {
-                outline: 0;
-            }
-            :enabled {
-                background: transparent;
-                color: #bfbfbf;
-                border: none;
-            }
-            :item {
-                margin: 0px;
-                padding: 0px;
-                border: none;
-                border-bottom: 1px solid #545454;
-            }
-            :item::selected {
-                background-color: rgba(61, 61, 61, 0.7);
-            }
-        """
         self.controller = controller
         self.has_model = has_model
 
-        self.setStyleSheet(list_style)
+        self.setStyleSheet(self.list_style.format("none", "none"))
         self.setIconSize(QSize(50, 50))
-        self.setVerticalScrollBar(GridScrollBar(vertical_color=QColor("#bfbfbf")))
-        self.setHorizontalScrollBar(GridScrollBar(vertical_color=QColor("#bfbfbf")))
         self.setAcceptDrops(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
-        self.setResizeMode(self.ResizeMode.Adjust)
-        self.setSelectionMode(self.SelectionMode.ExtendedSelection)
 
     def dropEvent(self, event: QDropEvent) -> None:
         if self != event.source() and isinstance(event.source(), ContainsList):

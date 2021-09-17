@@ -4,8 +4,7 @@ from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtWidgets import QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QListWidget, QSizePolicy, QWidget
 
 from view.sidebars.form import Form
-from view.sidebars.contains_list import ContainsList
-from view.fields import TextField, TextArea, CheckBox, ComboBox
+from view.fields import TextField, TextArea, CheckBox, ComboBox, ContainsList
 from view.worktop import ObjectItem
 from controller import ObjectController
 from model import Container, Object
@@ -14,10 +13,8 @@ from model import Container, Object
 class ObjectForm(Form):
     
     def __init__(self, model, sidebar) -> None:
-        super().__init__(model, sidebar=sidebar)
-        layout = QHBoxLayout()
-        self.setLayout(layout)
-        layout.addWidget(self.tab_widget)
+        super().__init__(model, sidebar.side_bar_width, sidebar=sidebar)
+        self.layout().addWidget(self.tab_widget)
         self.contains_widget = QWidget()
         self.props_widget = QWidget()
         self.tab_widget.addTab(self.props_widget, "Properties")
@@ -62,7 +59,7 @@ class ObjectForm(Form):
 
         pickable_chkbox = CheckBox()
         pickable_chkbox.setChecked(self.controller.get_pickable())
-        pickable_chkbox.stateChanged.connect(self.convert_to_bool)
+        pickable_chkbox.stateChanged.connect(self.pass_to_pickable)
         layout.addWidget(QLabel("Pickable", font=font))
         layout.addWidget(pickable_chkbox)
 
@@ -114,7 +111,7 @@ class ObjectForm(Form):
         if object in containers:
             containers.remove(object)
         for container in containers:
-            self.container_combo_box.addItem(container.name, container)
+            self.container_combo_box.addItem(container.q_icon, container.name, container)
 
     def __set_current_container(self, container: Container):
         self.container_combo_box.setCurrentText(container.name if container else None)
@@ -154,5 +151,5 @@ class ObjectForm(Form):
             filter_list
         )
 
-    def convert_to_bool(self, value):
+    def pass_to_pickable(self, value):
         self.controller.set_pickable(bool(value))

@@ -72,7 +72,8 @@ class MainWindow(QMainWindow):
         self.status_bar.addPermanentWidget(self.selected_place)
         self.status_bar.addPermanentWidget(self.location_label)
 
-        self.side_bar = SideBar(self.controller, self, self.hide_form)
+        self.side_bar_width = 300
+        self.side_bar = SideBar(self.controller, self, self.hide_form, self.side_bar_width)
         self.showed = False
         self.__connect_signals()
 
@@ -82,7 +83,7 @@ class MainWindow(QMainWindow):
             width = 0
             self.showed = False
         else:
-            width = 300
+            width = self.side_bar_width
             self.showed = True
         self.animation = QPropertyAnimation(self.side_bar.holder, b'geometry')
         self.animation.setDuration(300)
@@ -240,7 +241,9 @@ class MainWindow(QMainWindow):
     def flag_edit(self):
         self.working_space.clear_selection()
         self.tree_view.clearSelection()
-        self.show_form(self.controller.add_flag())
+        flag = self.controller.add_flag()
+        self.show_form(flag)
+        self.tree_view.setCurrentIndex(flag.index())
 
     def set_status_location(self, point):
         self.location_label.setText(f"X: {point.x()} Y: {point.y()}")

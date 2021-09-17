@@ -18,13 +18,16 @@ class SideBar(QObject):
         main_controller: WorldController,
         parent = None,
         hiding_func: FunctionType = None,
+        side_bar_width: int = 300
     ) -> None:
         super().__init__()    
         self._holder = QWidget(parent=parent)
         self.widget = None
         self.main_controller = main_controller
+        self.side_bar_width = side_bar_width
 
         self._holder.setLayout(QVBoxLayout())
+        self._holder.layout().setContentsMargins(0, 0, 0, 0)
         self._holder.setStyleSheet("background-color: #262626;")
         self._holder.resize(0, 0)
 

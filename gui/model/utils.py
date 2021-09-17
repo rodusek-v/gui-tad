@@ -35,9 +35,14 @@ class Block:
 
 class Action:
 
-    def __init__(self, message: str, dependecines: List['Dependency'] = None) -> None:
+    def __init__(self, message: str = None, dependecines: List['Dependency'] = None) -> None:
         self.message = message
+        if dependecines is None:
+            dependecines = []
         self.dependecines = dependecines
+
+    def get_dependecines(self) -> List['Dependency']:
+        return self.dependecines
 
     def add_dependency(self, dependency: 'Dependency') -> None:
         self.dependecines.append(dependency)
