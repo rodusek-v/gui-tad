@@ -1,7 +1,6 @@
 from typing import List
 from PyQt6.QtGui import QIcon
 
-from model.utils import Description
 from model.container import Container
 from model.item_node import ItemNode
 
@@ -10,11 +9,11 @@ class Object(ItemNode, Container):
 
     def __init__(
         self,
-        name:str = "new_object",
-        description: Description = None,
-        contains:List['Object'] = None,
-        pickable:bool = True,
-        container:Container = None
+        name: str = "new_object",
+        description: 'Description' = None,
+        contains: List['Object'] = None,
+        pickable: bool = True,
+        container: 'Container' = None
     ) -> None:
         super().__init__()
         self.name = name
@@ -51,11 +50,11 @@ class Object(ItemNode, Container):
         self.setText(self._name)
 
     @property
-    def description(self) -> Description:
+    def description(self) -> 'Description':
         return self._description
 
     @description.setter
-    def description(self, value: Description):
+    def description(self, value: 'Description'):
         self._description = value
 
     @property
@@ -75,11 +74,11 @@ class Object(ItemNode, Container):
         self._pickable = value
 
     @property
-    def container(self) -> Container:
+    def container(self) -> 'Container':
         return self._container
 
     @container.setter
-    def container(self, value: Container):
+    def container(self, value: 'Container'):
         self._container = value
         self.container_chaged.emit()
 
@@ -101,3 +100,6 @@ class Object(ItemNode, Container):
             del object.container
         except ValueError:
             pass
+
+
+from model.utils import Description

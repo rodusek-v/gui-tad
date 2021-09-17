@@ -7,8 +7,9 @@ from view.buttons import ToggleButton
 from view.sidebars.place_form import PlaceForm
 from view.sidebars.object_form import ObjectForm
 from view.sidebars.flag_form import FlagForm
+from view.sidebars.command_form import CommandForm
 from controller import WorldController
-from model import Place, Object, Flag
+from model import Place, Object, Flag, Command
 
 
 class SideBar(QObject):
@@ -59,6 +60,8 @@ class SideBar(QObject):
             form = ObjectForm(model, self)
         elif isinstance(model, Flag):
             form = FlagForm(model, self)
+        elif isinstance(model, Command):
+            form = CommandForm(model, self)
 
         if form is not None:
             if self.widget is not None:

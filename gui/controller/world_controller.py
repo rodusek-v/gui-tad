@@ -2,7 +2,7 @@ from typing import List
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QStandardItem
 
-from model import World, Place, Object, Container, Flag
+from model import World, Place, Object, Container, Flag, Command
 
 
 class WorldController(QObject):
@@ -54,6 +54,12 @@ class WorldController(QObject):
         self.model.append_flag(flag)
         return flag
 
+    def add_command(self) -> Command:
+        count = self.model.commands_count()
+        cmd = Command(count, [f"new_command{f'_{count}' if count != 0 else ''}"])
+        self.model.append_command(cmd)
+        return cmd
+
     def remove_object(self, object: Object) -> None:
         self.model.remove_object(object.row())
         object.children_changed.disconnect(self.__container_change)
@@ -68,6 +74,10 @@ class WorldController(QObject):
     def remove_flag(self, flag: Flag) -> None:
         self.model.remove_flag(flag.row())
         self.item_deletion.emit(flag)
+
+    def remove_cmd(self, cmd: Command) -> None:
+        self.model.remove_command(cmd.row())
+        self.item_deletion.emit(cmd)
 
     def get_objects(self) -> List['Object']:
         return self.model.objects

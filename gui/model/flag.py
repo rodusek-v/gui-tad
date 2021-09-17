@@ -1,6 +1,8 @@
 from PyQt6.QtGui import QIcon
+
 from model.utils import Action
 from model.item_node import ItemNode
+
 
 class Flag(ItemNode):
 

@@ -18,6 +18,7 @@ class World(QStandardItem, TextModel):
         self._places_count = 0
         self._objects_count = 0
         self._flags_count = 0
+        self._commands_count = 0
 
         self.setIcon(QIcon("icons/map.png"))
         self.setEditable(False)
@@ -103,6 +104,7 @@ class World(QStandardItem, TextModel):
 
     def append_command(self, command):
         self._commands.appendRow(command)
+        self._commands_count += 1
 
     def append_flag(self, flag):
         self._flags.appendRow(flag)
@@ -110,6 +112,9 @@ class World(QStandardItem, TextModel):
 
     def remove_flag(self, row_num):
         self._flags.takeRow(row_num)
+
+    def remove_command(self, row_num):
+        self._commands.takeRow(row_num)
 
     def places_count(self) -> int:
         return self._places_count
@@ -119,6 +124,9 @@ class World(QStandardItem, TextModel):
 
     def flags_count(self) -> int:
         return self._flags_count
+
+    def commands_count(self) -> int:
+        return self._commands_count
 
     @staticmethod
     def __create_folder_item(icon: QIcon, text: str):

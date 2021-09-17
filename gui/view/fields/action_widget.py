@@ -59,6 +59,10 @@ class ActionWidget(QWidget):
         self.fill_list_items()
         self.grid.addWidget(self.dependencies, 5, 0, 1, 2)
 
+    def set_buttons_text(self, text1, text2):
+        self.true_btn.setText(text1)
+        self.false_btn.setText(text2)
+
     def enable_add(self):
         flag = self.flag_combo_box.currentData()
         if (not self.true_btn.isChecked() and not self.false_btn.isChecked()) or flag is None:

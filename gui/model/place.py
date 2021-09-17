@@ -3,7 +3,6 @@ from typing import List
 from PyQt6.QtCore import QRectF
 from PyQt6.QtGui import QIcon
 
-from model.utils import Block, Description
 from model.container import Container
 from model.item_node import ItemNode
 
@@ -13,10 +12,9 @@ class Place(ItemNode, Container):
     def __init__(
         self,
         name:str = "new_place",
-        description: Description = None,
-        contains:List['Object'] = None,
-        turns_in:int = None,
-        blockade:List['Block'] = None,
+        description: 'Description' = None,
+        contains: List['Object'] = None,
+        blockade: List['Block'] = None
     ) -> None:
         super().__init__()
         self.name = name
@@ -26,7 +24,6 @@ class Place(ItemNode, Container):
         if contains is None:
             contains = []
         self.contains = contains
-        self.turns_in = turns_in
         self.blockade = blockade
 
         self.position = None
@@ -56,11 +53,11 @@ class Place(ItemNode, Container):
         self.rename_signal.emit()
 
     @property
-    def description(self) -> Description:
+    def description(self) -> 'Description':
         return self._description
 
     @description.setter
-    def description(self, value: Description) -> None:
+    def description(self, value: 'Description') -> None:
         self._description = value
 
     @property
@@ -72,19 +69,11 @@ class Place(ItemNode, Container):
         self._contains = value
 
     @property
-    def turns_in(self) -> int:
-        return self._turns_in
-
-    @turns_in.setter
-    def turns_in(self, value: int) -> None:
-        self._turns_in = value
-
-    @property
-    def blockade(self) -> List[Block]:
+    def blockade(self) -> List['Block']:
         return self._blockade
 
     @blockade.setter
-    def blockade(self, value: List[Block]) -> None:
+    def blockade(self, value: List['Block']) -> None:
         self._blockade = value
 
     @property
@@ -110,5 +99,5 @@ class Place(ItemNode, Container):
             pass
 
     
-
 from model.object import Object
+from model.utils import Block, Description

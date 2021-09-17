@@ -1,6 +1,6 @@
 from typing import List
 from PyQt6.QtCore import QRegularExpression
-from PyQt6.QtGui import QIntValidator, QRegularExpressionValidator
+from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtWidgets import QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QListWidget, QSizePolicy, QSpinBox, QWidget
 
 from view.sidebars.form import Form
@@ -56,12 +56,6 @@ class PlaceForm(Form):
         desc_txt_box.text_modified.connect(self.controller.set_description)
         layout.addWidget(QLabel("Description", font=font))
         layout.addWidget(desc_txt_box)
-
-        turns_in = TextField(self.controller.get_turns_in())
-        turns_in.setValidator(QIntValidator(bottom=0))
-        turns_in.editing_done.connect(self.controller.set_turns_in)
-        layout.addWidget(QLabel("Turns allowed", font=font))
-        layout.addWidget(turns_in)
         
     def __init_contains_form(self):
         layout = QGridLayout()

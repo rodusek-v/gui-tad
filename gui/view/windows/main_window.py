@@ -8,7 +8,7 @@ from view.worktop import WorktopView, ActionSelector
 from view.worldtree import WorldTreeView
 from view.sidebars import SideBar
 from controller import WorldController
-from model import Flag
+from model import Flag, Command
 
 
 class MainWindow(QMainWindow):
@@ -142,6 +142,7 @@ class MainWindow(QMainWindow):
         self.tree_view.remove_container_object_signal.connect(self.working_space.delete_object)
         self.tree_view.remove_object_signal.connect(self.controller.remove_object)
         self.tree_view.remove_flag_signal.connect(self.controller.remove_flag)
+        self.tree_view.remove_command_signal.connect(self.controller.remove_cmd)
         self.tree_view.selected_item.connect(self.show_form)
 
         self.working_space.selection_change.connect(
@@ -225,7 +226,7 @@ class MainWindow(QMainWindow):
         command.setIcon(QIcon("icons/command.png"))
         command.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(command)
-        #command.clicked.connect(lambda: self.action_selector.activate('command'))
+        command.clicked.connect(self.command_edit)
 
         self.top_toolbar.addSeparator()
         
@@ -245,6 +246,13 @@ class MainWindow(QMainWindow):
         self.show_form(flag)
         self.tree_view.setCurrentIndex(flag.index())
 
+    def command_edit(self):
+        self.working_space.clear_selection()
+        self.tree_view.clearSelection()
+        cmd = self.controller.add_command()
+        self.show_form(cmd)
+        self.tree_view.setCurrentIndex(cmd.index())
+
     def set_status_location(self, point):
         self.location_label.setText(f"X: {point.x()} Y: {point.y()}")
 
@@ -257,7 +265,7 @@ class MainWindow(QMainWindow):
 
     def show_form(self, model):
         self.side_bar.set_form(model)
-        if isinstance(model, Flag):
+        if isinstance(model, Flag) or isinstance(model, Command):
             self.working_space.clear_selection()
 
         if not self.showed:

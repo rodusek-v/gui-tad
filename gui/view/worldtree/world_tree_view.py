@@ -3,7 +3,7 @@ from PyQt6.QtCore import QItemSelection, Qt, pyqtSignal
 from PyQt6.QtWidgets import QTreeView
 
 from view.worktop import GridScrollBar
-from model import Place, Object, Flag, ItemNode
+from model import Place, Object, Flag, ItemNode, Command
 
 class WorldTreeView(QTreeView):
 
@@ -11,6 +11,7 @@ class WorldTreeView(QTreeView):
     selected_object = pyqtSignal(Object)
     remove_place_signal = pyqtSignal()
     remove_flag_signal = pyqtSignal(Flag)
+    remove_command_signal = pyqtSignal(Command)
     remove_container_object_signal = pyqtSignal(Place)
     remove_object_signal = pyqtSignal(Object)
     selected_item = pyqtSignal(ItemNode)
@@ -46,7 +47,7 @@ class WorldTreeView(QTreeView):
             elif isinstance(item, Object):
                 if isinstance(item.container, Place):
                     self.selected_object.emit(item)
-            elif isinstance(item, Flag):
+            elif isinstance(item, ItemNode):
                 pass
             else:
                 self.deselect.emit()
@@ -65,6 +66,8 @@ class WorldTreeView(QTreeView):
             elif isinstance(item, Flag):
                 self.remove_flag_signal.emit(item)
                 self.clearSelection()
+            elif isinstance(item, Command):
+                self.remove_command_signal.emit(item)
         elif event.key() == Qt.Key.Key_Escape:
             self.clearSelection()
             self.deselect.emit()

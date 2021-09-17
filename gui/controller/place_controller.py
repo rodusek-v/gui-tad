@@ -53,17 +53,6 @@ class PlaceController(QObject):
     def get_description(self) -> str:
         return self.model.description.description
 
-    def set_turns_in(self, turns_in: str) -> None:
-        num = None
-        try:
-            num = int(turns_in)
-        except:
-            pass
-        self.model.turns_in = num
-
-    def get_turns_in(self) -> str:
-        return "" if self.model.turns_in is None else str(self.model.turns_in)
-
     def get_contains(self) -> List['Object']:
         return self.model.contains
             
