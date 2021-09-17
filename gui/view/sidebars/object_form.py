@@ -62,7 +62,7 @@ class ObjectForm(Form):
 
         pickable_chkbox = CheckBox()
         pickable_chkbox.setChecked(self.controller.get_pickable())
-        pickable_chkbox.stateChanged.connect(lambda x: self.controller.set_pickable(bool(x)))
+        pickable_chkbox.stateChanged.connect(self.convert_to_bool)
         layout.addWidget(QLabel("Pickable", font=font))
         layout.addWidget(pickable_chkbox)
 
@@ -146,7 +146,7 @@ class ObjectForm(Form):
 
     def reload_lists(self):
         filter_list = self.controller.get_contains()[:]
-        filter_list.append(self.controller.model)
+        filter_list.extend([self.controller.model, self.controller.get_container()])
         self.__load_list(self.model_objects_list, self.controller.get_contains())
         self.__load_list(
             self.rest_object_list, 
@@ -154,4 +154,5 @@ class ObjectForm(Form):
             filter_list
         )
 
-    
+    def convert_to_bool(self, value):
+        self.controller.set_pickable(bool(value))

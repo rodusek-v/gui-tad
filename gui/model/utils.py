@@ -1,3 +1,4 @@
+from typing import List
 from jinja2 import Template
 
 
@@ -6,7 +7,7 @@ class TextModel:
     def __init__(self) -> None:
         pass
 
-    def text_model(self, template_path):
+    def text_model(self, template_path: str) -> str:
         ret_val = ""
         try:
             t = Template(template_path)
@@ -19,17 +20,37 @@ class TextModel:
 
 class Description:
 
-    def __init__(self, name="", description="") -> None:
+    def __init__(self, name:str = "", description: str = "") -> None:
         self.name = name
         self.description = description
 
 
 class Block:
 
-    def __init__(self, flag, direction, turns=None) -> None:
+    def __init__(self, flag: 'Flag', direction: str, turns: int = None) -> None:
         self.flag = flag
         self.direction = direction
         self.turns = turns
+
+
+class Action:
+
+    def __init__(self, message: str, dependecines: List['Dependency'] = None) -> None:
+        self.message = message
+        self.dependecines = dependecines
+
+    def add_dependency(self, dependency: 'Dependency') -> None:
+        self.dependecines.append(dependency)
+
+    def remove_dependency(self, dependency: 'Dependency') -> None:
+        self.dependecines.remove(dependency)
+
+
+class Dependency:
+
+    def __init__(self, flag: 'Flag', value: bool) -> None:
+        self.flag = flag
+        self.value = value
 
 
 class Operation(object):
@@ -130,3 +151,5 @@ class RelocateOperation(Requirements):
         attrs["can_die"] = str(self.can_die).lower()
         
         return attrs
+
+from model.flag import Flag

@@ -6,8 +6,9 @@ from PyQt6.QtWidgets import QVBoxLayout, QWidget
 from view.buttons import ToggleButton
 from view.sidebars.place_form import PlaceForm
 from view.sidebars.object_form import ObjectForm
+from view.sidebars.flag_form import FlagForm
 from controller import WorldController
-from model import Place, Object
+from model import Place, Object, Flag
 
 
 class SideBar(QObject):
@@ -53,6 +54,8 @@ class SideBar(QObject):
             form = PlaceForm(model, self)
         elif isinstance(model, Object):
             form = ObjectForm(model, self)
+        elif isinstance(model, Flag):
+            form = FlagForm(model, self)
 
         if form is not None:
             if self.widget is not None:
@@ -60,7 +63,7 @@ class SideBar(QObject):
                     self.holder.layout().removeWidget(self.widget)
                     self.widget.disconnect_all_signals()
                     self.widget = form
-                    self.holder.layout().addWidget(form)
+                    self.holder.layout().addWidget(self.widget)
             else:
                 self.widget = form
                 self.holder.layout().addWidget(form)

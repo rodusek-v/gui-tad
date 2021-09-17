@@ -12,7 +12,7 @@ class Object(ItemNode, Container):
         self,
         name:str = "new_object",
         description: Description = None,
-        contains:List['Object'] = [],
+        contains:List['Object'] = None,
         pickable:bool = True,
         container:Container = None
     ) -> None:
@@ -26,7 +26,6 @@ class Object(ItemNode, Container):
         self.contains = contains
         self.pickable = pickable
         self.container = container
-        self.setEditable(False)
 
     @property
     def q_icon(self) -> QIcon:

@@ -65,6 +65,9 @@ class ObjectController(QObject):
             old.remove_object(self.model)
             old.children_changed.emit()
         if new is not None:
+            if isinstance(new, Object) and new in self.model.contains:
+                self.model.contains.remove(new)
+                new.container = None
             new.add_object(self.model)
             new.children_changed.emit()
         else:

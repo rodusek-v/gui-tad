@@ -8,6 +8,7 @@ from view.worktop import WorktopView, ActionSelector
 from view.worldtree import WorldTreeView
 from view.sidebars import SideBar
 from controller import WorldController
+from model import Flag
 
 
 class MainWindow(QMainWindow):
@@ -73,6 +74,7 @@ class MainWindow(QMainWindow):
 
         self.side_bar = SideBar(self.controller, self, self.hide_form)
         self.showed = False
+        self.__connect_signals()
 
     def __animate(self):
         current_width = self.side_bar.width()
@@ -124,6 +126,9 @@ class MainWindow(QMainWindow):
         temp.layout().addWidget(self.working_space)
         temp.layout().setContentsMargins(10, 10, 10, 10)
 
+        self.setCentralWidget(temp)
+
+    def __connect_signals(self):
         self.working_space.viewport_change.connect(self.set_status_location)
         self.working_space.selection_change.connect(self.set_selected_text)
         self.working_space.dispatch_event.connect(self.show_form)
@@ -133,10 +138,9 @@ class MainWindow(QMainWindow):
         self.tree_view.selected_place.connect(lambda x: self.working_space.selecting_place(x.position.center()))
         self.tree_view.selected_object.connect(lambda x: self.working_space.selecting_object(x))
         self.tree_view.remove_place_signal.connect(self.working_space.delete_selected)
-        self.tree_view.remove_container_object_signal.connect(
-            lambda x: self.working_space.delete_object(x))
-        self.tree_view.remove_object_signal.connect(
-            lambda x: self.controller.remove_object(x))
+        self.tree_view.remove_container_object_signal.connect(self.working_space.delete_object)
+        self.tree_view.remove_object_signal.connect(self.controller.remove_object)
+        self.tree_view.remove_flag_signal.connect(self.controller.remove_flag)
         self.tree_view.selected_item.connect(self.show_form)
 
         self.working_space.selection_change.connect(
@@ -149,8 +153,6 @@ class MainWindow(QMainWindow):
         self.tree_view.deselect.connect(self.working_space.clear_selection)
 
         self.controller.item_deletion.connect(self.hide_form)
-
-        self.setCentralWidget(temp)
 
     def __init_top_side(self):
         menu_bar = QMenuBar()
@@ -215,7 +217,7 @@ class MainWindow(QMainWindow):
         flag.setIcon(QIcon("icons/flag.png"))
         flag.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(flag)
-        #flag.clicked.connect(lambda: self.action_selector.activate('flag'))
+        flag.clicked.connect(self.flag_edit)
 
         command = ToggleButton("", self)
         command.setCheckable(False)
@@ -235,6 +237,11 @@ class MainWindow(QMainWindow):
 
         select.click()
 
+    def flag_edit(self):
+        self.working_space.clear_selection()
+        self.tree_view.clearSelection()
+        self.show_form(self.controller.add_flag())
+
     def set_status_location(self, point):
         self.location_label.setText(f"X: {point.x()} Y: {point.y()}")
 
@@ -247,6 +254,9 @@ class MainWindow(QMainWindow):
 
     def show_form(self, model):
         self.side_bar.set_form(model)
+        if isinstance(model, Flag):
+            self.working_space.clear_selection()
+
         if not self.showed:
             self.__animate()
 

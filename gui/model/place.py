@@ -31,8 +31,6 @@ class Place(ItemNode, Container):
 
         self.position = None
 
-        self.setEditable(False)
-
     @property
     def q_icon(self) -> QIcon:
         if self._q_icon is None:

@@ -16,6 +16,7 @@ class ItemNode(QStandardItem):
         super().__init__()
         self._q_icon = None
         self.setIcon(self.q_icon)
+        self.setEditable(False)
         self.__signaler = Signaler()
     
     @property
