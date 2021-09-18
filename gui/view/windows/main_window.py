@@ -3,6 +3,7 @@ from PyQt6.QtCore import QPoint, QPropertyAnimation, QRect, QSize, Qt
 from PyQt6.QtGui import QIcon, QResizeEvent, QStandardItemModel
 from PyQt6.QtWidgets import QDockWidget, QMainWindow, QMenu, QMenuBar
 
+from view.windows.operation_dialog import OperationDialog, MaskWidget
 from view.buttons import ToggleButton
 from view.worktop import WorktopView, ActionSelector
 from view.worldtree import WorldTreeView
@@ -153,6 +154,7 @@ class MainWindow(QMainWindow):
         self.working_space.deselect.connect(self.tree_view.clearSelection)
         self.tree_view.deselect.connect(self.hide_form)
         self.tree_view.deselect.connect(self.working_space.clear_selection)
+        self.tree_view.no_container_object.connect(self.working_space.clear_selection)
 
         self.controller.item_deletion.connect(self.hide_form)
 
@@ -226,7 +228,7 @@ class MainWindow(QMainWindow):
         command.setIcon(QIcon("icons/command.png"))
         command.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(command)
-        command.clicked.connect(self.command_edit)
+        command.clicked.connect(self.open_operation_dialog)
 
         self.top_toolbar.addSeparator()
         
@@ -239,6 +241,15 @@ class MainWindow(QMainWindow):
 
         select.click()
 
+    def open_operation_dialog(self):
+        mask = MaskWidget(self)
+        mask.show()
+        dlg = OperationDialog(self)
+        dlg.selected_operation.connect(self.command_edit)
+        dlg.exec()
+        dlg.selected_operation.disconnect(self.command_edit)
+        mask.hide()
+
     def flag_edit(self):
         self.working_space.clear_selection()
         self.tree_view.clearSelection()
@@ -246,10 +257,10 @@ class MainWindow(QMainWindow):
         self.show_form(flag)
         self.tree_view.setCurrentIndex(flag.index())
 
-    def command_edit(self):
+    def command_edit(self, type):
         self.working_space.clear_selection()
         self.tree_view.clearSelection()
-        cmd = self.controller.add_command()
+        cmd = self.controller.add_command(type)
         self.show_form(cmd)
         self.tree_view.setCurrentIndex(cmd.index())
 

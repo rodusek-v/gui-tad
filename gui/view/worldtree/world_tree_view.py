@@ -16,6 +16,7 @@ class WorldTreeView(QTreeView):
     remove_object_signal = pyqtSignal(Object)
     selected_item = pyqtSignal(ItemNode)
     deselect = pyqtSignal()
+    no_container_object = pyqtSignal()
     
     def __init__(self, parent=None) -> None:
         super().__init__(parent=parent)
@@ -47,6 +48,8 @@ class WorldTreeView(QTreeView):
             elif isinstance(item, Object):
                 if isinstance(item.container, Place):
                     self.selected_object.emit(item)
+                else:
+                    self.no_container_object.emit()
             elif isinstance(item, ItemNode):
                 pass
             else:

@@ -2,12 +2,14 @@ from typing import List
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QStandardItem
 
-from model import World, Place, Object, Container, Flag, Command
+from model import World, Place, Object, Container, Flag, Command, ItemNode
+from model.operation import CDMOperation, FlagOperation, MessageOperation, OperationType, RelocateOperation
 
 
 class WorldController(QObject):
 
-    item_deletion = pyqtSignal(QStandardItem)
+    item_deletion = pyqtSignal(ItemNode)
+    item_addition = pyqtSignal(ItemNode)
     object_changes = pyqtSignal()
 
     def __init__(self, model: World = None) -> None:
@@ -36,6 +38,7 @@ class WorldController(QObject):
         place = Place(f"new_place{f'_{count}' if count != 0 else ''}")
         self.model.append_place(place)
         place.children_changed.connect(self.__container_change)
+        self.item_addition.emit(place)
         return place
 
     def add_object(self, container: Container = None) -> Object:
@@ -46,18 +49,29 @@ class WorldController(QObject):
         self.model.append_object(object)
         self.object_changes.emit()
         object.children_changed.connect(self.__container_change)
+        self.item_addition.emit(object)
         return object
 
     def add_flag(self) -> Flag:
         count = self.model.flags_count()
         flag = Flag(f"new_flag{f'_{count}' if count != 0 else ''}")
         self.model.append_flag(flag)
+        self.item_addition.emit(flag)
         return flag
 
-    def add_command(self) -> Command:
+    def add_command(self, type: OperationType) -> Command:
         count = self.model.commands_count()
-        cmd = Command(count, [f"new_command{f'_{count}' if count != 0 else ''}"])
+        if type == OperationType.RELOCATION_OPERATION:
+            operation = RelocateOperation()
+        elif type == OperationType.FLAG_OPERATION:
+            operation = FlagOperation()
+        elif type == OperationType.CDM_OPERATION:
+            operation = CDMOperation()
+        else:
+            operation = MessageOperation()
+        cmd = Command(count, [f"new_command{f'_{count}' if count != 0 else ''}"], operation)
         self.model.append_command(cmd)
+        self.item_addition.emit(cmd)
         return cmd
 
     def remove_object(self, object: Object) -> None:

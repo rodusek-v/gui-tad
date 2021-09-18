@@ -40,3 +40,7 @@ class ItemNode(QStandardItem):
     @property
     def container_chaged(self) -> pyqtSignal:
         return self.__signaler.container_chaged
+
+    @property
+    def name(self) -> str:
+        pass

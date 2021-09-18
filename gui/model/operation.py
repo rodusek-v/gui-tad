@@ -8,6 +8,13 @@ class CMDType(Enum):
     MOVE = "move"
 
 
+class OperationType(Enum):
+    MESSAGE_OPERATION = 0
+    FLAG_OPERATION = 1
+    CDM_OPERATION = 2
+    RELOCATION_OPERATION = 3
+
+
 class Operation(object):
 
     def __init__(self) -> None:
@@ -15,6 +22,10 @@ class Operation(object):
 
     @property
     def props(self):
+        pass
+
+    @property
+    def type(self) -> OperationType:
         pass
     
 
@@ -25,6 +36,10 @@ class MessageOperation(Operation):
         self.message: str = ""
         self.item: 'Object' = None
         self.at: 'Place' = None
+
+    @property
+    def type(self) -> OperationType:
+        return OperationType.MESSAGE_OPERATION
 
     @property
     def props(self):
@@ -73,6 +88,10 @@ class FlagOperation(Requirements):
         self.at: 'Place' = None
 
     @property
+    def type(self) -> OperationType:
+        return OperationType.FLAG_OPERATION
+
+    @property
     def props(self):
         attrs = super().props
         if self.at is not None:
@@ -92,6 +111,10 @@ class CDMOperation(FlagOperation):
         self.cdm_props: List['CDMProp'] = None
 
     @property
+    def type(self) -> OperationType:
+        return OperationType.CDM_OPERATION
+
+    @property
     def props(self):
         attrs = super().props
         del attrs['cdm_props']
@@ -109,6 +132,10 @@ class RelocateOperation(Requirements):
         self.success: str = None
         self.fail: str = None
         self.can_die: bool = None
+
+    @property
+    def type(self) -> OperationType:
+        return OperationType.RELOCATION_OPERATION
 
     @property
     def props(self):

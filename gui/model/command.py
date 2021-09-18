@@ -35,8 +35,8 @@ class Command(ItemNode):
         self._q_icon = icon
 
     @property
-    def id(self) -> int:
-        return self._id
+    def name(self) -> str:
+        return str(self._id)
 
     @property
     def cmd_text(self) -> List[str]:
