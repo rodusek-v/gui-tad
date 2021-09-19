@@ -83,6 +83,7 @@ class WorldController(QObject):
     def remove_place(self, place: Place) -> None:
         self.model.remove_place(place.row())
         place.children_changed.disconnect(self.__container_change)
+        self.object_changes.emit()
         self.item_deletion.emit(place)
 
     def remove_flag(self, flag: Flag) -> None:

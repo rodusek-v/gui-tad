@@ -1,8 +1,8 @@
 from typing import List
 from PyQt6.QtCore import QObject
 
-from model import Command, Place, Object
-from model.operation import FlagOperation, MessageOperation, OperationType
+from model import Command, Place, Object, Flag
+from model.operation import CDMOperation, CDMProp, CDMType, FlagOperation, MessageOperation, OperationType, RelocateOperation, Requirements
 
 
 class CommandController(QObject):
@@ -57,3 +57,118 @@ class CommandController(QObject):
         operation = self.model.operation
         if isinstance(operation, MessageOperation) or isinstance(operation, FlagOperation):
             return operation.at
+
+    def set_flag(self, flag: 'Flag') -> None:
+        operation = self.model.operation
+        if isinstance(operation, FlagOperation):
+            operation.flag = flag
+
+    def get_flag(self) -> 'Flag':
+        operation = self.model.operation
+        if isinstance(operation, FlagOperation):
+            return operation.flag
+
+    def set_value(self, value: bool) -> None:
+        operation = self.model.operation
+        if isinstance(operation, FlagOperation):
+            operation.value = value
+
+    def get_value(self) -> bool:
+        operation = self.model.operation
+        if isinstance(operation, FlagOperation):
+            return operation.value
+
+    def set_success(self, value: str) -> None:
+        operation = self.model.operation
+        if isinstance(operation, RelocateOperation) or isinstance(operation, FlagOperation):
+            operation.success = value
+
+    def get_success(self) -> str:
+        operation = self.model.operation
+        if isinstance(operation, RelocateOperation) or isinstance(operation, FlagOperation):
+            return operation.success
+
+    def set_fail(self, value: str) -> None:
+        operation = self.model.operation
+        if isinstance(operation, RelocateOperation) or isinstance(operation, FlagOperation):
+            operation.fail = value
+
+    def get_fail(self) -> str:
+        operation = self.model.operation
+        if isinstance(operation, RelocateOperation) or isinstance(operation, FlagOperation):
+            return operation.fail
+
+    def get_carry_requirements(self) -> List['Object']:
+        operation = self.model.operation
+        if isinstance(operation, Requirements):
+            return operation.is_carried
+
+    def add_carry_requirement(self, item: 'Object') -> None:
+        operation = self.model.operation
+        if isinstance(operation, Requirements):
+            return operation.is_carried.append(item)
+
+    def remove_carry_requirement(self, item: 'Object') -> None:
+        operation = self.model.operation
+        if isinstance(operation, Requirements):
+            return operation.is_carried.remove(item)
+
+    def get_present_requirements(self) -> List['Object']:
+        operation = self.model.operation
+        if isinstance(operation, Requirements):
+            return operation.is_present
+
+    def add_present_requirement(self, item: 'Object') -> None:
+        operation = self.model.operation
+        if isinstance(operation, Requirements):
+            return operation.is_present.append(item)
+
+    def remove_present_requirement(self, item: 'Object') -> None:
+        operation = self.model.operation
+        if isinstance(operation, Requirements):
+            return operation.is_present.remove(item)
+
+    def set_from(self, place: 'Place') -> None:
+        operation = self.model.operation
+        if isinstance(operation, RelocateOperation):
+            operation.from_ = place
+
+    def get_from(self) -> 'Place':
+        operation = self.model.operation
+        if isinstance(operation, RelocateOperation):
+            return operation.from_
+
+    def set_to(self, place: 'Place') -> None:
+        operation = self.model.operation
+        if isinstance(operation, RelocateOperation):
+            operation.to = place
+
+    def get_to(self) -> 'Place':
+        operation = self.model.operation
+        if isinstance(operation, RelocateOperation):
+            return operation.to
+
+    def set_can_die(self, value: bool) -> None:
+        operation = self.model.operation
+        if isinstance(operation, RelocateOperation):
+            operation.can_die = value
+
+    def get_can_die(self) -> bool:
+        operation = self.model.operation
+        if isinstance(operation, RelocateOperation):
+            return operation.can_die
+
+    def get_cdm_props(self) -> List[CDMProp]:
+        operation = self.model.operation
+        if isinstance(operation, CDMOperation):
+            return operation.cdm_props
+
+    def add_cdm_prop(self, type: CDMType, item: 'Object') -> bool:
+        operation = self.model.operation
+        if isinstance(operation, CDMOperation):
+            operation.cdm_props.append(CDMProp(type, item))
+
+    def remove_cdm_prop(self, prop: CDMProp) -> bool:
+        operation = self.model.operation
+        if isinstance(operation, CDMOperation):
+            operation.cdm_props.remove(prop)

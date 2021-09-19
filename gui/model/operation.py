@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List
 
 
-class CMDType(Enum):
+class CDMType(Enum):
     CREATE = "create"
     DELETE = "delete"
     MOVE = "move"
@@ -82,7 +82,7 @@ class FlagOperation(Requirements):
     def __init__(self) -> None:
         super().__init__()
         self.flag: 'Flag' = None
-        self.value: bool = None
+        self.value: bool = True
         self.success: str = None
         self.fail: str = None
         self.at: 'Place' = None
@@ -94,6 +94,7 @@ class FlagOperation(Requirements):
     @property
     def props(self):
         attrs = super().props
+        del attrs["value"]
         if self.at is not None:
             attrs["at"] = self.at.name
         else:
@@ -108,7 +109,7 @@ class CDMOperation(FlagOperation):
 
     def __init__(self) -> None:
         super().__init__()
-        self.cdm_props: List['CDMProp'] = None
+        self.cdm_props: List['CDMProp'] = []
 
     @property
     def type(self) -> OperationType:
@@ -131,7 +132,7 @@ class RelocateOperation(Requirements):
         self.to: 'Place' = None
         self.success: str = None
         self.fail: str = None
-        self.can_die: bool = None
+        self.can_die: bool = False
 
     @property
     def type(self) -> OperationType:
@@ -149,9 +150,9 @@ class RelocateOperation(Requirements):
 
 class CDMProp:
 
-    def __init__(self):
-        self.type: 'CMDType' = None
-        self.item: 'Object' = None
+    def __init__(self, type: 'CDMType' = None, item: 'Object' = None):
+        self.type: 'CDMType' = type
+        self.item: 'Object' = item
 
 
 from model.flag import Flag

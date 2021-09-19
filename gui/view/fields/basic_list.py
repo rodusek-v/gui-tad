@@ -43,7 +43,6 @@ class BasicItem(QListWidgetItem):
     def __init__(self, item_data, parent=None) -> None:
         super().__init__(parent=parent)
         self._item_data = item_data
-        self.setText(f"{self._item_data.flag.name} == {str(self._item_data.value).lower()}")
 
     @property
     def item_data(self):
