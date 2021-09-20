@@ -73,7 +73,7 @@ class RelocationForm(QObject):
 
     def __set_current_to(self):
         to = self.controller.get_to()
-        self.from_combo_box.setCurrentText(to.name if to else None)
+        self.to_combo_box.setCurrentText(to.name if to else None)
 
     def __reload_items_box(self):
         self.requirement.fill_combo_box(self.sidebar.main_controller.get_objects())

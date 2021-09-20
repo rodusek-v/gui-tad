@@ -14,10 +14,19 @@ class ItemNode(QStandardItem):
 
     def __init__(self) -> None:
         super().__init__()
+        self._ref_count = 0
         self._q_icon = None
         self.setIcon(self.q_icon)
         self.setEditable(False)
         self.__signaler = Signaler()
+
+    @property
+    def ref_count(self) -> int:
+        return self._ref_count
+
+    @ref_count.setter
+    def ref_count(self, value: int) -> None:
+        self._ref_count = value
     
     @property
     def q_icon(self) -> QIcon:

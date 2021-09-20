@@ -258,9 +258,11 @@ class WorktopView(QGraphicsView):
                 bar = self.scene().addRect(rel_rect, pen, brush)
                 bar.setZValue(-10)
 
-    def __remove_object(self, object):
+    def __remove_object(self, placeItem):
         self.item_remove_start.emit()
-        self.controller.remove_object(object)
+        object = placeItem.selectedItems()[0].model
+        if self.controller.remove_object(object):
+            placeItem.takeItem(placeItem.selectedIndexes()[0].row())
         self.item_remove_end.emit()
 
     def get_scene_point(self, point: QPointF):
@@ -433,20 +435,21 @@ class WorktopView(QGraphicsView):
         if self.selection["item"]:
             self.item_remove_start.emit()
             place = self.selection["item"].widget()
-            points = place.say_goodbye(self.controller.remove_connection)
-            self.controller.remove_place(place.place_model)
-            self.__remove_items(points)
-            self.places.remove_from_group(self.selection["item"])
-            place.selected_object.disconnect(self.__dispatch)
-            place.selected_place.disconnect(self.__dispatch)
-            place.removed_object.disconnect(self.__remove_object)
-            place.removed_place.disconnect(self.delete_selected)
-            place.current_item.disconnect(self.__procced_signal)
+            if self.controller.remove_place(place.place_model):
+                points = place.say_goodbye(self.controller.remove_connection)
+                
+                self.__remove_items(points)
+                self.places.remove_from_group(self.selection["item"])
+                place.selected_object.disconnect(self.__dispatch)
+                place.selected_place.disconnect(self.__dispatch)
+                place.removed_object.disconnect(self.__remove_object)
+                place.removed_place.disconnect(self.delete_selected)
+                place.current_item.disconnect(self.__procced_signal)
 
-            self.clear_selection()
-            self.selection_change.emit(None)
-            self.__resize_scene()
-            self.update()
+                self.clear_selection()
+                self.selection_change.emit(None)
+                self.__resize_scene()
+                self.update()
             self.item_remove_end.emit()
 
     def clear_selection(self, deselect_item=True):

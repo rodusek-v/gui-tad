@@ -1,6 +1,6 @@
 from typing import List
-from PyQt6.QtCore import QRegularExpression
-from PyQt6.QtGui import QRegularExpressionValidator
+from PyQt6.QtCore import QRegularExpression, Qt
+from PyQt6.QtGui import QKeyEvent, QRegularExpressionValidator
 from PyQt6.QtWidgets import QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QListWidget, QSizePolicy, QSpinBox, QWidget
 
 from view.sidebars.form import Form
@@ -91,7 +91,7 @@ class PlaceForm(Form):
         self.enable_add()
         grid.addWidget(self.add_btn, 1, 3, 1, 2)
 
-        self.block_list = BasicList()
+        self.block_list = BlockList(self)
         self.block_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         grid.addWidget(self.block_list, 2, 0, 1, 5)
 
@@ -123,6 +123,7 @@ class PlaceForm(Form):
         self.sidebar.main_controller.object_changes.connect(self.reload_lists)
 
         self.reload_lists()
+        self.fill_list_items()
 
         model_object_group.layout().addWidget(self.model_objects_list)
         rest_object_group.layout().addWidget(self.rest_object_list)
@@ -196,3 +197,19 @@ class PlaceForm(Form):
             item.setText(obj.name)
             item.setFont(font)
             list_widget.addItem(item)
+
+
+class BlockList(BasicList):
+
+    def __init__(self, parent: 'PlaceForm') -> None:
+        super().__init__()
+        self.parent_ = parent
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Delete:
+            items = self.selectedItems()
+            if len(items) != 0:
+                for item in items:
+                    self.parent_.controller.remove_blockade(item.item_data)
+                self.parent_.fill_list_items()
+        super().keyPressEvent(event)

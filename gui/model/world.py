@@ -2,6 +2,8 @@ from PyQt6.QtGui import QIcon, QStandardItem
 
 from model.place import Place
 from model.object import Object
+from model.flag import Flag
+from model.command import Command
 from model.utils import TextModel
 
 
@@ -95,6 +97,8 @@ class World(QStandardItem, TextModel):
         if len(row) != 0 and isinstance(row[0], Place):
             for obj in row[0].get_objects():
                 del obj.container
+            for block in row[0].blockade:
+                block.flag.ref_count -= 1
 
     def append_object(self, object):
         self._objects.appendRow(object)
@@ -106,19 +110,26 @@ class World(QStandardItem, TextModel):
             if row[0].container is not None:
                 row[0].container.remove_object(row[0])
 
-    def append_command(self, command):
-        self._commands.appendRow(command)
-        self._commands_count += 1
-
     def append_flag(self, flag):
         self._flags.appendRow(flag)
         self._flags_count += 1
 
     def remove_flag(self, row_num):
-        self._flags.takeRow(row_num)
+        row = self._flags.takeRow(row_num)
+        if len(row) != 0 and isinstance(row[0], Flag):
+            for d in row[0].action_on_true.get_dependecines():
+                d.flag.ref_count -= 1
+            for d in row[0].action_on_false.get_dependecines():
+                d.flag.ref_count -= 1
+
+    def append_command(self, command):
+        self._commands.appendRow(command)
+        self._commands_count += 1
 
     def remove_command(self, row_num):
-        self._commands.takeRow(row_num)
+        row = self._commands.takeRow(row_num)
+        if len(row) != 0 and isinstance(row[0], Command):
+            row[0].operation.decrease_refferees()
 
     def places_count(self) -> int:
         return self._places_count

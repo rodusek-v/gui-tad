@@ -27,6 +27,9 @@ class Operation(object):
     @property
     def type(self) -> OperationType:
         pass
+
+    def decrease_refferees(self):
+        pass
     
 
 class MessageOperation(Operation):
@@ -54,6 +57,12 @@ class MessageOperation(Operation):
             del attrs["at"]
         return attrs
 
+    def decrease_refferees(self):
+        if self.at:
+            self.at.ref_count -= 1
+        if self.item:
+            self.item.ref_count -= 1
+
 
 class Requirements(Operation):
 
@@ -75,6 +84,12 @@ class Requirements(Operation):
         else:
             attrs["is_carried"] = f"[{','.join([item.name for item in self.is_carried])}]"
         return attrs
+
+    def decrease_refferees(self):
+        for item in self.is_carried:
+            item.ref_count -= 1
+        for item in self.is_present:
+            item.ref_count -= 1
 
 
 class FlagOperation(Requirements):
@@ -105,6 +120,13 @@ class FlagOperation(Requirements):
             del attrs["flag"]
         return attrs
 
+    def decrease_refferees(self):
+        super().decrease_refferees()
+        if self.flag:
+            self.flag.ref_count -= 1
+        if self.at:
+            self.at.ref_count -= 1
+
 class CDMOperation(FlagOperation):
 
     def __init__(self) -> None:
@@ -122,6 +144,11 @@ class CDMOperation(FlagOperation):
         for cdm in self.cdm_props:
             attrs[cdm.type.value] = cdm.item.name
         return attrs
+
+    def decrease_refferees(self):
+        super().decrease_refferees()
+        for cdm in self.cdm_props:
+            cdm.item.ref_count -= 1
 
 
 class RelocateOperation(Requirements):
@@ -147,6 +174,13 @@ class RelocateOperation(Requirements):
         attrs["can_die"] = str(self.can_die).lower()
         
         return attrs
+
+    def decrease_refferees(self):
+        super().decrease_refferees()
+        if self.to:
+            self.to.ref_count -= 1
+        if self.from_:
+            self.from_.ref_count -= 1
 
 class CDMProp:
 

@@ -38,7 +38,7 @@ class PlaceItem(QListWidget):
 
     selected_object = pyqtSignal(Object)
     selected_place = pyqtSignal(Place)
-    removed_object = pyqtSignal(Object)
+    removed_object = pyqtSignal(QListWidget)
     removed_place = pyqtSignal()
     current_item = pyqtSignal(Object)
 
@@ -267,8 +267,7 @@ class PlaceItem(QListWidget):
 
     def remove_selected(self):
         if len(self.selectedIndexes()) != 0:
-            item = self.takeItem(self.selectedIndexes()[0].row())
-            self.removed_object.emit(item.model)
+            self.removed_object.emit(self)
 
     def setGeometry(self, rect: QRectF) -> None:
         super().setGeometry(rect)

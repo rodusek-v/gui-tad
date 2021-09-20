@@ -41,7 +41,11 @@ class CommandController(QObject):
     def set_item(self, item: 'Object') -> None:
         operation = self.model.operation
         if isinstance(operation, MessageOperation):
+            if operation.item is not None:
+                operation.item.ref_count -= 1
             operation.item = item
+            if operation.item is not None:
+                operation.item.ref_count += 1
 
     def get_item(self) -> 'Object':
         operation = self.model.operation
@@ -51,7 +55,11 @@ class CommandController(QObject):
     def set_at(self, place: 'Place') -> None:
         operation = self.model.operation
         if isinstance(operation, MessageOperation) or isinstance(operation, FlagOperation):
+            if operation.at is not None:
+                operation.at.ref_count -= 1
             operation.at = place
+            if operation.at is not None:
+                operation.at.ref_count += 1
 
     def get_at(self) -> 'Place':
         operation = self.model.operation
@@ -106,11 +114,13 @@ class CommandController(QObject):
     def add_carry_requirement(self, item: 'Object') -> None:
         operation = self.model.operation
         if isinstance(operation, Requirements):
+            item.ref_count += 1
             return operation.is_carried.append(item)
 
     def remove_carry_requirement(self, item: 'Object') -> None:
         operation = self.model.operation
         if isinstance(operation, Requirements):
+            item.ref_count -= 1
             return operation.is_carried.remove(item)
 
     def get_present_requirements(self) -> List['Object']:
@@ -121,17 +131,23 @@ class CommandController(QObject):
     def add_present_requirement(self, item: 'Object') -> None:
         operation = self.model.operation
         if isinstance(operation, Requirements):
+            item.ref_count += 1
             return operation.is_present.append(item)
 
     def remove_present_requirement(self, item: 'Object') -> None:
         operation = self.model.operation
         if isinstance(operation, Requirements):
+            item.ref_count -= 1
             return operation.is_present.remove(item)
 
     def set_from(self, place: 'Place') -> None:
         operation = self.model.operation
         if isinstance(operation, RelocateOperation):
+            if operation.from_ is not None:
+                operation.from_.ref_count -= 1
             operation.from_ = place
+            if operation.from_ is not None:
+                operation.from_.ref_count += 1
 
     def get_from(self) -> 'Place':
         operation = self.model.operation
@@ -141,7 +157,11 @@ class CommandController(QObject):
     def set_to(self, place: 'Place') -> None:
         operation = self.model.operation
         if isinstance(operation, RelocateOperation):
+            if operation.to is not None:
+                operation.to.ref_count -= 1
             operation.to = place
+            if operation.to is not None:
+                operation.to.ref_count += 1
 
     def get_to(self) -> 'Place':
         operation = self.model.operation
@@ -166,9 +186,11 @@ class CommandController(QObject):
     def add_cdm_prop(self, type: CDMType, item: 'Object') -> bool:
         operation = self.model.operation
         if isinstance(operation, CDMOperation):
+            item.ref_count += 1
             operation.cdm_props.append(CDMProp(type, item))
 
     def remove_cdm_prop(self, prop: CDMProp) -> bool:
         operation = self.model.operation
         if isinstance(operation, CDMOperation):
+            prop.item.ref_count -= 1
             operation.cdm_props.remove(prop)

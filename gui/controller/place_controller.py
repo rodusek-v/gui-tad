@@ -61,8 +61,10 @@ class PlaceController(QObject):
         return self.model.blockade
 
     def add_blockade(self, flag: 'Flag', direction: Sides, allowed_turns: int = -1) -> None:
+        flag.ref_count += 1
         self.model.blockade.append(Block(flag, direction, allowed_turns))
 
     def remove_blockade(self, block: Block) -> None:
+        block.flag.ref_count -= 1
         self.model.blockade.remove(block)
             

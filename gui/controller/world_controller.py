@@ -10,6 +10,7 @@ class WorldController(QObject):
     item_deletion = pyqtSignal(ItemNode)
     item_addition = pyqtSignal(ItemNode)
     object_changes = pyqtSignal()
+    not_allowed_delete = pyqtSignal(ItemNode)
 
     def __init__(self, model: World = None) -> None:
         super().__init__()
@@ -76,21 +77,36 @@ class WorldController(QObject):
     def add_connection(self, conn: Connection):
         self.model.connections.append(conn)
 
-    def remove_object(self, object: Object) -> None:
-        self.model.remove_object(object.row())
-        object.children_changed.disconnect(self.__container_change)
-        self.object_changes.emit()
-        self.item_deletion.emit(object)
+    def remove_object(self, object: Object) -> bool:
+        if object.ref_count == 0:
+            self.model.remove_object(object.row())
+            object.children_changed.disconnect(self.__container_change)
+            self.object_changes.emit()
+            self.item_deletion.emit(object)
+            return True
+        
+        self.not_allowed_delete.emit(object)
+        return False
 
-    def remove_place(self, place: Place) -> None:
-        self.model.remove_place(place.row())
-        place.children_changed.disconnect(self.__container_change)
-        self.object_changes.emit()
-        self.item_deletion.emit(place)
+    def remove_place(self, place: Place) -> bool:
+        if place.ref_count == 0:
+            self.model.remove_place(place.row())
+            place.children_changed.disconnect(self.__container_change)
+            self.object_changes.emit()
+            self.item_deletion.emit(place)
+            return True
+        
+        self.not_allowed_delete.emit(place)
+        return False
 
-    def remove_flag(self, flag: Flag) -> None:
-        self.model.remove_flag(flag.row())
-        self.item_deletion.emit(flag)
+    def remove_flag(self, flag: Flag) -> bool:
+        if flag.ref_count == 0:
+            self.model.remove_flag(flag.row())
+            self.item_deletion.emit(flag)
+            return True
+        
+        self.not_allowed_delete.emit(flag)
+        return False
 
     def remove_cmd(self, cmd: Command) -> None:
         self.model.remove_command(cmd.row())

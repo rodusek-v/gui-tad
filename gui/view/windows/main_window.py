@@ -4,6 +4,7 @@ from PyQt6.QtGui import QIcon, QResizeEvent, QStandardItemModel
 from PyQt6.QtWidgets import QDockWidget, QMainWindow, QMenu, QMenuBar
 
 from view.windows.operation_dialog import OperationDialog, MaskWidget
+from view.windows.message_box import MessageBox
 from view.buttons import ToggleButton
 from view.worktop import WorktopView, ActionSelector
 from view.worldtree import WorldTreeView
@@ -157,6 +158,7 @@ class MainWindow(QMainWindow):
         self.tree_view.no_container_object.connect(self.working_space.clear_selection)
 
         self.controller.item_deletion.connect(self.hide_form)
+        self.controller.not_allowed_delete.connect(self.open_message_box)
 
     def __init_top_side(self):
         menu_bar = QMenuBar()
@@ -248,6 +250,13 @@ class MainWindow(QMainWindow):
         dlg.selected_operation.connect(self.command_edit)
         dlg.exec()
         dlg.selected_operation.disconnect(self.command_edit)
+        mask.hide()
+
+    def open_message_box(self, item):
+        mask = MaskWidget(self)
+        mask.show()
+        dlg = MessageBox(self, item.name)
+        dlg.exec()
         mask.hide()
 
     def flag_edit(self):

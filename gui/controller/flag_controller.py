@@ -49,14 +49,20 @@ class FlagController(QObject):
         return self.model.action_on_false.message
 
     def add_true_dependency(self, flag: Flag, value: bool) -> None:
+        if self.model != flag:
+            flag.ref_count += 1
         self.model.action_on_true.add_dependency(Dependency(flag, value))
 
     def add_false_dependency(self, flag: Flag, value: bool) -> None:
+        if self.model != flag:
+            flag.ref_count += 1
         self.model.action_on_false.add_dependency(Dependency(flag, value))
 
     def remove_true_dependency(self, dependency: Dependency) -> None:
+        dependency.flag.ref_count -= 1
         self.model.action_on_true.remove_dependency(dependency)
 
     def remove_false_dependency(self, dependency: Dependency) -> None:
+        dependency.flag.ref_count -= 1
         self.model.action_on_false.remove_dependency(dependency) 
             

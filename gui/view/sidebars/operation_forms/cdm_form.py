@@ -42,7 +42,7 @@ class CDMForm(FlagForm):
         self.cdm_btn.setEnabled(False)
         self.layout.addWidget(self.cdm_btn)
 
-        self.cdm_list = BasicList()
+        self.cdm_list = CDMList(self)
         self.cdm_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.layout.addWidget(self.cdm_list)
 
