@@ -1,7 +1,7 @@
 from typing import List
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from model import World, Place, Object, Container, Flag, Command, ItemNode, Connection, Sides, Connection
+from model import *
 from model.operation import CDMOperation, FlagOperation, MessageOperation, OperationType, RelocateOperation
 
 
@@ -139,3 +139,9 @@ class WorldController(QObject):
         containers.extend(self.model.objects)
         # containers.append(self.model.player) TODO: initialize player
         return containers
+
+    def get_player(self) -> 'Player':
+        return self.model.player
+
+    def get_finish(self) -> 'Finish':
+        return self.model.finish

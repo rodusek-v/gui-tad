@@ -1,5 +1,5 @@
 from typing import List
-from PyQt6.QtCore import QRegularExpression, Qt
+from PyQt6.QtCore import QRegularExpression, Qt, pyqtSignal
 from PyQt6.QtGui import QKeyEvent, QRegularExpressionValidator
 from PyQt6.QtWidgets import QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QListWidget, QSizePolicy, QSpinBox, QWidget
 
@@ -91,7 +91,8 @@ class PlaceForm(Form):
         self.enable_add()
         grid.addWidget(self.add_btn, 1, 3, 1, 2)
 
-        self.block_list = BlockList(self)
+        self.block_list = BlockList()
+        self.block_list.delete_pressed.connect(self.__remove_cdms)
         self.block_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         grid.addWidget(self.block_list, 2, 0, 1, 5)
 
@@ -103,6 +104,7 @@ class PlaceForm(Form):
         self.add_btn.clicked.connect(self.__add_block)
 
         self.__reload_flag_box()
+        self.fill_list_items()
         
     def __init_contains_form(self):
         layout = QGridLayout()
@@ -123,7 +125,6 @@ class PlaceForm(Form):
         self.sidebar.main_controller.object_changes.connect(self.reload_lists)
 
         self.reload_lists()
-        self.fill_list_items()
 
         model_object_group.layout().addWidget(self.model_objects_list)
         rest_object_group.layout().addWidget(self.rest_object_list)
@@ -138,6 +139,13 @@ class PlaceForm(Form):
         self.controller.add_blockade(flag, direction, turns)
         self.flag_combo_box.setCurrentText("")
         self.fill_list_items()
+
+    def __remove_cdms(self):
+        items = self.block_list.selectedItems()
+        if len(items) != 0:
+            for item in items:
+                self.controller.remove_blockade(item.item_data)
+            self.fill_list_items()
 
     def __reload_flag_box(self):
         self.flag_combo_box.clear()
@@ -201,15 +209,12 @@ class PlaceForm(Form):
 
 class BlockList(BasicList):
 
-    def __init__(self, parent: 'PlaceForm') -> None:
+    delete_pressed = pyqtSignal()
+
+    def __init__(self) -> None:
         super().__init__()
-        self.parent_ = parent
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Delete:
-            items = self.selectedItems()
-            if len(items) != 0:
-                for item in items:
-                    self.parent_.controller.remove_blockade(item.item_data)
-                self.parent_.fill_list_items()
+            self.delete_pressed.emit()
         super().keyPressEvent(event)

@@ -22,7 +22,7 @@ class ToggleButton(QPushButton):
 
     def select(self):
         if self.isChecked():
-            self.styles["background"] = "#393f4f"
+            self.styles["background"] = "#5e5eff"
         else:
             self.styles["background"] = self.bg_color
         self.setStyleSheet(self.__get_style())

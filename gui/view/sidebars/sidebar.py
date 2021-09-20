@@ -8,8 +8,10 @@ from view.sidebars.place_form import PlaceForm
 from view.sidebars.object_form import ObjectForm
 from view.sidebars.flag_form import FlagForm
 from view.sidebars.command_form import CommandForm
+from view.sidebars.player_form import PlayerForm
+from view.sidebars.finish_form import FinishForm
 from controller import WorldController
-from model import Place, Object, Flag, Command
+from model import Place, Object, Flag, Command, Player, Finish
 
 
 class SideBar(QObject):
@@ -62,6 +64,10 @@ class SideBar(QObject):
             form = FlagForm(model, self)
         elif isinstance(model, Command):
             form = CommandForm(model, self)
+        elif isinstance(model, Player):
+            form = PlayerForm(model, self)
+        elif isinstance(model, Finish):
+            form = FinishForm(model, self)
 
         if form is not None:
             if self.widget is not None:
@@ -70,6 +76,7 @@ class SideBar(QObject):
                     self.widget.disconnect_all_signals()
                     self.widget = form
                     self.holder.layout().addWidget(self.widget)
+                    self.holder.update()
             else:
                 self.widget = form
                 self.holder.layout().addWidget(form)

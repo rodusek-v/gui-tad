@@ -62,7 +62,7 @@ class WorktopView(QGraphicsView):
         self.v_scroll = GridScrollBar()
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self.setStyleSheet("background: #f0f0f0;")
+        self.setStyleSheet("background: #2e2e2e;")
         self.setHorizontalScrollBar(self.h_scroll)
         self.setVerticalScrollBar(self.v_scroll)
         

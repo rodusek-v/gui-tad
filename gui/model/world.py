@@ -4,6 +4,8 @@ from model.place import Place
 from model.object import Object
 from model.flag import Flag
 from model.command import Command
+from model.player import Player
+from model.finish import Finish
 from model.utils import TextModel
 
 
@@ -14,8 +16,8 @@ class World(QStandardItem, TextModel):
         self._name = None
         self._description = None
         self._connections = list()
-        self._player = None
-        self._finish = None
+        self._player = Player()
+        self._finish = Finish()
 
         self._places_count = 0
         self._objects_count = 0
@@ -84,6 +86,10 @@ class World(QStandardItem, TextModel):
     @property
     def player(self):
         return self._player
+
+    @property
+    def finish(self):
+        return self._finish
 
     def save(self):
         pass

@@ -9,6 +9,7 @@ from view.buttons import ToggleButton
 from view.worktop import WorktopView, ActionSelector
 from view.worldtree import WorldTreeView
 from view.sidebars import SideBar
+from view.menus import FileMenu
 from controller import WorldController
 from model import Flag, Command
 
@@ -18,7 +19,7 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle('GUI TAD')
-        self.setWindowIcon(QIcon('icons/icon.png'))
+        self.setWindowIcon(QIcon('icons/window_icon.png'))
         screen = QApplication.primaryScreen().size()
         self.resize(int(screen.width() * 0.8), int(screen.height() * 0.8))
 
@@ -29,7 +30,6 @@ class MainWindow(QMainWindow):
         self.__init_working_space()
         self.__init_top_side()
 
-        
         style = """
             QMenuBar {
                 background-color: #262626;
@@ -121,9 +121,9 @@ class MainWindow(QMainWindow):
 
     def __init_working_space(self):
         temp = QWidget()
-        temp.setStyleSheet("background-color: #c9c5c5;")
+        temp.setStyleSheet("background-color: #575757;")
         
-        self.working_space = WorktopView(self.controller, self.action_selector)
+        self.working_space = WorktopView(self.controller, self.action_selector, side=120)
         self.working_space.setMinimumWidth(int(self.size().width() * 0.77))
         temp.setLayout(QHBoxLayout())
         temp.layout().addWidget(self.working_space)
@@ -163,7 +163,7 @@ class MainWindow(QMainWindow):
     def __init_top_side(self):
         menu_bar = QMenuBar()
 
-        file_menu_item = QMenu("&File", self)
+        file_menu_item = FileMenu(self, self.controller)
         
         settings_menu_item = QMenu("&Settings", self)
 
@@ -233,6 +233,20 @@ class MainWindow(QMainWindow):
         command.clicked.connect(self.open_operation_dialog)
 
         self.top_toolbar.addSeparator()
+
+        player = ToggleButton("", self)
+        player.setCheckable(False)
+        player.setIcon(QIcon("icons/player.png"))
+        player.setIconSize(QSize(35, 35))
+        self.top_toolbar.addWidget(player)
+        player.clicked.connect(self.player_edit)
+
+        finish = ToggleButton("", self)
+        finish.setCheckable(False)
+        finish.setIcon(QIcon("icons/finish.png"))
+        finish.setIconSize(QSize(35, 35))
+        self.top_toolbar.addWidget(finish)
+        finish.clicked.connect(self.finish_edit)
         
         grp = QButtonGroup(self)
         grp.addButton(select)
@@ -272,6 +286,18 @@ class MainWindow(QMainWindow):
         cmd = self.controller.add_command(type)
         self.show_form(cmd)
         self.tree_view.setCurrentIndex(cmd.index())
+
+    def player_edit(self):
+        self.working_space.clear_selection()
+        self.tree_view.clearSelection()
+        player = self.controller.get_player()
+        self.show_form(player)
+
+    def finish_edit(self):
+        self.working_space.clear_selection()
+        self.tree_view.clearSelection()
+        finish = self.controller.get_finish()
+        self.show_form(finish)
 
     def set_status_location(self, point):
         self.location_label.setText(f"X: {point.x()} Y: {point.y()}")
