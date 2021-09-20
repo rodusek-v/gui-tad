@@ -17,6 +17,7 @@ class WorldController(QObject):
         self.model = model
         if self.model is None:
             self.__create_new_model()
+        self.model.player.children_changed.connect(self.__container_change)
     
     def __create_new_model(self, name: str = "New world") -> None:
         self.model = World()
@@ -137,7 +138,7 @@ class WorldController(QObject):
         containers = []
         containers.extend(self.model.places)
         containers.extend(self.model.objects)
-        # containers.append(self.model.player) TODO: initialize player
+        containers.append(self.model.player)
         return containers
 
     def get_player(self) -> 'Player':

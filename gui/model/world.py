@@ -16,7 +16,7 @@ class World(QStandardItem, TextModel):
         self._name = None
         self._description = None
         self._connections = list()
-        self._player = Player()
+        self._player = Player("player")
         self._finish = Finish()
 
         self._places_count = 0

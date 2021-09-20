@@ -243,8 +243,9 @@ class WorktopView(QGraphicsView):
             new_place.geometry().y() + self.side / 2
         )
         
-        pen = QPen(Qt.GlobalColor.black, 0.7)
-        brush = QBrush(QColor(94, 94, 255))
+        color = QColor(94, 94, 255)
+        pen = QPen(color, 0.7)
+        brush = QBrush(color)
         for direction, offset in PlaceItem.directions.items():
             check_point = QPointF(
                 center_point.x() + offset.x() * self.side,
