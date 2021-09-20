@@ -48,22 +48,22 @@ class FlagForm(Form):
 
         msg_txt_bot = TextField(self.controller.get_true_message())
         msg_txt_bot.editing_done.connect(self.controller.set_true_message)
-        layout.addWidget(QLabel("Message", font=font))
+        layout.addWidget(QLabel("Action on true", font=font))
+        layout.addWidget(QLabel("Message"))
         layout.addWidget(msg_txt_bot)
 
         self.action_on_true_list = ActionList(controller=self.controller, type=True)
         self.action_on_true_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        layout.addWidget(QLabel("Action on true", font=font))
         layout.addWidget(self.action_on_true_list)
 
         msg_txt_bot = TextField(self.controller.get_false_message())
         msg_txt_bot.editing_done.connect(self.controller.set_false_message)
-        layout.addWidget(QLabel("Message", font=font))
+        layout.addWidget(QLabel("Action on false", font=font))
+        layout.addWidget(QLabel("Message"))
         layout.addWidget(msg_txt_bot)
 
         self.action_on_false_list = ActionList(controller=self.controller, type=False)
         self.action_on_false_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        layout.addWidget(QLabel("Action on false", font=font))
         layout.addWidget(self.action_on_false_list)
 
         self.refresh_list()

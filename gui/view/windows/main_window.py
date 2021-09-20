@@ -304,4 +304,4 @@ class MainWindow(QMainWindow):
             btn.setStyle("background", "transparent")
 
         to_toggle.setChecked(True)
-        to_toggle.setStyle("background", "#393f4f")
+        to_toggle.setStyle("background", "#5e5eff")

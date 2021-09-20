@@ -24,6 +24,8 @@ class Place(ItemNode, Container):
         if contains is None:
             contains = []
         self.contains = contains
+        if blockade is None:
+            blockade = []
         self.blockade = blockade
 
         self.position = None

@@ -70,6 +70,7 @@ class ObjectForm(Form):
         layout.addWidget(self.container_combo_box)
         self.controller.model.container_chaged.connect(self.__reload_combo_box)
         self.sidebar.main_controller.item_deletion.connect(self.__reload_combo_box)
+        self.sidebar.main_controller.item_addition.connect(self.__reload_combo_box)
 
     def __init_contains_form(self):
         layout = QGridLayout()
@@ -139,6 +140,7 @@ class ObjectForm(Form):
     def disconnect_all_signals(self):
         self.controller.model.container_chaged.disconnect(self.__reload_combo_box)
         self.sidebar.main_controller.item_deletion.disconnect(self.__reload_combo_box)
+        self.sidebar.main_controller.item_addition.disconnect(self.__reload_combo_box)
         self.sidebar.main_controller.object_changes.disconnect(self.reload_lists)
 
     def reload_lists(self):

@@ -1,19 +1,13 @@
-from enum import Enum
 from time import time
 
-from PyQt6.QtCore import QItemSelection, QPointF, QRectF, QSize, QSizeF, Qt, pyqtSignal
+from PyQt6.QtCore import QPointF, QRectF, QSize, QSizeF, Qt, pyqtSignal
 from PyQt6.QtGui import QDropEvent, QKeyEvent, QMouseEvent
 from PyQt6.QtWidgets import QAbstractItemView, QLabel, QListWidget
 
 from view.worktop.object_item import ObjectItem
-from model.place import Place, Object
+from model import Place, Object, Sides
 from controller import PlaceController
 
-class Sides(Enum):
-    N = "N"
-    S = "S"
-    W = "W"
-    E = "E"
 
 class Title(QLabel):
 
@@ -70,13 +64,14 @@ class PlaceItem(QListWidget):
         self.setStyleSheet("""
             QListWidget {
                 outline: 0;
+                border: none;
             }
             :enabled {
-                background: rgb(140, 140, 140);
+                background: #5e5eff;
                 color: black;
             }
             :disabled {
-                background: rgb(140, 140, 140);
+                background: #5e5eff;
                 color: black;
             }
             :item {
@@ -221,23 +216,35 @@ class PlaceItem(QListWidget):
     def set_neighbour(self, side: Sides, neighbour):
         self._neighbours[side.name] = neighbour
 
+    def get_neighbour(self, side: Sides):
+        return self._neighbours[side.name]
+
     def check_if_neighbour_exist(self, side: Sides):
         return self._neighbours[side.name] is not None
 
     def remove_neighbour(self, side: Sides):
         self._neighbours[side.name] = None
 
-    def say_hello(self, side: Sides, neighbour):
+    def say_hello(self, side: Sides, neighbour, callback_func=None):
         self.set_neighbour(side, neighbour)
         self._neighbours[side.name].set_neighbour(
             Sides(self.inverse_side[side.name]), self)
 
+        if callback_func is not None:
+            callback_func(
+                self.place_model, side, neighbour.place_model
+            )
+
         return self.__relation_rect(side)
 
-    def say_goodbye(self):
+    def say_goodbye(self, callback_func=None):
         rel_centers = []
         for side, neighbour in self._neighbours.items():
             if neighbour is not None:
+                if callback_func is not None:
+                    callback_func(
+                        self.place_model, side, neighbour.place_model
+                    )
                 self.remove_neighbour(Sides(side))
                 neighbour.remove_neighbour(Sides(self.inverse_side[side]))
                 rel_rect = self.__relation_rect(Sides(side))

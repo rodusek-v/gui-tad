@@ -49,6 +49,7 @@ class MessageForm(QObject):
 
     def __set_currect_item(self):
         item = self.controller.get_item()
+        print(item)
         self.item_combo_box.setCurrentText(item.name if item else None)
 
     def __set_current_place(self):

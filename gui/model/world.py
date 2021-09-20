@@ -76,6 +76,10 @@ class World(QStandardItem, TextModel):
         return [temp.child(i) for i in range(temp.rowCount())]
 
     @property
+    def connections(self):
+        return self._connections
+
+    @property
     def player(self):
         return self._player
 

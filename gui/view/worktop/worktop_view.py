@@ -195,7 +195,7 @@ class WorktopView(QGraphicsView):
             pen = QPen(Qt.GlobalColor.black)
             rect_side = space_rect.width()
             pen.setDashPattern([0, rect_side / 20, rect_side / 10, rect_side / 20])
-            self.hover_cell = self.scene().addRect(space_rect, pen, QColor(212, 212, 212))
+            self.hover_cell = self.scene().addRect(space_rect, pen, QColor(179, 179, 255))
 
     def __add_place_press(self, event: QMouseEvent):
         adding_point = self.get_scene_point(event.position())
@@ -216,7 +216,7 @@ class WorktopView(QGraphicsView):
                 dy = space_rect.y() - self.selection["item"].y()
                 
                 if isinstance(self.selection["item"], QGraphicsProxyWidget):
-                    points = self.selection["item"].widget().say_goodbye()
+                    points = self.selection["item"].widget().say_goodbye(self.controller.remove_connection)
                     self.__remove_items(points)
                     self.selection["item"].moveBy(dx, dy)
                     self.selection["item"].widget().place_model.position = \
@@ -244,7 +244,7 @@ class WorktopView(QGraphicsView):
         )
         
         pen = QPen(Qt.GlobalColor.black, 0.7)
-        brush = QBrush(QColor(140, 140, 140))
+        brush = QBrush(QColor(94, 94, 255))
         for direction, offset in PlaceItem.directions.items():
             check_point = QPointF(
                 center_point.x() + offset.x() * self.side,
@@ -252,7 +252,9 @@ class WorktopView(QGraphicsView):
             )
             item = self.scene().itemAt(check_point, QTransform())
             if isinstance(item, QGraphicsProxyWidget):
-                rel_rect = new_place.say_hello(Sides(direction), item.widget())
+                rel_rect = new_place.say_hello(
+                    Sides(direction), item.widget(), self.controller.add_connection
+                )
                 bar = self.scene().addRect(rel_rect, pen, brush)
                 bar.setZValue(-10)
 
@@ -430,15 +432,16 @@ class WorktopView(QGraphicsView):
     def delete_selected(self):
         if self.selection["item"]:
             self.item_remove_start.emit()
-            points = self.selection["item"].widget().say_goodbye()
-            self.controller.remove_place(self.selection["item"].widget().place_model)
+            place = self.selection["item"].widget()
+            points = place.say_goodbye(self.controller.remove_connection)
+            self.controller.remove_place(place.place_model)
             self.__remove_items(points)
             self.places.remove_from_group(self.selection["item"])
-            self.selection["item"].widget().selected_object.disconnect(self.__dispatch)
-            self.selection["item"].widget().selected_place.disconnect(self.__dispatch)
-            self.selection["item"].widget().removed_object.disconnect(self.__remove_object)
-            self.selection["item"].widget().removed_place.disconnect(self.delete_selected)
-            self.selection["item"].widget().current_item.disconnect(self.__procced_signal)
+            place.selected_object.disconnect(self.__dispatch)
+            place.selected_place.disconnect(self.__dispatch)
+            place.removed_object.disconnect(self.__remove_object)
+            place.removed_place.disconnect(self.delete_selected)
+            place.current_item.disconnect(self.__procced_signal)
 
             self.clear_selection()
             self.selection_change.emit(None)

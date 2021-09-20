@@ -1,7 +1,8 @@
 from typing import List
 from PyQt6.QtCore import QObject
 
-from model import Place, Object
+from model.utils import Block, Sides
+from model import Place, Object, Flag
 
 
 class PlaceController(QObject):
@@ -55,4 +56,13 @@ class PlaceController(QObject):
 
     def get_contains(self) -> List['Object']:
         return self.model.contains
+
+    def get_blockade(self) -> List['Block']:
+        return self.model.blockade
+
+    def add_blockade(self, flag: 'Flag', direction: Sides, allowed_turns: int = -1) -> None:
+        self.model.blockade.append(Block(flag, direction, allowed_turns))
+
+    def remove_blockade(self, block: Block) -> None:
+        self.model.blockade.remove(block)
             

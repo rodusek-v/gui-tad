@@ -1,8 +1,7 @@
 from typing import List
 from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtGui import QStandardItem
 
-from model import World, Place, Object, Container, Flag, Command, ItemNode
+from model import World, Place, Object, Container, Flag, Command, ItemNode, Connection, Sides, Connection
 from model.operation import CDMOperation, FlagOperation, MessageOperation, OperationType, RelocateOperation
 
 
@@ -74,6 +73,9 @@ class WorldController(QObject):
         self.item_addition.emit(cmd)
         return cmd
 
+    def add_connection(self, conn: Connection):
+        self.model.connections.append(conn)
+
     def remove_object(self, object: Object) -> None:
         self.model.remove_object(object.row())
         object.children_changed.disconnect(self.__container_change)
@@ -94,6 +96,9 @@ class WorldController(QObject):
         self.model.remove_command(cmd.row())
         self.item_deletion.emit(cmd)
 
+    def remove_connection(self, conn: Connection):
+        self.model.connections.remove(conn)
+
     def get_objects(self) -> List['Object']:
         return self.model.objects
 
@@ -102,6 +107,15 @@ class WorldController(QObject):
 
     def get_flags(self) -> List['Flag']:
         return self.model.flags
+
+    def get_connections(self) -> List['Connection']:
+        return self.model.connections
+
+    def add_connection(self, place_1: 'Place', direction: Sides, place_2: 'Place') -> None:
+        self.model.connections.append(Connection(place_1, direction, place_2))
+
+    def remove_connection(self, place_1: 'Place', direction: Sides, place_2: 'Place') -> None:
+        self.model.connections.remove(Connection(place_1, direction, place_2))
 
     def get_containers(self) -> List['Container']:
         containers = []

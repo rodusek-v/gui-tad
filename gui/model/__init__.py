@@ -7,3 +7,5 @@ from . player import Player
 from . finish import Finish
 from . item_node import ItemNode
 from . container import Container
+from . utils import Sides
+from . connection import Connection

@@ -1,5 +1,13 @@
+from enum import Enum
 from typing import List
 from jinja2 import Template
+
+
+class Sides(Enum):
+    N = "N"
+    S = "S"
+    W = "W"
+    E = "E"
 
 
 class TextModel:
@@ -27,7 +35,7 @@ class Description:
 
 class Block:
 
-    def __init__(self, flag: 'Flag', direction: str, turns: int = None) -> None:
+    def __init__(self, flag: 'Flag', direction: Sides, turns: int = -1) -> None:
         self.flag = flag
         self.direction = direction
         self.turns = turns

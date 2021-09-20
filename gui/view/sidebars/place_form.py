@@ -4,10 +4,12 @@ from PyQt6.QtGui import QRegularExpressionValidator
 from PyQt6.QtWidgets import QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QListWidget, QSizePolicy, QSpinBox, QWidget
 
 from view.sidebars.form import Form
-from view.fields import TextField, TextArea, ContainsList
+from view.fields import TextField, TextArea, ContainsList, ComboBox, BasicList, BasicItem
 from view.worktop import ObjectItem
+from view.buttons import ToggleButton
 from controller import PlaceController
 from model import Object
+from model.utils import Sides
 
 
 class PlaceForm(Form):
@@ -56,6 +58,51 @@ class PlaceForm(Form):
         desc_txt_box.text_modified.connect(self.controller.set_description)
         layout.addWidget(QLabel("Description", font=font))
         layout.addWidget(desc_txt_box)
+
+        blockade = QWidget()
+        grid = QGridLayout()
+        grid.setContentsMargins(0, 0, 0, 0)
+        blockade.setLayout(grid)
+        
+        self.flag_combo_box = ComboBox()
+        self.flag_combo_box.currentIndexChanged.connect(self.enable_add)
+        grid.addWidget(self.flag_combo_box, 0, 0, 1, 4)
+
+        self.direction_box = ComboBox()
+        for member in Sides:
+            self.direction_box.addItem(member.value, member)
+        grid.addWidget(self.direction_box, 0, 4)
+
+        self.turns_spin = QSpinBox()
+        self.turns_spin.setStyleSheet("""
+            QSpinBox {
+                padding: 1px 5px 5px 2px;
+                border: 2px solid #545454;
+            }
+        """)
+        self.turns_spin.setMinimum(-1)
+        grid.addWidget(self.turns_spin, 1, 0, 1, 2)
+
+        self.add_btn = ToggleButton("Add")
+        self.add_btn.setCheckable(False)
+        self.add_btn.setStyle("background", "#3d3d3d")
+        self.add_btn.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        self.add_btn.setEnabled(False)
+        self.enable_add()
+        grid.addWidget(self.add_btn, 1, 3, 1, 2)
+
+        self.block_list = BasicList()
+        self.block_list.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        grid.addWidget(self.block_list, 2, 0, 1, 5)
+
+        layout.addWidget(QLabel("Blockades", font=font))
+        layout.addWidget(blockade)
+
+        self.sidebar.main_controller.item_deletion.connect(self.__reload_flag_box)
+        self.sidebar.main_controller.item_addition.connect(self.__reload_flag_box)
+        self.add_btn.clicked.connect(self.__add_block)
+
+        self.__reload_flag_box()
         
     def __init_contains_form(self):
         layout = QGridLayout()
@@ -82,6 +129,41 @@ class PlaceForm(Form):
         layout.addWidget(model_object_group, 0, 0)
         layout.addWidget(rest_object_group, 1, 0)
 
+    def __add_block(self):
+        flag = self.flag_combo_box.currentData()
+        direction = self.direction_box.currentData()
+        turns = self.turns_spin.value()
+
+        self.controller.add_blockade(flag, direction, turns)
+        self.flag_combo_box.setCurrentText("")
+        self.fill_list_items()
+
+    def __reload_flag_box(self):
+        self.flag_combo_box.clear()
+        self.flag_combo_box.addItem("", None)
+        items = self.sidebar.main_controller.get_flags()
+        for item in items:
+            self.flag_combo_box.addItem(item.q_icon, item.name, item)
+
+    def enable_add(self):
+        data = self.flag_combo_box.currentData()
+        if data is None:
+            self.add_btn.setStyle("background", "#878787")
+            self.add_btn.setEnabled(False)
+        else:
+            self.add_btn.setStyle("background", "#3d3d3d")
+            self.add_btn.setEnabled(True)
+
+    def fill_list_items(self):
+        self.block_list.clear()
+        items = self.controller.get_blockade()
+        for item in items:
+            list_item = BasicItem(item)
+            text = f"flag = {item.flag.name}, direction = {item.direction.value}"
+            text += "" if item.turns == -1 else f", allowed_turns = {item.turns}"
+            list_item.setText(text)
+            self.block_list.addItem(list_item)
+
     def reload_lists(self):
         self.__load_list(self.model_objects_list, self.controller.get_contains())
         self.__load_list(
@@ -92,6 +174,8 @@ class PlaceForm(Form):
 
     def disconnect_all_signals(self):
         self.sidebar.main_controller.object_changes.disconnect(self.reload_lists)
+        self.sidebar.main_controller.item_deletion.disconnect(self.__reload_flag_box)
+        self.sidebar.main_controller.item_addition.disconnect(self.__reload_flag_box)
 
     @staticmethod
     def __load_list(
