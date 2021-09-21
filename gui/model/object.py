@@ -87,6 +87,21 @@ class Object(ItemNode, Container):
         self._container = None
         self.container_chaged.emit()
 
+    def serialize(self):
+        ser = dict(self.__dict__)
+        del ser['_q_icon']
+        del ser['_ItemNode__signaler']
+        del ser['_ref_count']
+        ser['_description'] = self.description.__dict__
+        ser['_contains'] = [obj.name for obj in self.contains]
+        ser['_container'] = None if self.container is None else self.container.name
+        return ser
+
+    def load(self, serialized):
+        self.name = serialized['_name']
+        self.description.name = serialized['_description']['name']
+        self.description.description = serialized['_description']['description']
+
     def add_object(self, object: 'Object') -> None:
         object.container = self
         self._contains.append(object)

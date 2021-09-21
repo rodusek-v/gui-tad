@@ -28,6 +28,15 @@ class Finish(ItemNode):
     def flag(self, value: 'Flag') -> None:
         self._flag = value
 
+    def serialize(self):
+        ser = dict(self.__dict__)
+        del ser['_q_icon']
+        del ser['_ItemNode__signaler']
+        del ser['_ref_count']
+        ser['_position'] = self.position.name if self.position else None
+        ser['_flag'] = self.flag.name if self.flag else None
+        return ser
+
 
 from model.place import Place
 from model.flag import Flag

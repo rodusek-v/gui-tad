@@ -34,7 +34,7 @@ class ActionList(EqualList):
 
     def fill_list_items(self):
         self.basic_list.clear()
-        items = self.controller.get_action(self.type).get_dependecines()
+        items = self.controller.get_action(self.type).get_dependencies()
         for item in items:
             list_item = BasicItem(item)
             list_item.setText(f"{item.flag.name} == {str(item.value).lower()}")

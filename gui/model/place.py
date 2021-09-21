@@ -86,6 +86,22 @@ class Place(ItemNode, Container):
     def position(self, position: QRectF):
         self._position = position
 
+    def serialize(self):
+        ser = dict(self.__dict__)
+        del ser['_q_icon']
+        del ser['_ItemNode__signaler']
+        del ser['_ref_count']
+        ser['_description'] = self.description.__dict__
+        ser['_contains'] = [obj.name for obj in self.contains]
+        ser['_blockade'] = [block.serialize() for block in self.blockade]
+        return ser
+
+    def load(self, serialized):
+        self.name = serialized['_name']
+        self.description.name = serialized['_description']['name']
+        self.description.description = serialized['_description']['description']
+        self.position = QRectF(serialized['_position'])
+
     def get_objects(self) -> List['Object']:
         return self.contains
 

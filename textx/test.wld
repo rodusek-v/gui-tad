@@ -12,7 +12,7 @@ places {
     place Room2 {
         """
             name: Room2
-            description: You are in room Two, entrance to the room Four is blocked by door  
+            description: You are in room Two, entrance to the room Four is blocked by door
         """
 
         contains {

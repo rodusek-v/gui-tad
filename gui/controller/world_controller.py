@@ -1,7 +1,10 @@
-from typing import List
+import pickle
+
+from typing import Dict, List
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from model import *
+from model.utils import Block, Dependency
 from model.operation import CDMOperation, FlagOperation, MessageOperation, OperationType, RelocateOperation
 
 
@@ -34,17 +37,94 @@ class WorldController(QObject):
     def model(self, value: World) -> None:
         self._model = value
 
+    def save(self):
+        with open("test.dat", "wb") as dump:
+            pickle.dump(self.model.serialize(), dump)
+
+    def load(self):
+        with open("test.dat", "rb") as dump:
+            map: Dict[str, str] = pickle.load(dump)
+            model = World()
+            self.model = model
+            model.load(map)
+
+            places: Dict[str, Place] = {}
+            for place in map['places']:
+                place_model = self.add_place()
+                place_model.load(place)
+                places[place_model.name] = place_model
+
+            objects: Dict[str, Object] = {}
+            for object in map['objects']:
+                object_model = self.add_object()
+                object_model.load(object)
+                objects[object_model.name] = object_model
+
+            flags: Dict[str, Flag] = {}
+            for flag in map['flags']:
+                flag_model = self.add_flag()
+                flag_model.load(flag)
+                flags[flag_model.name] = flag_model
+
+            commands: Dict[str, Command] = {}
+            for command in map['commands']:
+                command_model = self.add_command(command['_operation']['type'])
+                command_model.load(command, places=places, objects=objects, flags=flags)
+                commands[command_model.name] = command_model
+
+            for conn in map['connections']:
+                place_1 = places.get(conn['place_1'], None)
+                place_2 = places.get(conn['place_2'], None)
+                self.add_connection(place_1, conn['direction'], place_2)
+
+            model.player.name = map['player']['_name']
+            player_position = map['player']['_position']
+            model.player.position = places.get(player_position, None)
+
+            for obj in map['player']['_items']:
+                model.player.add_object(objects[obj])
+
+            finish_flag = map['finish']['_flag']
+            model.finish.flag = flags.get(finish_flag, None)
+
+            finish_position = map['finish']['_position']
+            model.finish.position = places.get(finish_position, None)
+
+            for place in map['places']:
+                for obj in place['_contains']:
+                    places[place['_name']].add_object(objects[obj])
+
+                for block in place['_blockade']:
+                    flag = flags[block['flag']]
+                    flag.ref_count += 1
+                    places[place['_name']].blockade.append(
+                        Block(flag, block['direction'], block['turns']))
+
+            for object in map['objects']:
+                for obj in object['_contains']:
+                    objects[object['_name']].add_object(objects[obj])
+
+            for flg in map['flags']:
+                for dep in flg['_action_on_true']['dependencies']:
+                    flag = flags[dep['flag']]
+                    flag.ref_count += 1
+                    flags[flg['_name']].action_on_true.add_dependency(Dependency(flag, dep['value']))
+                for dep in flg['_action_on_false']['dependencies']:
+                    flag = flags[dep['flag']]
+                    flag.ref_count += 1
+                    flags[flg['_name']].action_on_false.add_dependency(Dependency(flag, dep['value']))
+
     def add_place(self) -> Place:
-        count = self.model.places_count()
-        place = Place(f"new_place{f'_{count}' if count != 0 else ''}")
+        index = self.model.places_index
+        place = Place(f"new_place{f'_{index}' if index != 0 else ''}")
         self.model.append_place(place)
         place.children_changed.connect(self.__container_change)
         self.item_addition.emit(place)
         return place
 
     def add_object(self, container: Container = None) -> Object:
-        count = self.model.objects_count()
-        object = Object(f"new_object{f'_{count}' if count != 0 else ''}")
+        index = self.model.objects_index
+        object = Object(f"new_object{f'_{index}' if index != 0 else ''}")
         if container is not None:
             container.add_object(object)
         self.model.append_object(object)
@@ -54,14 +134,14 @@ class WorldController(QObject):
         return object
 
     def add_flag(self) -> Flag:
-        count = self.model.flags_count()
-        flag = Flag(f"new_flag{f'_{count}' if count != 0 else ''}")
+        index = self.model.flags_index
+        flag = Flag(f"new_flag{f'_{index}' if index != 0 else ''}")
         self.model.append_flag(flag)
         self.item_addition.emit(flag)
         return flag
 
     def add_command(self, type: OperationType) -> Command:
-        count = self.model.commands_count()
+        index = self.model.commands_index
         if type == OperationType.RELOCATION_OPERATION:
             operation = RelocateOperation()
         elif type == OperationType.FLAG_OPERATION:
@@ -70,7 +150,7 @@ class WorldController(QObject):
             operation = CDMOperation()
         else:
             operation = MessageOperation()
-        cmd = Command(count, [f"new_command{f'_{count}' if count != 0 else ''}"], operation)
+        cmd = Command(index, [f"new_command{f'_{index}' if index != 0 else ''}"], operation)
         self.model.append_command(cmd)
         self.item_addition.emit(cmd)
         return cmd

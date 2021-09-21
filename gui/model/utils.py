@@ -40,23 +40,33 @@ class Block:
         self.direction = direction
         self.turns = turns
 
+    def serialize(self):
+        ser = dict(self.__dict__)
+        ser['flag'] = self.flag.name
+        return ser
+
 
 class Action:
 
-    def __init__(self, message: str = None, dependecines: List['Dependency'] = None) -> None:
+    def __init__(self, message: str = None, dependencies: List['Dependency'] = None) -> None:
         self.message = message
-        if dependecines is None:
-            dependecines = []
-        self.dependecines = dependecines
+        if dependencies is None:
+            dependencies = []
+        self.dependencies = dependencies
 
-    def get_dependecines(self) -> List['Dependency']:
-        return self.dependecines
+    def get_dependencies(self) -> List['Dependency']:
+        return self.dependencies
 
     def add_dependency(self, dependency: 'Dependency') -> None:
-        self.dependecines.append(dependency)
+        self.dependencies.append(dependency)
 
     def remove_dependency(self, dependency: 'Dependency') -> None:
-        self.dependecines.remove(dependency)
+        self.dependencies.remove(dependency)
+
+    def serialize(self):
+        ser = dict(self.__dict__)
+        ser['dependencies'] = [dep.serialize() for dep in self.dependencies]
+        return ser
 
 
 class Dependency:
@@ -64,6 +74,12 @@ class Dependency:
     def __init__(self, flag: 'Flag', value: bool) -> None:
         self.flag = flag
         self.value = value
+
+    def serialize(self):
+        ser = dict(self.__dict__)
+        ser['flag'] = self.flag.name
+
+        return ser
 
 
 from model.flag import Flag

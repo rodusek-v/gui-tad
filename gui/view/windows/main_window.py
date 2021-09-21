@@ -25,6 +25,7 @@ class MainWindow(QMainWindow):
 
         self.action_selector = ActionSelector()
         self.controller = WorldController()
+        self.controller.load()
 
         self.__init_tree_view()
         self.__init_working_space()

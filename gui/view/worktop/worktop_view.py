@@ -75,7 +75,7 @@ class WorktopView(QGraphicsView):
         self.setScene(QGraphicsScene())
         self.__fill_view()
 
-    def __add_place(self, model, space_rect):
+    def __add_place(self, model, space_rect, just_draw=False):
         place = PlaceItem(model, margin=self.margin, size=self.side)
         place.selected_object.connect(self.__dispatch)
         place.selected_place.connect(self.__dispatch)
@@ -89,11 +89,11 @@ class WorktopView(QGraphicsView):
 
         self.places.add_to_group(new_place)
         
-        self.__check_neighbours(place)
+        self.__check_neighbours(place, just_draw)
 
     def __fill_view(self):
         for place in self.controller.get_places():
-            self.__add_place(place, place.position)
+            self.__add_place(place, place.position, just_draw=True)
 
     def __dispatch(self, obj):
         self.dispatch_event.emit(obj)
@@ -237,7 +237,7 @@ class WorktopView(QGraphicsView):
                 self.scene().removeItem(item)
         self.places.set_z_value(z_value)
 
-    def __check_neighbours(self, new_place: PlaceItem):
+    def __check_neighbours(self, new_place: PlaceItem, just_draw=False):
         center_point = QPointF(
             new_place.geometry().x() + self.side / 2,
             new_place.geometry().y() + self.side / 2
@@ -253,9 +253,12 @@ class WorktopView(QGraphicsView):
             )
             item = self.scene().itemAt(check_point, QTransform())
             if isinstance(item, QGraphicsProxyWidget):
-                rel_rect = new_place.say_hello(
-                    Sides(direction), item.widget(), self.controller.add_connection
-                )
+                if just_draw:
+                    rel_rect = new_place.say_hello(Sides(direction), item.widget())
+                else:
+                    rel_rect = new_place.say_hello(
+                        Sides(direction), item.widget(), self.controller.add_connection
+                    )
                 bar = self.scene().addRect(rel_rect, pen, brush)
                 bar.setZValue(-10)
 

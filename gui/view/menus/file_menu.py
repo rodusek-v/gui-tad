@@ -28,9 +28,11 @@ class FileMenu(QMenu):
 
         self.open = QAction("Open project", self)
         self.open.setShortcut("CTRL+O")
+        self.open.triggered.connect(controller.load)
 
         self.save = QAction("Save", self)
         self.save.setShortcut("CTRL+S")
+        self.save.triggered.connect(controller.save)
 
         self.exit = QAction("Exit", self)
         self.exit.triggered.connect(self.exit_)

@@ -19,7 +19,7 @@ class Player(ItemNode, Container):
         self.position = position
         if items is None:
             items = []
-        self.items = items
+        self._items = items
 
     @property
     def q_icon(self) -> QIcon:
@@ -51,16 +51,25 @@ class Player(ItemNode, Container):
     def position(self, value: 'Place') -> None:
         self._position = value
 
+    def serialize(self):
+        ser = dict(self.__dict__)
+        del ser['_q_icon']
+        del ser['_ItemNode__signaler']
+        del ser['_ref_count']
+        ser['_position'] = self.position.name if self.position else None
+        ser['_items'] = [item.name for item in self._items]
+        return ser
+
     def get_objects(self) -> List['Object']:
-        return self.items
+        return self._items
 
     def add_object(self, object: 'Object') -> None:
         object.container = self
-        self.items.append(object)
+        self._items.append(object)
 
     def remove_object(self, object: 'Object') -> None:
         try:
-            self.items.remove(object)
+            self._items.remove(object)
             del object.container
         except ValueError:
             pass
