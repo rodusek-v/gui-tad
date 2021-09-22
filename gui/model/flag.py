@@ -8,7 +8,7 @@ class Flag(ItemNode):
 
     def __init__(
         self,
-        name: str = None,
+        name: str = "",
         activated: bool = False,
     ) -> None:
         super().__init__()
@@ -69,6 +69,7 @@ class Flag(ItemNode):
         del ser['_q_icon']
         del ser['_ItemNode__signaler']
         del ser['_ref_count']
+        del ser['template_path']
         ser['_action_on_true'] = self.action_on_true.serialize()
         ser['_action_on_false'] = self.action_on_false.serialize()
         return ser

@@ -10,7 +10,7 @@ class Player(ItemNode, Container):
 
     def __init__(
         self,
-        name: str = None,
+        name: str = "",
         position: 'Place' = None,
         items: List['Object'] = None
     ) -> None:
@@ -56,6 +56,7 @@ class Player(ItemNode, Container):
         del ser['_q_icon']
         del ser['_ItemNode__signaler']
         del ser['_ref_count']
+        del ser['template_path']
         ser['_position'] = self.position.name if self.position else None
         ser['_items'] = [item.name for item in self._items]
         return ser

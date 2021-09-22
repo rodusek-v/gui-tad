@@ -2,6 +2,8 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QIcon, QStandardItem
 
+from model.helpers import TextModel
+
 
 class Signaler(QObject):
 
@@ -10,12 +12,14 @@ class Signaler(QObject):
     container_chaged = pyqtSignal()
 
 
-class ItemNode(QStandardItem):
+class ItemNode(QStandardItem, TextModel):
 
     def __init__(self) -> None:
         super().__init__()
         self._ref_count = 0
         self._q_icon = None
+
+        self.template_path = f"template/{self.__class__.__name__.lower()}.template"
         self.setIcon(self.q_icon)
         self.setEditable(False)
         self.__signaler = Signaler()

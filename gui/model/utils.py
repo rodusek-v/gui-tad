@@ -1,6 +1,6 @@
+import jinja2
 from enum import Enum
 from typing import List
-from jinja2 import Template
 
 
 class Sides(Enum):
@@ -18,8 +18,10 @@ class TextModel:
     def text_model(self, template_path: str) -> str:
         ret_val = ""
         try:
-            t = Template(template_path)
-            ret_val = t.render(self=self)
+            templateLoader = jinja2.FileSystemLoader(searchpath="./")
+            templateEnv = jinja2.Environment(loader=templateLoader)
+            t = templateEnv.get_template(template_path)
+            ret_val = t.render(model=self)
         except Exception as ex:
             print(ex)
 
@@ -48,7 +50,7 @@ class Block:
 
 class Action:
 
-    def __init__(self, message: str = None, dependencies: List['Dependency'] = None) -> None:
+    def __init__(self, message: str = "", dependencies: List['Dependency'] = None) -> None:
         self.message = message
         if dependencies is None:
             dependencies = []
@@ -67,6 +69,17 @@ class Action:
         ser = dict(self.__dict__)
         ser['dependencies'] = [dep.serialize() for dep in self.dependencies]
         return ser
+
+    def __str__(self) -> str:
+        deps = ""
+        if len(self.dependencies) != 0:
+            deps = "dependencies: ["
+            deps += ", ".join([f"{dep.flag.name} == {str(dep.value).lower()}" for dep in self.dependencies])
+            deps += "]"
+        return f"""
+            message: "{self.message}"
+            {deps}
+        """
 
 
 class Dependency:

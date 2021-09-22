@@ -1,16 +1,16 @@
-object {{self.name}} {
-    """
-        name: {{self.description.name}}
-        description: {{self.description.description}}
-    """
+    object {{model.name}} {
+        """
+            name: {{model.description.name}}
+            description: {{model.description.description}}
+        """
 
-    contains {
-        {% for item in self.contains %}
-            {{item.name}}
-        {% endfor %}
+        contains {
+            {% for item in model.contains -%}
+                {{item.name}}
+            {% endfor %}
+        }
+        pickable: {{model.pickable | lower}}
+        {% if model.container %}
+        container: {{model.container.name}}
+        {% endif %}
     }
-    pickable: {{str(self.pickable).lower()}}
-    {% if self.container %}
-    container: self.container.name
-    {% endif %}
-}

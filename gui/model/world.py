@@ -7,7 +7,7 @@ from model.flag import Flag
 from model.command import Command
 from model.player import Player
 from model.finish import Finish
-from model.utils import TextModel
+from model.helpers import TextModel
 
 
 class World(QStandardItem, TextModel):
@@ -16,7 +16,7 @@ class World(QStandardItem, TextModel):
         super().__init__()
         self._name = None
         self._connections = list()
-        self._player = Player("player")
+        self._player = Player("PLAYER")
         self._finish = Finish()
 
         self._places_index = 0
@@ -24,8 +24,9 @@ class World(QStandardItem, TextModel):
         self._flags_index = 0
         self._commands_index = 0
 
+        self.template_path = "template/world.template"
         self.setIcon(QIcon("icons/map.png"))
-        self.setEditable(False)
+        #self.setEditable(False)
         self.__init_model()
 
     def __init_model(self):

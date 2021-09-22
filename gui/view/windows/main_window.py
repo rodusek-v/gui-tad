@@ -193,6 +193,13 @@ class MainWindow(QMainWindow):
         self.__set_up_toolbar()
 
     def __set_up_toolbar(self):
+        generate = ToggleButton("", self)
+        generate.setCheckable(False)
+        generate.setIcon(QIcon("icons/generate.png"))
+        generate.setIconSize(QSize(50, 50))
+        self.top_toolbar.addWidget(generate)
+        generate.clicked.connect(self.generating_func)
+
         grid = ToggleButton("", self)
         grid.setIcon(QIcon("icons/grid.png"))
         grid.setIconSize(QSize(35, 35))
@@ -343,6 +350,26 @@ class MainWindow(QMainWindow):
         else:
             if self.showed:
                 self.__animate()
+
+    def generating_func(self):
+        try:
+            self.controller.generate()
+            mask = MaskWidget(self)
+            mask.show()
+            dlg = MessageBox(self, "")
+            dlg.setIcon(MessageBox.Icon.Information)
+            dlg.setText("World model is successfully generated.")
+            dlg.exec()
+            mask.hide()
+        except Exception as ex:
+            mask = MaskWidget(self)
+            mask.show()
+            dlg = MessageBox(self, "")
+            ex_msg = str(ex)
+            error_msg = f"Not a valid project.\n{ex_msg[ex_msg.index('error:'):]}" 
+            dlg.setText(error_msg)
+            dlg.exec()
+            mask.hide()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         current_width = self.side_bar.width()

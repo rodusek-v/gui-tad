@@ -92,6 +92,7 @@ class Object(ItemNode, Container):
         del ser['_q_icon']
         del ser['_ItemNode__signaler']
         del ser['_ref_count']
+        del ser['template_path']
         ser['_description'] = self.description.__dict__
         ser['_contains'] = [obj.name for obj in self.contains]
         ser['_container'] = None if self.container is None else self.container.name

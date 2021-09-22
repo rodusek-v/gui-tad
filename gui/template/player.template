@@ -1,6 +1,6 @@
 player {
-    name: {{self.name}}
-    position: {{self.position.name}}
+    name: {{model.name}}
+    position: {{model.position.name}}
     inventory {
         {% for item in items %}
             {{item.name}}

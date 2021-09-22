@@ -28,3 +28,9 @@ class FinishController(QObject):
 
     def get_flag(self) -> 'Flag':
         return self.model.flag
+
+    def set_value(self, value: bool) -> None:
+        self.model.value = value 
+
+    def get_value(self) -> bool:
+        return self.model.value

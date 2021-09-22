@@ -1,5 +1,5 @@
-command {% for cmd in text %} "{{cmd}}"{{", " if not loop.last else ""}} {% endfor %} {
-    {% for key, value in self.props.items() %}
+    command {% for cmd in model.cmd_text %}"{{cmd}}"{{", " if not loop.last else ""}}{% endfor %} {
+    {% for key, value in model.operation.props.items() %}
         {{key}}: {{value}}
     {% endfor %}
-}
+    }

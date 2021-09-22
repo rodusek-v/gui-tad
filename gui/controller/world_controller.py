@@ -1,8 +1,9 @@
 import pickle
+from types import TracebackType
 
 from typing import Dict, List
+from textx import metamodel_from_file
 from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtWidgets import QApplication
 
 from model import *
 from model.utils import Block, Dependency
@@ -91,9 +92,9 @@ class WorldController(QObject):
 
             finish_flag = map['finish']['_flag']
             model.finish.flag = flags.get(finish_flag, None)
-
             finish_position = map['finish']['_position']
             model.finish.position = places.get(finish_position, None)
+            model.finish.value = map['finish']['_value']
 
             for place in map['places']:
                 for obj in place['_contains']:
@@ -119,6 +120,19 @@ class WorldController(QObject):
                     flag.ref_count += 1
                     flags[flg['_name']].action_on_false.add_dependency(Dependency(flag, dep['value']))
 
+    def generate(self):
+        meta_model = metamodel_from_file("../textx/world.tx")
+        path = self.config.get_last_loaded()
+        path = path.replace(f"{self.model.name}.wd", f"{self.model.name}.wld")
+        try:
+            with open(path, "w") as file:
+                lines = self.model.text_model().split("\n")
+                new_text = "\n".join([line for line in lines if line.strip() != ""])
+                file.write(new_text)
+                meta_model.model_from_str(new_text)
+        except Exception as ex:
+            raise Exception(ex)
+        
     def add_place(self) -> Place:
         index = self.model.places_index
         place = Place(f"new_place{f'_{index}' if index != 0 else ''}")

@@ -1,5 +1,5 @@
 from typing import List
-from PyQt6.QtWidgets import QFormLayout, QLabel, QWidget
+from PyQt6.QtWidgets import QButtonGroup, QFormLayout, QLabel, QRadioButton, QWidget
 
 from view.sidebars.form import Form
 from view.fields import ComboBox
@@ -34,6 +34,17 @@ class FinishForm(Form):
         self.flag_combo_box.currentIndexChanged.connect(self.__change_flag)
         layout.addWidget(QLabel("Flag", font=font))
         layout.addWidget(self.flag_combo_box)
+
+        indicator_group = QButtonGroup()
+        self.true_btn = QRadioButton("true")
+        self.false_btn = QRadioButton("false")
+        indicator_group.addButton(self.true_btn)
+        indicator_group.addButton(self.false_btn)
+        self.true_btn.setChecked(self.controller.get_value())
+        self.false_btn.setChecked(not self.controller.get_value())
+        layout.addWidget(self.true_btn)
+        layout.addWidget(self.false_btn)
+        self.true_btn.toggled.connect(self.controller.set_value)
 
         self.sidebar.main_controller.item_deletion.connect(self.__reload_flag_box)
         self.sidebar.main_controller.item_addition.connect(self.__reload_flag_box)

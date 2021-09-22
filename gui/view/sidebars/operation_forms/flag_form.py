@@ -34,6 +34,7 @@ class FlagForm(QObject):
         indicator_group.addButton(self.true_btn)
         indicator_group.addButton(self.false_btn)
         self.true_btn.setChecked(self.controller.get_value())
+        self.false_btn.setChecked(not self.controller.get_value())
         self.layout.addWidget(self.true_btn)
         self.layout.addWidget(self.false_btn)
         self.true_btn.toggled.connect(self.controller.set_value)

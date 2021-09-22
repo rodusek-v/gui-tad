@@ -50,6 +50,7 @@ class MessageOperation(Operation):
     @property
     def props(self):
         attrs = dict(self.__dict__)
+        attrs["message"] = f'"{self.message}"'
         if self.item is not None:
             attrs["item"] = self.item.name
         else:
@@ -115,8 +116,8 @@ class FlagOperation(Requirements):
         super().__init__()
         self.flag: 'Flag' = None
         self.value: bool = True
-        self.success: str = None
-        self.fail: str = None
+        self.success: str = ""
+        self.fail: str = ""
         self.at: 'Place' = None
 
     @property
@@ -135,6 +136,8 @@ class FlagOperation(Requirements):
             attrs["flag"] = f"{self.flag.name} == {str(self.value).lower()}"
         else:
             del attrs["flag"]
+        attrs["success"] = f'"{self.success}"'
+        attrs["fail"] = f'"{self.fail}"'
         return attrs
 
     def serialize(self):
@@ -188,8 +191,8 @@ class RelocateOperation(Requirements):
         super().__init__()
         self.from_: 'Place' = None
         self.to: 'Place' = None
-        self.success: str = None
-        self.fail: str = None
+        self.success: str = ""
+        self.fail: str = ""
         self.can_die: bool = False
 
     @property
@@ -203,6 +206,8 @@ class RelocateOperation(Requirements):
         attrs["from"] = self.from_.name
         attrs["to"] = self.to.name
         attrs["can_die"] = str(self.can_die).lower()
+        attrs["success"] = f'"{self.success}"'
+        attrs["fail"] = f'"{self.fail}"'
         
         return attrs
 

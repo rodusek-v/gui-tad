@@ -1,37 +1,33 @@
 places {
-    {% for place in self.places %}
-        {{place.text_model}}
-    {% endfor %}
+{% for place in model.places -%}
+    {{place.text_model()}}
+{% endfor %}
 }
 
 objects {
-    {% for object in self.objects %}
-        {{object.text_model}}
-    {% endfor %}
+{% for object in model.objects -%}
+    {{object.text_model()}}
+{% endfor %}
 }
 
 connections {
-    {% for conn in self.connections %}
-        {{conn.text_model}}
+    {% for conn in model.connections -%}
+        {{conn.place_1.name}}, {{conn.direction.value}}, {{conn.place_2.name}};
     {% endfor %}
 }
 
 commands {
-    {% for command in self.commands %}
-        {{command.text_model}}
-    {% endfor %}
+{% for command in model.commands -%}
+    {{command.text_model()}}
+{% endfor %}
 }
 
 flags {
-    {% for flag in self.flags %}
-        {{flag.text_model}}
-    {% endfor %}
+{% for flag in model.flags -%}
+    {{flag.text_model()}}
+{% endfor %}
 }
 
-player {
-    {{self.player.text_model}}
-}
+{{model.player.text_model()}}
 
-finish {
-    {{self.finish.text_model}}
-}
+{{model.finish.text_model()}}

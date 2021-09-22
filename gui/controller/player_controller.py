@@ -19,7 +19,7 @@ class PlayerController(QObject):
         self._model = value
 
     def set_name(self, value: str) -> None:
-        self.model.name = value 
+        self.model.name = value.upper()
 
     def get_name(self) -> str:
         return self.model.name

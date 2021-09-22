@@ -91,6 +91,7 @@ class Place(ItemNode, Container):
         del ser['_q_icon']
         del ser['_ItemNode__signaler']
         del ser['_ref_count']
+        del ser['template_path']
         ser['_description'] = self.description.__dict__
         ser['_contains'] = [obj.name for obj in self.contains]
         ser['_blockade'] = [block.serialize() for block in self.blockade]
