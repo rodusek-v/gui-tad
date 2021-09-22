@@ -15,11 +15,13 @@ from model import Flag, Command
 
 
 class MainWindow(QMainWindow):
+    
+    EXIT_CODE_REBOOT = -123456789
 
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle('GUI TAD')
-        self.setWindowIcon(QIcon('icons/window_icon.png'))
+        self.setWindowIcon(QIcon('icons/logo.png'))
         screen = QApplication.primaryScreen().size()
         self.resize(int(screen.width() * 0.8), int(screen.height() * 0.8))
 
@@ -158,20 +160,27 @@ class MainWindow(QMainWindow):
         self.tree_view.deselect.connect(self.working_space.clear_selection)
         self.tree_view.no_container_object.connect(self.working_space.clear_selection)
 
+        self.tree_view.add_object.triggered.connect(self.object_edit)
+        self.tree_view.add_flag.triggered.connect(self.flag_edit)
+        self.tree_view.add_command.triggered.connect(self.open_operation_dialog)
+
         self.controller.item_deletion.connect(self.hide_form)
         self.controller.not_allowed_delete.connect(self.open_message_box)
 
     def __init_top_side(self):
         menu_bar = QMenuBar()
+        font = self.font()
+        font.setPointSize(13)
+        menu_bar.setFont(font)
 
         file_menu_item = FileMenu(self, self.controller)
-        
-        settings_menu_item = QMenu("&Settings", self)
+        file_menu_item.new_object_item.triggered.connect(self.object_edit)
+        file_menu_item.new_flag_item.triggered.connect(self.flag_edit)
+        file_menu_item.new_command_item.triggered.connect(self.open_operation_dialog)
 
         help_menu_item = QMenu("&Help", self)
 
         menu_bar.addMenu(file_menu_item)
-        menu_bar.addMenu(settings_menu_item)
         menu_bar.addMenu(help_menu_item)
         self.setMenuBar(menu_bar)
 
@@ -280,6 +289,13 @@ class MainWindow(QMainWindow):
         flag = self.controller.add_flag()
         self.show_form(flag)
         self.tree_view.setCurrentIndex(flag.index())
+
+    def object_edit(self):
+        self.working_space.clear_selection()
+        self.tree_view.clearSelection()
+        object = self.controller.add_object()
+        self.show_form(object)
+        self.tree_view.setCurrentIndex(object.index())
 
     def command_edit(self, type):
         self.working_space.clear_selection()

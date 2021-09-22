@@ -2,10 +2,12 @@ import pickle
 
 from typing import Dict, List
 from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtWidgets import QApplication
 
 from model import *
 from model.utils import Block, Dependency
 from model.operation import CDMOperation, FlagOperation, MessageOperation, OperationType, RelocateOperation
+from config_loader import Config
 
 
 class WorldController(QObject):
@@ -17,6 +19,7 @@ class WorldController(QObject):
 
     def __init__(self, model: World = None) -> None:
         super().__init__()
+        self.config = Config()
         self.model = model
         if self.model is None:
             self.__create_new_model()
@@ -38,11 +41,13 @@ class WorldController(QObject):
         self._model = value
 
     def save(self):
-        with open("test.dat", "wb") as dump:
+        path = self.config.get_last_loaded()
+        with open(path, "wb") as dump:
             pickle.dump(self.model.serialize(), dump)
 
     def load(self):
-        with open("test.dat", "rb") as dump:
+        path = self.config.get_last_loaded()
+        with open(path, "rb") as dump:
             map: Dict[str, str] = pickle.load(dump)
             model = World()
             self.model = model

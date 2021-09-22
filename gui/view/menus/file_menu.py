@@ -1,8 +1,9 @@
-from PyQt6 import QtCore
-from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QMenu
+from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtWidgets import QApplication, QMenu
 
 from controller import WorldController
+from view.windows.creating_dialog import CreatingDialog
+from view.windows.starting_dialog import StartingDialog
 
 
 class FileMenu(QMenu):
@@ -20,15 +21,28 @@ class FileMenu(QMenu):
             }
         """)
 
-        self.new_world_item = QAction("New item", self)
-        self.new_world_item.setShortcut("CTRL+N")
+        self.new_world_item = QMenu("New item", self)
 
-        self.new_item = QAction("New project", self)
-        self.new_item.setShortcut("CTRL+SHIFT+N")
+        self.new_object_item = QAction(QIcon("icons/object.png"), "New object", self)
+        self.new_object_item.setShortcut("CTRL+SHIFT+O")
+
+        self.new_flag_item = QAction(QIcon("icons/flag.png"), "New flag", self)
+        self.new_flag_item.setShortcut("CTRL+SHIFT+F")
+
+        self.new_command_item = QAction(QIcon("icons/command.png"), "New command", self)
+        self.new_command_item.setShortcut("CTRL+SHIFT+C")
+
+        self.new_world_item.addAction(self.new_object_item)
+        self.new_world_item.addAction(self.new_flag_item)
+        self.new_world_item.addAction(self.new_command_item)
+
+        self.new_project = QAction("New project", self)
+        self.new_project.setShortcut("CTRL+SHIFT+N")
+        self.new_project.triggered.connect(self.create)
 
         self.open = QAction("Open project", self)
         self.open.setShortcut("CTRL+O")
-        self.open.triggered.connect(controller.load)
+        self.open.triggered.connect(self.load)
 
         self.save = QAction("Save", self)
         self.save.setShortcut("CTRL+S")
@@ -37,13 +51,26 @@ class FileMenu(QMenu):
         self.exit = QAction("Exit", self)
         self.exit.triggered.connect(self.exit_)
 
-        self.addAction(self.new_item)
-        self.addAction(self.new_world_item)
+        self.addAction(self.new_project)
+        self.addMenu(self.new_world_item)
         self.addSeparator()
         self.addAction(self.open)
         self.addAction(self.save)
         self.addSeparator()
         self.addAction(self.exit)
 
+    def load(self):
+        dlg = StartingDialog(self.parent())
+        dlg.accepted.connect(self.restart)
+        dlg.exec()
+
+    def create(self):
+        dlg = CreatingDialog(self.parent())
+        dlg.accepted.connect(self.restart)
+        dlg.exec()
+
+    def restart(self):
+        QApplication.exit(self.parent().EXIT_CODE_REBOOT)
+
     def exit_(self):
-        QtCore.QCoreApplication.instance().quit()
+        QApplication.quit()
