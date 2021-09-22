@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QApplication, QMenu
 from controller import WorldController
 from view.windows.creating_dialog import CreatingDialog
 from view.windows.starting_dialog import StartingDialog
+from constants import THIS_FOLDER
 
 
 class FileMenu(QMenu):
@@ -23,13 +24,16 @@ class FileMenu(QMenu):
 
         self.new_world_item = QMenu("New item", self)
 
-        self.new_object_item = QAction(QIcon("icons/object.png"), "New object", self)
+        object_png = "/".join([THIS_FOLDER, "icons/object.png"])
+        self.new_object_item = QAction(QIcon(object_png), "New object", self)
         self.new_object_item.setShortcut("CTRL+SHIFT+O")
 
-        self.new_flag_item = QAction(QIcon("icons/flag.png"), "New flag", self)
+        flag_png = "/".join([THIS_FOLDER, "icons/flag.png"])
+        self.new_flag_item = QAction(QIcon(flag_png), "New flag", self)
         self.new_flag_item.setShortcut("CTRL+SHIFT+F")
 
-        self.new_command_item = QAction(QIcon("icons/command.png"), "New command", self)
+        command_png = "/".join([THIS_FOLDER, "icons/command.png"])
+        self.new_command_item = QAction(QIcon(command_png), "New command", self)
         self.new_command_item.setShortcut("CTRL+SHIFT+C")
 
         self.new_world_item.addAction(self.new_object_item)

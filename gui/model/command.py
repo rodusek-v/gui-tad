@@ -3,6 +3,7 @@ from PyQt6.QtGui import QIcon
 
 from model.operation import CDMOperation, CDMProp, FlagOperation, MessageOperation, Operation, RelocateOperation, Requirements
 from model.item_node import ItemNode
+from constants import THIS_FOLDER
 
 
 class Command(ItemNode):
@@ -24,9 +25,10 @@ class Command(ItemNode):
     def q_icon(self) -> QIcon:
         if self._q_icon is None:
             icon = QIcon()
-            icon.addFile("icons/nodes/command.png", mode=QIcon.Mode.Active)
-            icon.addFile("icons/nodes/command.png", mode=QIcon.Mode.Selected)
-            icon.addFile("icons/nodes/command.png", mode=QIcon.Mode.Disabled)
+            png_path = "/".join([THIS_FOLDER, "icons/nodes/command.png"])
+            icon.addFile(png_path, mode=QIcon.Mode.Active)
+            icon.addFile(png_path, mode=QIcon.Mode.Selected)
+            icon.addFile(png_path, mode=QIcon.Mode.Disabled)
             self._q_icon = icon
         return self._q_icon
 
@@ -95,7 +97,7 @@ class Command(ItemNode):
         if isinstance(self.operation, CDMOperation):
             for cdm_prop in operation['cdm_props']:
                 item = self.get_param_and_increase(kwargs['objects'], cdm_prop['item'])
-                self.operation.cdm_props.append(CDMProp(cdm_prop['type'], obj))
+                self.operation.cdm_props.append(CDMProp(cdm_prop['type'], item))
 
         if isinstance(self.operation, RelocateOperation):
             from_ = self.get_param_and_increase(kwargs['places'], operation['from_'])

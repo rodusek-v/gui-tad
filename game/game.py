@@ -1,6 +1,8 @@
+import sys
 from os.path import join, dirname
 from world.world import World
 from utils.utils import clear, getch
+
 
 class GameCmd(object):
     
@@ -79,5 +81,9 @@ class GameCmd(object):
 
 if __name__ == '__main__':
     this_folder = dirname(__file__)
-    game = GameCmd(join(this_folder, '../textx/world.tx'), join(this_folder, '../textx/test.wld'))
+    if len(sys.argv) == 1:
+        model_path = join(this_folder, '../textx/test.wld')
+    else:
+        model_path = sys.argv[1]
+    game = GameCmd(join(this_folder, '../textx/world.tx'), model_path)
     game.play()

@@ -2,6 +2,8 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QCursor, QPixmap
 
+from constants import THIS_FOLDER
+
 
 class ActionSelector(QObject):
 
@@ -12,11 +14,11 @@ class ActionSelector(QObject):
         super().__init__()
         self.grid_turn_on = False
         self.cursors = {
-            "add_place": QCursor(QPixmap('icons/cursors/box.png')),
-            "add_object": QCursor(QPixmap('icons/cursors/object.png')),
-            "drag": QCursor(QPixmap('icons/cursors/hand.png')),
-            "select": QCursor(QPixmap('icons/cursors/arrow.png')),
-            "grab": QCursor(QPixmap('icons/cursors/grab.png'))
+            "add_place": QCursor(QPixmap("/".join([THIS_FOLDER, 'icons/cursors/box.png']))),
+            "add_object": QCursor(QPixmap("/".join([THIS_FOLDER, 'icons/cursors/object.png']))),
+            "drag": QCursor(QPixmap("/".join([THIS_FOLDER, 'icons/cursors/hand.png']))),
+            "select": QCursor(QPixmap("/".join([THIS_FOLDER, 'icons/cursors/arrow.png']))),
+            "grab": QCursor(QPixmap("/".join([THIS_FOLDER, 'icons/cursors/grab.png'])))
         }
 
         self.interaction_group = {

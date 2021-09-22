@@ -12,6 +12,7 @@ from view.sidebars.player_form import PlayerForm
 from view.sidebars.finish_form import FinishForm
 from controller import WorldController
 from model import Place, Object, Flag, Command, Player, Finish
+from constants import THIS_FOLDER
 
 
 class SideBar(QObject):
@@ -37,7 +38,9 @@ class SideBar(QObject):
         self.hide_btn = ToggleButton("")
         self.hide_btn.setFixedHeight(30)
         self.hide_btn.setCheckable(False)
-        self.hide_btn.setIcon(QIcon("icons/hide.png"))
+
+        hide_png = "/".join([THIS_FOLDER, "icons/hide.png"])
+        self.hide_btn.setIcon(QIcon(hide_png))
         self.hide_btn.setIconSize(QSize(40, 40))
         self.hide_btn.clicked.connect(lambda: hiding_func())
         self.hide_btn.setFixedWidth(60)

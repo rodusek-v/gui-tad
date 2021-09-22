@@ -8,6 +8,7 @@ from model.command import Command
 from model.player import Player
 from model.finish import Finish
 from model.helpers import TextModel
+from constants import THIS_FOLDER
 
 
 class World(QStandardItem, TextModel):
@@ -25,7 +26,7 @@ class World(QStandardItem, TextModel):
         self._commands_index = 0
 
         self.template_path = "template/world.template"
-        self.setIcon(QIcon("icons/map.png"))
+        self.setIcon(QIcon("/".join([THIS_FOLDER, "icons/nodes/flag.png"])))
         #self.setEditable(False)
         self.__init_model()
 
@@ -183,6 +184,7 @@ class World(QStandardItem, TextModel):
     @staticmethod
     def __create_icon(path: str) -> QIcon:
         icon = QIcon()
+        path = "/".join([THIS_FOLDER, path])
         icon.addFile(path, mode=QIcon.Mode.Active)
         icon.addFile(path, mode=QIcon.Mode.Selected)
         icon.addFile(path, mode=QIcon.Mode.Disabled)

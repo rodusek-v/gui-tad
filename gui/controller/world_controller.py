@@ -1,5 +1,4 @@
 import pickle
-from types import TracebackType
 
 from typing import Dict, List
 from textx import metamodel_from_file

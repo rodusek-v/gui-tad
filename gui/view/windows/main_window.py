@@ -12,6 +12,7 @@ from view.sidebars import SideBar
 from view.menus import FileMenu
 from controller import WorldController
 from model import Flag, Command
+from constants import THIS_FOLDER
 
 
 class MainWindow(QMainWindow):
@@ -195,13 +196,13 @@ class MainWindow(QMainWindow):
     def __set_up_toolbar(self):
         generate = ToggleButton("", self)
         generate.setCheckable(False)
-        generate.setIcon(QIcon("icons/generate.png"))
+        generate.setIcon(QIcon("/".join([THIS_FOLDER, "icons/generate.png"])))
         generate.setIconSize(QSize(50, 50))
         self.top_toolbar.addWidget(generate)
         generate.clicked.connect(self.generating_func)
 
         grid = ToggleButton("", self)
-        grid.setIcon(QIcon("icons/grid.png"))
+        grid.setIcon(QIcon("/".join([THIS_FOLDER, "icons/grid.png"])))
         grid.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(grid)
         grid.clicked.connect(self.action_selector.toggle_grid)
@@ -210,25 +211,25 @@ class MainWindow(QMainWindow):
         self.top_toolbar.addSeparator()
 
         select = ToggleButton("", self)
-        select.setIcon(QIcon("icons/arrow.png"))
+        select.setIcon(QIcon("/".join([THIS_FOLDER, "icons/arrow.png"])))
         select.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(select)
         select.clicked.connect(lambda: self.action_selector.activate('select'))
 
         drag = ToggleButton("", self)
         self.top_toolbar.addWidget(drag)
-        drag.setIcon(QIcon("icons/filled_hand.png"))
+        drag.setIcon(QIcon("/".join([THIS_FOLDER, "icons/filled_hand.png"])))
         drag.setIconSize(QSize(35, 35))
         drag.clicked.connect(lambda: self.action_selector.activate('drag'))
 
         add_place = ToggleButton("", self)
-        add_place.setIcon(QIcon("icons/box.png"))
+        add_place.setIcon(QIcon("/".join([THIS_FOLDER, "icons/box.png"])))
         add_place.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(add_place)
         add_place.clicked.connect(lambda: self.action_selector.activate('add_place'))
 
         add_object = ToggleButton("", self)
-        add_object.setIcon(QIcon("icons/object.png"))
+        add_object.setIcon(QIcon("/".join([THIS_FOLDER, "icons/object.png"])))
         add_object.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(add_object)
         add_object.clicked.connect(lambda: self.action_selector.activate('add_object'))
@@ -237,14 +238,14 @@ class MainWindow(QMainWindow):
 
         flag = ToggleButton("", self)
         flag.setCheckable(False)
-        flag.setIcon(QIcon("icons/flag.png"))
+        flag.setIcon(QIcon("/".join([THIS_FOLDER, "icons/flag.png"])))
         flag.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(flag)
         flag.clicked.connect(self.flag_edit)
 
         command = ToggleButton("", self)
         command.setCheckable(False)
-        command.setIcon(QIcon("icons/command.png"))
+        command.setIcon(QIcon("/".join([THIS_FOLDER, "icons/command.png"])))
         command.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(command)
         command.clicked.connect(self.open_operation_dialog)
@@ -253,14 +254,14 @@ class MainWindow(QMainWindow):
 
         player = ToggleButton("", self)
         player.setCheckable(False)
-        player.setIcon(QIcon("icons/player.png"))
+        player.setIcon(QIcon("/".join([THIS_FOLDER, "icons/player.png"])))
         player.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(player)
         player.clicked.connect(self.player_edit)
 
         finish = ToggleButton("", self)
         finish.setCheckable(False)
-        finish.setIcon(QIcon("icons/finish.png"))
+        finish.setIcon(QIcon("/".join([THIS_FOLDER, "icons/finish.png"])))
         finish.setIconSize(QSize(35, 35))
         self.top_toolbar.addWidget(finish)
         finish.clicked.connect(self.finish_edit)
@@ -366,7 +367,7 @@ class MainWindow(QMainWindow):
             mask.show()
             dlg = MessageBox(self, "")
             ex_msg = str(ex)
-            error_msg = f"Not a valid project.\n{ex_msg[ex_msg.index('error:'):]}" 
+            error_msg = f"Not a valid project.\n{ex_msg}" 
             dlg.setText(error_msg)
             dlg.exec()
             mask.hide()

@@ -5,6 +5,7 @@ from PyQt6.QtGui import QIcon
 
 from model.container import Container
 from model.item_node import ItemNode
+from constants import THIS_FOLDER
 
 
 class Place(ItemNode, Container):
@@ -34,9 +35,10 @@ class Place(ItemNode, Container):
     def q_icon(self) -> QIcon:
         if self._q_icon is None:
             icon = QIcon()
-            icon.addFile("icons/nodes/box.png", mode=QIcon.Mode.Active)
-            icon.addFile("icons/nodes/box.png", mode=QIcon.Mode.Selected)
-            icon.addFile("icons/nodes/box.png", mode=QIcon.Mode.Disabled)
+            png_path = "/".join([THIS_FOLDER, "icons/nodes/box.png"])
+            icon.addFile(png_path, mode=QIcon.Mode.Active)
+            icon.addFile(png_path, mode=QIcon.Mode.Selected)
+            icon.addFile(png_path, mode=QIcon.Mode.Disabled)
             self._q_icon = icon
         return self._q_icon
 
