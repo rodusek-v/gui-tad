@@ -26,7 +26,7 @@ class Player(ItemNode, Container):
     def q_icon(self) -> QIcon:
         if self._q_icon is None:
             icon = QIcon()
-            png_path = "/".join([THIS_FOLDER, "icons/nodes/player.png"])
+            png_path = "/".join([THIS_FOLDER, "icons/player.png"])
             icon.addFile(png_path, mode=QIcon.Mode.Active)
             icon.addFile(png_path, mode=QIcon.Mode.Selected)
             icon.addFile(png_path, mode=QIcon.Mode.Disabled)

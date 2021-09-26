@@ -26,8 +26,8 @@ class World(QStandardItem, TextModel):
         self._commands_index = 0
 
         self.template_path = "template/world.template"
-        self.setIcon(QIcon("/".join([THIS_FOLDER, "icons/nodes/flag.png"])))
-        #self.setEditable(False)
+        self.setIcon(QIcon("/".join([THIS_FOLDER, "icons/map.png"])))
+        self.setEditable(False)
         self.__init_model()
 
     def __init_model(self):

@@ -1,10 +1,11 @@
 import sys
 from PyQt6.QtGui import QFont
-from view.windows import MainWindow, StartingDialog
 
 from PyQt6.QtWidgets import QApplication
 
 from config_loader import Config
+from view.windows import MainWindow, StartingDialog
+from controller.world_controller import WorldController
 
 
 if __name__ == '__main__':
@@ -15,7 +16,13 @@ if __name__ == '__main__':
     QApplication.setFont(font)
     
     current_exit_code = 0
-    if config.get_last_loaded() is None:
+    controller = WorldController()
+    good = True
+    try:
+        controller.load()
+    except:
+        good = False
+    if config.get_last_loaded() is None or not good:
         starting = StartingDialog()
         starting.exec()
         if starting.closed():

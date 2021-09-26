@@ -344,6 +344,7 @@ class World(object):
                             self._response = f"I don't know how to {predicate.lower()}"
                             return
                     
+                    self._response = ""
                     self.__move(direction)
                 elif predicate in ["GET", "TAKE"]:
                     object_name = command[OBJECT]

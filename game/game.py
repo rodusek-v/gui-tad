@@ -57,7 +57,6 @@ class GameCmd(object):
                     while getch() != '\r':
                         pass
 
-                    clear()
                     self._print_menu()
                 else:
                     command = input(">")
@@ -73,7 +72,6 @@ class GameCmd(object):
                         break
 
                     if self._world.is_console_resetable():
-                        clear()
                         self._print_menu()
             except Exception as ex:
                 print(ex)
