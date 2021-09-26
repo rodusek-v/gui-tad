@@ -86,6 +86,7 @@ class SideBar(QObject):
 
     def remove_form(self):
         if self.widget is not None:
+            self.widget.disconnect_all_signals()
             self.holder.layout().removeWidget(self.widget)
         self.widget = None
         self.hide_btn.hide()

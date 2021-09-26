@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QApplication, QMenu
 from controller import WorldController
 from view.windows.creating_dialog import CreatingDialog
 from view.windows.starting_dialog import StartingDialog
+from view.windows.message_box import MessageBox
 from constants import THIS_FOLDER
 
 
@@ -21,7 +22,7 @@ class FileMenu(QMenu):
                 height: 1px;
             }
         """)
-
+        self.controller = controller
         self.new_world_item = QMenu("New item", self)
 
         object_png = "/".join([THIS_FOLDER, "icons/object.png"])
@@ -50,7 +51,7 @@ class FileMenu(QMenu):
 
         self.save = QAction("Save", self)
         self.save.setShortcut("CTRL+S")
-        self.save.triggered.connect(controller.save)
+        self.save.triggered.connect(self.save_func)
 
         self.exit = QAction("Exit", self)
         self.exit.triggered.connect(self.exit_)
@@ -72,6 +73,20 @@ class FileMenu(QMenu):
         dlg = CreatingDialog(self.parent())
         dlg.accepted.connect(self.restart)
         dlg.exec()
+
+    def save_func(self):
+        try:
+            self.controller.save()
+            dlg = MessageBox(self.parent(), "")
+            dlg.setIcon(MessageBox.Icon.Information)
+            dlg.setText("World model is saved successfully.")
+            dlg.exec()
+        except Exception as ex:
+            dlg = MessageBox(self.parent(), "")
+            ex_msg = str(ex)
+            error_msg = f"Save successful but has some warnings:\n{ex_msg}" 
+            dlg.setText(error_msg)
+            dlg.exec()
 
     def restart(self):
         QApplication.exit(self.parent().EXIT_CODE_REBOOT)

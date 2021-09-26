@@ -1,5 +1,7 @@
 finish {
+    {% if model.position %}
     position: {{model.position.name}}
+    {% endif %}
     {% if model.flag -%}
     flag: {{model.flag.name}} == {{model.value | lower}}
     {% endif %}

@@ -1,8 +1,8 @@
-import pickle
+import json
 
 from typing import Dict, List
 from textx import metamodel_from_file
-from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtCore import QObject, QRectF, pyqtSignal
 
 from model import *
 from model.utils import Block, Dependency
@@ -40,90 +40,123 @@ class WorldController(QObject):
     def model(self, value: World) -> None:
         self._model = value
 
-    def save(self):
-        path = self.config.get_last_loaded()
-        with open(path, "wb") as dump:
-            pickle.dump(self.model.serialize(), dump)
-
     def load(self):
         path = self.config.get_last_loaded()
-        with open(path, "rb") as dump:
-            map: Dict[str, str] = pickle.load(dump)
-            model = World()
-            self.model = model
-            model.load(map)
+        world_config = path.replace(".wld", ".json")
+        meta_model = metamodel_from_file("../textx/tad_meta.tx")
+        try:
+            model = meta_model.model_from_file(path)
+            world = World()
+            world.name = model.name
+            self.model = world
 
             places: Dict[str, Place] = {}
-            for place in map['places']:
+            for place in model.places:
                 place_model = self.add_place()
                 place_model.load(place)
                 places[place_model.name] = place_model
-
+                
             objects: Dict[str, Object] = {}
-            for object in map['objects']:
+            for object in model.objects:
                 object_model = self.add_object()
                 object_model.load(object)
                 objects[object_model.name] = object_model
 
             flags: Dict[str, Flag] = {}
-            for flag in map['flags']:
+            for flag in model.flags:
                 flag_model = self.add_flag()
                 flag_model.load(flag)
                 flags[flag_model.name] = flag_model
 
             commands: Dict[str, Command] = {}
-            for command in map['commands']:
-                command_model = self.add_command(command['_operation']['type'])
+            for command in model.commands:
+                operation_type = OperationType(command.operation.__class__.__name__)
+                command_model = self.add_command(operation_type)
                 command_model.load(command, places=places, objects=objects, flags=flags)
                 commands[command_model.name] = command_model
 
-            for conn in map['connections']:
-                place_1 = places.get(conn['place_1'], None)
-                place_2 = places.get(conn['place_2'], None)
-                self.add_connection(place_1, conn['direction'], place_2)
+            for conn in model.connections:
+                place_1 = places.get(conn.from_.name, None)
+                place_2 = places.get(conn.to_.name, None)
+                self.add_connection(place_1, Sides(conn.direction), place_2)
+        
+            world.player.name = model.player.name
+            player_position = None
+            if model.player.position:
+                player_position = model.player.position.name
+            world.player.position = places.get(player_position, None)
 
-            model.player.name = map['player']['_name']
-            player_position = map['player']['_position']
-            model.player.position = places.get(player_position, None)
+            for obj in model.player.items:
+                world.player.add_object(objects[obj.name])
 
-            for obj in map['player']['_items']:
-                model.player.add_object(objects[obj])
+            finish_flag = None
+            value = False
+            if model.finish.flag_prop:
+                finish_flag = model.finish.flag_prop.flag.name
+                value = model.finish.flag_prop.value
+            world.finish.flag = flags.get(finish_flag, None)
+            finish_position = None
+            if model.finish.position:
+                finish_position = model.finish.position.name
+            world.finish.position = places.get(finish_position, None)
+            world.finish.value = value
 
-            finish_flag = map['finish']['_flag']
-            model.finish.flag = flags.get(finish_flag, None)
-            finish_position = map['finish']['_position']
-            model.finish.position = places.get(finish_position, None)
-            model.finish.value = map['finish']['_value']
+            for place in model.places:
+                for obj in place.contains.objects:
+                    places[place.name].add_object(objects[obj.name])
 
-            for place in map['places']:
-                for obj in place['_contains']:
-                    places[place['_name']].add_object(objects[obj])
+                if place.blockade:
+                    for block in place.blockade.blocks:
+                        flag = flags[block.flag.name]
+                        flag.ref_count += 1
+                        turn = -1
+                        if block.turns:
+                            turn = block.turns.value
+                        places[place.name].blockade.append(
+                            Block(flag, Sides(block.direction), turn))
 
-                for block in place['_blockade']:
-                    flag = flags[block['flag']]
+            for object in model.objects:
+                for obj in object.contains.objects:
+                    objects[object.name].add_object(objects[obj.name])
+
+            for flg in model.flags:
+                true_dependencies = []
+                if flg.action_true.dependencies:
+                    true_dependencies = flg.action_true.dependencies
+                for dep in true_dependencies:
+                    flag = flags[dep.flag.name]
                     flag.ref_count += 1
-                    places[place['_name']].blockade.append(
-                        Block(flag, block['direction'], block['turns']))
+                    flags[flg.name].action_on_true.add_dependency(Dependency(flag, dep.value))
 
-            for object in map['objects']:
-                for obj in object['_contains']:
-                    objects[object['_name']].add_object(objects[obj])
-
-            for flg in map['flags']:
-                for dep in flg['_action_on_true']['dependencies']:
-                    flag = flags[dep['flag']]
+                false_dependencies = []
+                if flg.action_false.dependencies:
+                    true_dependencies = flg.action_false.dependencies
+                for dep in false_dependencies:
+                    flag = flags[dep.flag.name]
                     flag.ref_count += 1
-                    flags[flg['_name']].action_on_true.add_dependency(Dependency(flag, dep['value']))
-                for dep in flg['_action_on_false']['dependencies']:
-                    flag = flags[dep['flag']]
-                    flag.ref_count += 1
-                    flags[flg['_name']].action_on_false.add_dependency(Dependency(flag, dep['value']))
+                    flags[flg.name].action_on_false.add_dependency(Dependency(flag, dep.value))
+        except Exception as ex:
+            print(ex)
 
-    def generate(self):
+        try:
+            with open(world_config, "r") as conf_file:
+                configs = json.load(conf_file)
+                world.load(configs)
+                for key, value in configs['positions'].items():
+                    places[key].position = QRectF(value[0], value[1], value[2], value[3])
+        except Exception as ex:
+            with open(world_config, "w") as conf_file:
+                conf = self.get_current_conf()
+                json.dump(conf, conf_file, indent=4)
+
+    def save(self):
         meta_model = metamodel_from_file("../textx/world.tx")
         path = self.config.get_last_loaded()
-        path = path.replace(f"{self.model.name}.wd", f"{self.model.name}.wld")
+        world_config = path.replace(".wld", ".json")
         try:
+            with open(world_config, "w") as conf_file:
+                conf = self.get_current_conf()
+                json.dump(conf, conf_file, indent=4)
             with open(path, "w") as file:
                 lines = self.model.text_model().split("\n")
                 new_text = "\n".join([line for line in lines if line.strip() != ""])
@@ -131,6 +164,17 @@ class WorldController(QObject):
                 meta_model.model_from_str(new_text)
         except Exception as ex:
             raise Exception(ex)
+
+    def get_current_conf(self):
+        return {
+            "places_index": self.model.places_index,
+            "objects_index": self.model.objects_index,
+            "flags_index": self.model.flags_index,
+            "commands_index": self.model.commands_index,
+            "positions": {
+                place.name : place.position.getRect() for place in self.model.places
+            },
+        }
         
     def add_place(self) -> Place:
         index = self.model.places_index
@@ -168,13 +212,10 @@ class WorldController(QObject):
             operation = CDMOperation()
         else:
             operation = MessageOperation()
-        cmd = Command(index, [f"new_command{f'_{index}' if index != 0 else ''}"], operation)
+        cmd = Command([f"new_command{f'_{index}' if index != 0 else ''}"], operation)
         self.model.append_command(cmd)
         self.item_addition.emit(cmd)
         return cmd
-
-    def add_connection(self, conn: Connection):
-        self.model.connections.append(conn)
 
     def remove_object(self, object: Object) -> bool:
         if object.ref_count == 0:

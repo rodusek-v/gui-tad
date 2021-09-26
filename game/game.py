@@ -83,5 +83,14 @@ if __name__ == '__main__':
         model_path = join(this_folder, '../textx/test.wld')
     else:
         model_path = sys.argv[1]
-    game = GameCmd(join(this_folder, '../textx/world.tx'), model_path)
-    game.play()
+    try:
+        game = GameCmd(join(this_folder, '../textx/world.tx'), model_path)
+    except Exception as ex:
+        print(ex)
+        print("Bad world model")
+        exit(-1)
+    
+    try:
+        game.play()
+    except:
+        print("\nClosed...")

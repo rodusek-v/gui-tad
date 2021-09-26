@@ -92,28 +92,10 @@ class World(QStandardItem, TextModel):
         self._finish = finish
 
     def load(self, desereliazed):
-        self.name = desereliazed['name']
         self._places_index = desereliazed['places_index']
         self._objects_index = desereliazed['objects_index']
         self._flags_index = desereliazed['flags_index']
         self._commands_index = desereliazed['commands_index']
-
-    def serialize(self) -> Dict[str, str]:
-        ser = dict()
-        ser['name'] = self.name
-        ser['places_index'] = self.places_index
-        ser['objects_index'] = self.objects_index
-        ser['flags_index'] = self.flags_index
-        ser['commands_index'] = self.commands_index
-        ser['player'] = self.player.serialize()
-        ser['finish'] = self.finish.serialize()
-        ser['places'] = [ place.serialize() for place in self.places]
-        ser['objects'] = [ obj.serialize() for obj in self.objects]
-        ser['flags'] = [ flag.serialize() for flag in self.flags]
-        ser['commands'] = [ cmd.serialize() for cmd in self.commands]
-        ser['connections'] = [ conn.serialize() for conn in self.connections]
-        
-        return ser
 
     def append_place(self, place):
         self._places.appendRow(place)

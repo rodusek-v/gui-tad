@@ -95,10 +95,12 @@ class CreatingDialog(QDialog):
     def create_world(self):
         name = self.name_txt.text()
         folder = self.folder_name.text()
-        path = "/".join([folder, f"{name}.wd"])
+        path = "/".join([folder, f"{name}.wld"])
         self.config.set_last_loaded(path)
         world = World()
         world.name = name
-        with open(path, "wb") as dump:
-            pickle.dump(world.serialize(), dump)
+        with open(path, "w") as file:
+            lines = world.text_model().split("\n")
+            new_text = "\n".join([line for line in lines if line.strip() != ""])
+            file.write(new_text)
         self.accept()

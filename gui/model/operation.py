@@ -9,10 +9,10 @@ class CDMType(Enum):
 
 
 class OperationType(Enum):
-    MESSAGE_OPERATION = 0
-    FLAG_OPERATION = 1
-    CDM_OPERATION = 2
-    RELOCATION_OPERATION = 3
+    MESSAGE_OPERATION = "MessageOperation"
+    FLAG_OPERATION = "FlagOperation"
+    CDM_OPERATION = "CDMOperation"
+    RELOCATION_OPERATION = "RelocateOperation"
 
 
 class Operation(object):
@@ -29,9 +29,6 @@ class Operation(object):
         pass
 
     def decrease_refferees(self):
-        pass
-
-    def serialize(self):
         pass
     
 
@@ -61,13 +58,6 @@ class MessageOperation(Operation):
             del attrs["at"]
         return attrs
 
-    def serialize(self):
-        ser = dict(self.__dict__)
-        ser["item"] = self.item.name if self.item else None
-        ser["at"] = self.at.name if self.at else None
-        ser["type"] = self.type
-        return ser
-
     def decrease_refferees(self):
         if self.at:
             self.at.ref_count -= 1
@@ -95,13 +85,6 @@ class Requirements(Operation):
         else:
             attrs["is_carried"] = f"[{','.join([item.name for item in self.is_carried])}]"
         return attrs
-
-    def serialize(self):
-        ser = dict(self.__dict__)
-        ser["is_present"] = [item.name for item in self.is_present]
-        ser["is_carried"] = [item.name for item in self.is_carried]
-        ser["type"] = self.type
-        return ser
 
     def decrease_refferees(self):
         for item in self.is_carried:
@@ -140,15 +123,6 @@ class FlagOperation(Requirements):
         attrs["fail"] = f'"{self.fail}"'
         return attrs
 
-    def serialize(self):
-        ser = super().serialize()
-        ser['value'] = self.value
-        ser['at'] = self.at.name if self.at else None
-        ser['flag'] = self.flag.name if self.flag else None
-        ser['success'] = self.success
-        ser['fail'] = self.fail
-        return ser
-
     def decrease_refferees(self):
         super().decrease_refferees()
         if self.flag:
@@ -173,11 +147,6 @@ class CDMOperation(FlagOperation):
         for cdm in self.cdm_props:
             attrs[cdm.type.value] = cdm.item.name
         return attrs
-
-    def serialize(self):
-        ser = super().serialize()
-        ser['cdm_props'] = [prop.serialize() for prop in self.cdm_props]
-        return ser
 
     def decrease_refferees(self):
         super().decrease_refferees()
@@ -211,12 +180,6 @@ class RelocateOperation(Requirements):
         
         return attrs
 
-    def serialize(self):
-        ser = super().serialize()
-        ser['from_'] = self.from_.name if self.from_ else None
-        ser['to'] = self.to.name if self.to else None
-        return ser
-
     def decrease_refferees(self):
         super().decrease_refferees()
         if self.to:
@@ -229,11 +192,6 @@ class CDMProp:
     def __init__(self, type: 'CDMType' = None, item: 'Object' = None):
         self.type: 'CDMType' = type
         self.item: 'Object' = item
-
-    def serialize(self):
-        ser = dict(self.__dict__)
-        ser['item'] = self.item.name
-        return ser
 
 
 from model.flag import Flag

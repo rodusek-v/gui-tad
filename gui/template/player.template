@@ -1,6 +1,10 @@
 player {
+    {% if model.name %}
     name: {{model.name}}
+    {% endif %}
+    {% if model.position %}
     position: {{model.position.name}}
+    {% endif %}
     inventory {
         {% for item in items %}
             {{item.name}}

@@ -1,7 +1,7 @@
     object {{model.name}} {
         """
-            name: {{model.description.name}}
-            description: {{model.description.description}}
+            name: "{{model.description.name}}"
+            description: "{{model.description.description}}"
         """
 
         contains {

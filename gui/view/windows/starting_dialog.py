@@ -77,7 +77,7 @@ class StartingDialog(QDialog):
         layout.addWidget(self.create_button, 4, 3, 1, 2)
 
     def open_other(self):
-        fname = QFileDialog.getOpenFileName(self, "Open project", filter="World files (*.wd)")
+        fname = QFileDialog.getOpenFileName(self, "Open project", filter="World files (*.wld)")
         if fname[0] != "":
             self.open_main(fname[0])
 
@@ -93,7 +93,8 @@ class StartingDialog(QDialog):
         try:
             controller.load()
             self.accept()
-        except:
+        except Exception as ex:
+            print(ex)
             msg_box = MessageBox(self, "")
             msg_box.setText("Bad file format")
             msg_box.exec()

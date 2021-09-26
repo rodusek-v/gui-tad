@@ -2,7 +2,7 @@ World:
     (
         ('name' ':' name = STRING)?
         ('places' '{'
-            places += Place
+            places *= Place
         '}')
         ('objects' '{'
             objects *= Object
@@ -173,8 +173,8 @@ Connection:
 
 Player:
     'player' '{'
-        'name' ':' name = WID
-        'position' ':' position = [Place]
+        ('name' ':' name = WID)?
+        ('position' ':' position = [Place])?
         'inventory' '{'
             items *= [Object]
         '}'
@@ -183,7 +183,7 @@ Player:
 
 Finish:
     'finish' '{'
-        'position' ':' position = [Place]
+        ('position' ':' position = [Place])?
         (flag_prop = FlagProp)?
     '}'
 ;

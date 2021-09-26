@@ -174,14 +174,14 @@ class MainWindow(QMainWindow):
         font.setPointSize(13)
         menu_bar.setFont(font)
 
-        file_menu_item = FileMenu(self, self.controller)
-        file_menu_item.new_object_item.triggered.connect(self.object_edit)
-        file_menu_item.new_flag_item.triggered.connect(self.flag_edit)
-        file_menu_item.new_command_item.triggered.connect(self.open_operation_dialog)
+        self.file_menu_item = FileMenu(self, self.controller)
+        self.file_menu_item.new_object_item.triggered.connect(self.object_edit)
+        self.file_menu_item.new_flag_item.triggered.connect(self.flag_edit)
+        self.file_menu_item.new_command_item.triggered.connect(self.open_operation_dialog)
 
         help_menu_item = QMenu("&Help", self)
 
-        menu_bar.addMenu(file_menu_item)
+        menu_bar.addMenu(self.file_menu_item)
         menu_bar.addMenu(help_menu_item)
         self.setMenuBar(menu_bar)
 
@@ -199,7 +199,7 @@ class MainWindow(QMainWindow):
         generate.setIcon(QIcon("/".join([THIS_FOLDER, "icons/generate.png"])))
         generate.setIconSize(QSize(50, 50))
         self.top_toolbar.addWidget(generate)
-        generate.clicked.connect(self.generating_func)
+        generate.clicked.connect(self.file_menu_item.save_func)
 
         grid = ToggleButton("", self)
         grid.setIcon(QIcon("/".join([THIS_FOLDER, "icons/grid.png"])))

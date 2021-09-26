@@ -334,7 +334,8 @@ class World(object):
             object_name = command[OBJECT] if len(command) == 2 else None
             if not self.__specific_command(predicate, object_name):
                 predicate = full_names.get(predicate, predicate)
-                    
+                
+                self._response = ""
                 if predicate in directions or predicate == "GO":
                     direction = predicate
                     if predicate == "GO":
@@ -344,7 +345,6 @@ class World(object):
                             self._response = f"I don't know how to {predicate.lower()}"
                             return
                     
-                    self._response = ""
                     self.__move(direction)
                 elif predicate in ["GET", "TAKE"]:
                     object_name = command[OBJECT]

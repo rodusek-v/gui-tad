@@ -1,7 +1,7 @@
 from typing import Dict, List
 from PyQt6.QtGui import QIcon
 
-from model.operation import CDMOperation, CDMProp, FlagOperation, MessageOperation, Operation, RelocateOperation, Requirements
+from model.operation import CDMOperation, CDMProp, CDMType, FlagOperation, MessageOperation, Operation, RelocateOperation, Requirements
 from model.item_node import ItemNode
 from constants import THIS_FOLDER
 
@@ -10,12 +10,10 @@ class Command(ItemNode):
 
     def __init__(
         self,
-        id: int,
         text: List[str] = None,
         operation: Operation = None
     ) -> None:
         super().__init__()
-        self._id = id
         if text is None:
             text = []
         self.cmd_text = text
@@ -38,7 +36,7 @@ class Command(ItemNode):
 
     @property
     def name(self) -> str:
-        return str(self._id)
+        return ", ".join(self._cmd_text)
 
     @property
     def cmd_text(self) -> List[str]:
@@ -57,54 +55,58 @@ class Command(ItemNode):
     def operation(self, value: Operation) -> None:
         self._operation = value
 
-    def serialize(self):
-        ser = dict(self.__dict__)
-        del ser['_q_icon']
-        del ser['_ItemNode__signaler']
-        del ser['_ref_count']
-        ser['_operation'] = self.operation.serialize()
-        return ser
+    def load(self, model, **kwargs):
+        self.cmd_text = [f"{cmd.predicate}{f' {cmd.object}' if cmd.object else ''}" for cmd in model.text]
 
-    def load(self, serialized, **kwargs):
-        self._id = serialized['_id']
-        self.cmd_text = serialized['_cmd_text']
-
-        operation = serialized['_operation']
+        operation = model.operation
         if isinstance(self.operation, MessageOperation):
-            at = self.get_param_and_increase(kwargs['places'], operation['at'])
-            item = self.get_param_and_increase(kwargs['objects'], operation['item'])
-            self.operation.message = operation['message']
+            at = None
+            if operation.located_prop:     
+                at = self.get_param_and_increase(kwargs['places'], operation.located_prop.located.name)
+            item = None
+            if operation.item:     
+                item = self.get_param_and_increase(kwargs['objects'], operation.item.name)
+            self.operation.message = operation.message
             self.operation.at = at
             self.operation.item = item
 
         if isinstance(self.operation, Requirements):
-            for obj in operation['is_carried']:
-                obj = self.get_param_and_increase(kwargs['objects'], obj)
-                self.operation.is_carried.append(obj)
-            for obj in operation['is_present']:
-                obj = self.get_param_and_increase(kwargs['objects'], obj)
-                self.operation.is_present.append(obj)
+            for req in operation.require_prop:
+                if req.__class__.__name__ == "RequireInventoryProp":
+                    for obj in req.require:
+                        obj = self.get_param_and_increase(kwargs['objects'], obj.name)
+                        self.operation.is_carried.append(obj)
+                elif req.__class__.__name__ == "RequirePlaceProp":
+                    for obj in req.require:
+                        obj = self.get_param_and_increase(kwargs['objects'], obj.name)
+                        self.operation.is_present.append(obj)
 
         if isinstance(self.operation, FlagOperation):
-            at = self.get_param_and_increase(kwargs['places'], operation['at'])
-            flag = self.get_param_and_increase(kwargs['flags'], operation['flag'])
-            self.operation.success = operation['success']
-            self.operation.fail = operation['fail']
+            at = None
+            if operation.located_prop:     
+                at = self.get_param_and_increase(kwargs['places'], operation.located_prop.located.name)
+            flag = None
+            value = False
+            if operation.flag_prop:     
+                flag = self.get_param_and_increase(kwargs['flags'], operation.flag_prop.flag.name)
+                value = operation.flag_prop.value
+            self.operation.success = operation.success
+            self.operation.fail = operation.fail
             self.operation.flag = flag
             self.operation.at = at
-            self.operation.value = operation['value']
+            self.operation.value = value
 
         if isinstance(self.operation, CDMOperation):
-            for cdm_prop in operation['cdm_props']:
-                item = self.get_param_and_increase(kwargs['objects'], cdm_prop['item'])
-                self.operation.cdm_props.append(CDMProp(cdm_prop['type'], item))
+            for cdm_prop in operation.cdm_props:
+                item = self.get_param_and_increase(kwargs['objects'], cdm_prop.item.name)
+                self.operation.cdm_props.append(CDMProp(CDMType(cdm_prop.type), item))
 
         if isinstance(self.operation, RelocateOperation):
-            from_ = self.get_param_and_increase(kwargs['places'], operation['from_'])
-            to = self.get_param_and_increase(kwargs['places'], operation['to'])
-            self.operation.success = operation['success']
-            self.operation.fail = operation['fail']
-            self.operation.can_die = operation['can_die']
+            from_ = self.get_param_and_increase(kwargs['places'], operation.from_.name)
+            to = self.get_param_and_increase(kwargs['places'], operation.to_.name)
+            self.operation.success = operation.success
+            self.operation.fail = operation.fail
+            self.operation.can_die = operation.can_die
             self.operation.from_ = from_
             self.operation.to = to
             

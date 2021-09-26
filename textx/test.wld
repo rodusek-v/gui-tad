@@ -1,8 +1,8 @@
 places {
     place Room1 {
         """
-            name: Room1
-            description: You are in room One
+            name: "Room1"
+            description: "You are in room One"
         """
 
         contains {
@@ -11,8 +11,8 @@ places {
     }
     place Room2 {
         """
-            name: Room2
-            description: You are in room Two, entrance to the room Four is blocked by door
+            name: "Room2"
+            description: "You are in room Two, entrance to the room Four is blocked by door"
         """
 
         contains {
@@ -26,8 +26,8 @@ places {
     }
     place Room3 {
         """
-            name: Room3
-            description: You are in room Three, there is an attic entrance
+            name: "Room3"
+            description: "You are in room Three, there is an attic entrance"
         """
         
         contains {
@@ -36,16 +36,16 @@ places {
     }
     place Room4 {
         """
-            name: Room4
-            description: You are in room Four
+            name: "Room4"
+            description: "You are in room Four"
         """
 
         contains {}
     }
     place Room5 {
         """
-            name: Room5
-            description: You are in room Five
+            name: "Room5"
+            description: "You are in room Five"
         """
 
         contains {
@@ -58,16 +58,16 @@ places {
     }
     place Room6 {
         """
-            name: Room6
-            description: You are in room Six, there is a some kind of lever
+            name: "Room6"
+            description: "You are in room Six, there is a some kind of lever"
         """
 
         contains {}
     }
     place Room7 {
         """
-            name: Room7
-            description: You are in room Seven, there is picture hanging on the wall
+            name: "Room7"
+            description: "You are in room Seven, there is picture hanging on the wall"
         """
 
         contains {}
@@ -77,8 +77,8 @@ places {
 objects {
     object apple {
         """
-            name: an apple
-            description: Big green apple
+            name: "an apple"
+            description: "Big green apple"
         """
         contains {}
         pickable: true
@@ -86,8 +86,8 @@ objects {
     }
     object chest {
         """
-            name: small chest
-            description: Small chest for jewelery
+            name: "small chest"
+            description: "Small chest for jewelery"
         """
         contains {
             key
@@ -97,8 +97,8 @@ objects {
     }
     object key {
         """
-            name: gold key
-            description: Golden key that has cross on it
+            name: "gold key"
+            description: "Golden key that has cross on it"
         """
         contains {}
         pickable: true
@@ -106,16 +106,16 @@ objects {
     }
     object seeds {
         """
-            name: apple seeds
-            description: Seeds from fresh apple
+            name: "apple seeds"
+            description: "Seeds from fresh apple"
         """
         contains {}
         pickable: true
     }
     object monster {
         """
-            name: evil monster
-            description: Evil monster that you need to defeat
+            name: "evil monster"
+            description: "Evil monster that you need to defeat"
         """
         contains {}
         pickable: false
@@ -123,8 +123,8 @@ objects {
     }
     object gun {
         """
-            name: gun
-            description: Powerful gun
+            name: "gun"
+            description: "Powerful gun"
         """
         contains {}
         pickable: true
@@ -132,8 +132,8 @@ objects {
     }
     object ladder {
         """
-            name: iron ladder
-            description: Very tall ladder
+            name: "iron ladder"
+            description: "Very tall ladder"
         """
         contains {}
         pickable: true

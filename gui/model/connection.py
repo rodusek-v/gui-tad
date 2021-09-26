@@ -27,12 +27,3 @@ class Connection(ItemNode):
 
     def __str__(self) -> str:
         return f"{self.place_1.name}, {self.direction}, {self.place_2.name}"
-
-    def serialize(self):
-        ser = dict(self.__dict__)
-        del ser['_q_icon']
-        del ser['_ItemNode__signaler']
-        del ser['_ref_count']
-        ser['place_1'] = self.place_1.name if self.place_1 else None
-        ser['place_2'] = self.place_2.name if self.place_2 else None
-        return ser

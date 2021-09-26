@@ -1,3 +1,5 @@
+name: "{{model.name}}"
+
 places {
 {% for place in model.places -%}
     {{place.text_model()}}

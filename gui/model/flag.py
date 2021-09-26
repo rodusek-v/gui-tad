@@ -65,18 +65,7 @@ class Flag(ItemNode):
     @action_on_false.setter
     def action_on_false(self, value: Action) -> None:
         self._action_on_false = value
-
-    def serialize(self):
-        ser = dict(self.__dict__)
-        del ser['_q_icon']
-        del ser['_ItemNode__signaler']
-        del ser['_ref_count']
-        del ser['template_path']
-        ser['_action_on_true'] = self.action_on_true.serialize()
-        ser['_action_on_false'] = self.action_on_false.serialize()
-        return ser
-
-    def load(self, serialized):
-        self.name = serialized['_name']
-        self.action_on_true.message = serialized['_action_on_true']['message']
-        self.action_on_false.message = serialized['_action_on_false']['message']
+        
+    def load(self, model):
+        self.name = model.name
+        self.activated = model.activated
