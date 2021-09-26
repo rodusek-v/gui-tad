@@ -42,11 +42,6 @@ class Block:
         self.direction = direction
         self.turns = turns
 
-    def serialize(self):
-        ser = dict(self.__dict__)
-        ser['flag'] = self.flag.name
-        return ser
-
 
 class Action:
 
@@ -65,11 +60,6 @@ class Action:
     def remove_dependency(self, dependency: 'Dependency') -> None:
         self.dependencies.remove(dependency)
 
-    def serialize(self):
-        ser = dict(self.__dict__)
-        ser['dependencies'] = [dep.serialize() for dep in self.dependencies]
-        return ser
-
     def __str__(self) -> str:
         deps = ""
         if len(self.dependencies) != 0:
@@ -87,12 +77,6 @@ class Dependency:
     def __init__(self, flag: 'Flag', value: bool) -> None:
         self.flag = flag
         self.value = value
-
-    def serialize(self):
-        ser = dict(self.__dict__)
-        ser['flag'] = self.flag.name
-
-        return ser
 
 
 from model.flag import Flag
