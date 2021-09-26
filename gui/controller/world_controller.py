@@ -231,6 +231,10 @@ class WorldController(QObject):
     def remove_place(self, place: Place) -> bool:
         if place.ref_count == 0:
             self.model.remove_place(place.row())
+            if self.model.player.position == place:
+                self.model.player.position = None
+            if self.model.finish.position == place:
+                self.model.finish.position = None
             place.children_changed.disconnect(self.__container_change)
             self.object_changes.emit()
             self.item_deletion.emit(place)
@@ -242,6 +246,8 @@ class WorldController(QObject):
     def remove_flag(self, flag: Flag) -> bool:
         if flag.ref_count == 0:
             self.model.remove_flag(flag.row())
+            if self.model.finish.flag == flag:
+                self.model.finish.flag = None
             self.item_deletion.emit(flag)
             return True
         
