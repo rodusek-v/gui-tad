@@ -93,7 +93,13 @@ class WorktopView(QGraphicsView):
 
     def __fill_view(self):
         for place in self.controller.get_places():
-            self.__add_place(place, place.position, just_draw=True)
+            rect = QRectF(
+                place.position.x() * self.side + self.margin,
+                place.position.y() * self.side + self.margin,
+                self.side - self.margin * 2,
+                self.side - self.margin * 2
+            )
+            self.__add_place(place, rect, just_draw=True)
 
     def __dispatch(self, obj):
         self.dispatch_event.emit(obj)
@@ -219,8 +225,8 @@ class WorktopView(QGraphicsView):
                     points = self.selection["item"].widget().say_goodbye(self.controller.remove_connection)
                     self.__remove_items(points)
                     self.selection["item"].moveBy(dx, dy)
-                    self.selection["item"].widget().place_model.position = \
-                        self.selection["item"].sceneBoundingRect()
+                    self.selection["item"].widget().setGeometry(
+                        self.selection["item"].sceneBoundingRect().toRect())
                     self.__check_neighbours(self.selection["item"].widget())
 
                 self.selection["item"] = None

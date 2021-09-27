@@ -1,6 +1,6 @@
 
 from typing import List
-from PyQt6.QtCore import QRectF
+from PyQt6.QtCore import QPointF
 from PyQt6.QtGui import QIcon
 
 from model.container import Container
@@ -81,11 +81,11 @@ class Place(ItemNode, Container):
         self._blockade = value
 
     @property
-    def position(self) -> QRectF:
+    def position(self) -> QPointF:
         return self._position
 
     @position.setter
-    def position(self, position: QRectF):
+    def position(self, position: QPointF):
         self._position = position
 
     def load(self, model):

@@ -55,6 +55,7 @@ class PlaceItem(QListWidget):
         }
         self.margin = margin
         self.cwidth = size * 0.1
+        self.side = size
         self._model = model
         self._model.rename_signal.connect(self.__set_title)
         self._model.children_changed.connect(self.__fill_item)
@@ -271,4 +272,7 @@ class PlaceItem(QListWidget):
 
     def setGeometry(self, rect: QRectF) -> None:
         super().setGeometry(rect)
-        self.place_model.position = rect
+        self.place_model.position = QPointF(
+            round((rect.x() - self.margin / 2) / self.side),
+            round((rect.y() - self.margin / 2) / self.side)
+        )

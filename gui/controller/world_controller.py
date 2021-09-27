@@ -2,7 +2,7 @@ import json
 
 from typing import Dict, List
 from textx import metamodel_from_file
-from PyQt6.QtCore import QObject, QRectF, pyqtSignal
+from PyQt6.QtCore import QObject, QPointF, QRectF, QSizeF, pyqtSignal
 
 from model import *
 from model.utils import Block, Dependency
@@ -136,16 +136,17 @@ class WorldController(QObject):
                     flag.ref_count += 1
                     flags[flg.name].action_on_false.add_dependency(Dependency(flag, dep.value))
         except Exception as ex:
-            print(ex)
-
+            raise Exception(ex)
         try:
+            
             with open(world_config, "r") as conf_file:
                 configs = json.load(conf_file)
                 world.load(configs)
                 for key, value in configs['positions'].items():
-                    places[key].position = QRectF(value[0], value[1], value[2], value[3])
+                    places[key].position = QPointF(value[0], value[1])
         except Exception as ex:
             with open(world_config, "w") as conf_file:
+                self.calculate_position()
                 conf = self.get_current_conf()
                 json.dump(conf, conf_file, indent=4)
 
@@ -172,10 +173,46 @@ class WorldController(QObject):
             "flags_index": self.model.flags_index,
             "commands_index": self.model.commands_index,
             "positions": {
-                place.name : place.position.getRect() for place in self.model.places
+                place.name : [place.position.x(), place.position.y()] for place in self.model.places
             },
         }
-        
+
+    def calculate_position(self):
+        marked = []
+        start = QPointF(0, 0)
+        directions = {
+            "N": QPointF(0, -1), "E": QPointF(1, 0), 
+            "S": QPointF(0, 1), "W": QPointF(-1, 0)
+        }
+        inverse = {"N": "S", "S": "N", "E": "W", "W": "E"}
+        self.model.connections[0].place_1.position = start
+        marked.append(self.model.connections[0].place_1.position)
+        for conn in self.model.connections:
+            if conn.place_1.position not in marked:
+                if conn.place_2.position in marked:
+                    direction = directions[inverse[conn.direction.value]]
+                    conn.place_1.position = QPointF(
+                        conn.place_2.position.x() + direction.x(),
+                        conn.place_2.position.y() + direction.y())
+                    marked.append(conn.place_1.position)
+            else:
+                if conn.place_2.position not in marked:
+                    direction = directions[conn.direction.value]
+                    conn.place_2.position = QPointF(
+                        conn.place_1.position.x() + direction.x(),
+                        conn.place_1.position.y() + direction.y())
+                    marked.append(conn.place_2.position)
+
+        rect = QRectF()
+        for m in marked:
+            rect = rect.united(QRectF(m, QSizeF(1, 1)))
+
+        for place in self.model.places:
+            if place.position is None:
+                place.position = QPointF(
+                    rect.topRight().x(),
+                    rect.topRight().y())
+            
     def add_place(self) -> Place:
         index = self.model.places_index
         place = Place(f"new_place{f'_{index}' if index != 0 else ''}")

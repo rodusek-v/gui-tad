@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 from PyQt6.QtGui import QIcon, QStandardItem
 
 from model.place import Place
@@ -7,6 +7,7 @@ from model.flag import Flag
 from model.command import Command
 from model.player import Player
 from model.finish import Finish
+from model.connection import Connection
 from model.helpers import TextModel
 from constants import THIS_FOLDER
 
@@ -16,7 +17,7 @@ class World(QStandardItem, TextModel):
     def __init__(self) -> None:
         super().__init__()
         self._name = None
-        self._connections = list()
+        self._connections: List['Connection'] = []
         self._player = Player("PLAYER")
         self._finish = Finish()
 
@@ -52,7 +53,7 @@ class World(QStandardItem, TextModel):
         self.setText(self._name)
 
     @property
-    def places(self):
+    def places(self) -> List['Place']:
         temp = self._places
         return [temp.child(i) for i in range(temp.rowCount())]
 
@@ -72,7 +73,7 @@ class World(QStandardItem, TextModel):
         return [temp.child(i) for i in range(temp.rowCount())]
 
     @property
-    def connections(self):
+    def connections(self) -> List['Connection']:
         return self._connections
 
     @property
