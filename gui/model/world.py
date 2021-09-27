@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import List
 from PyQt6.QtGui import QIcon, QStandardItem
 
 from model.place import Place

@@ -1,6 +1,6 @@
 
 from typing import List
-from PyQt6.QtCore import QPointF
+from PyQt6.QtCore import QPointF, QRectF
 from PyQt6.QtGui import QIcon
 
 from model.container import Container
@@ -30,6 +30,7 @@ class Place(ItemNode, Container):
         self.blockade = blockade
 
         self.position = None
+        self.rect = None
 
     @property
     def q_icon(self) -> QIcon:
@@ -87,6 +88,14 @@ class Place(ItemNode, Container):
     @position.setter
     def position(self, position: QPointF):
         self._position = position
+
+    @property
+    def rect(self) -> QRectF:
+        return self._rect
+
+    @rect.setter
+    def rect(self, rect: QRectF):
+        self._rect = rect
 
     def load(self, model):
         self.name = model.name

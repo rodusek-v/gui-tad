@@ -142,7 +142,7 @@ class MainWindow(QMainWindow):
         self.working_space.item_remove_start.connect(self.tree_view.deactivate_selection)
         self.working_space.item_remove_end.connect(self.tree_view.activate_selection)
         
-        self.tree_view.selected_place.connect(lambda x: self.working_space.selecting_place(x.position.center()))
+        self.tree_view.selected_place.connect(lambda x: self.working_space.selecting_place(x.rect.center()))
         self.tree_view.selected_object.connect(lambda x: self.working_space.selecting_object(x))
         self.tree_view.remove_place_signal.connect(self.working_space.delete_selected)
         self.tree_view.remove_container_object_signal.connect(self.working_space.delete_object)

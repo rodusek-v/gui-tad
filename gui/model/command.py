@@ -1,7 +1,8 @@
 from typing import Dict, List
 from PyQt6.QtGui import QIcon
 
-from model.operation import CDMOperation, CDMProp, CDMType, FlagOperation, MessageOperation, Operation, RelocateOperation, Requirements
+from model.operation import CDMOperation, CDMProp, CDMType, FlagOperation, \
+     MessageOperation, Operation, RelocateOperation, Requirements
 from model.item_node import ItemNode
 from constants import THIS_FOLDER
 

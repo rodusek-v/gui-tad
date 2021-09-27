@@ -1,7 +1,8 @@
 from typing import List
 from PyQt6.QtCore import QRegularExpression
 from PyQt6.QtGui import QRegularExpressionValidator
-from PyQt6.QtWidgets import QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QListWidget, QSizePolicy, QWidget
+from PyQt6.QtWidgets import QFormLayout, QGridLayout, QGroupBox, \
+    QHBoxLayout, QLabel, QListWidget, QSizePolicy, QWidget
 
 from view.sidebars.form import Form
 from view.fields import TextField, TextArea, CheckBox, ComboBox, ContainsList

@@ -1,7 +1,6 @@
-import pickle
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QGridLayout, QLabel, QSizePolicy
+from PyQt6.QtWidgets import QDialog, QFileDialog, QGridLayout, QLabel, QSizePolicy
 
 from view.buttons import ToggleButton
 from view.fields import TextField

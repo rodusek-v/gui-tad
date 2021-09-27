@@ -430,14 +430,14 @@ class WorktopView(QGraphicsView):
 
     def selecting_object(self, object_model):
         container = object_model.container
-        item = self.scene().itemAt(QPointF(container.position.center()), QTransform())
+        item = self.scene().itemAt(QPointF(container.rect.center()), QTransform())
         for child in self.places.child_items():
             child.widget().clearSelection()
         if item is not None:
             item.widget().select_item(object_model)
 
     def delete_object(self, place_model):
-        item = self.scene().itemAt(QPointF(place_model.position.center()), QTransform())
+        item = self.scene().itemAt(QPointF(place_model.rect.center()), QTransform())
         if item is not None:
             item.widget().remove_selected()
 

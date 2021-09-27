@@ -272,6 +272,7 @@ class PlaceItem(QListWidget):
 
     def setGeometry(self, rect: QRectF) -> None:
         super().setGeometry(rect)
+        self.place_model.rect = rect
         self.place_model.position = QPointF(
             round((rect.x() - self.margin / 2) / self.side),
             round((rect.y() - self.margin / 2) / self.side)

@@ -1,6 +1,6 @@
 from typing import List
 from PyQt6.QtCore import QRectF
-from PyQt6.QtWidgets import QGraphicsItem, QGraphicsScene
+from PyQt6.QtWidgets import QGraphicsItem
 
 
 class ItemGroup(object):

@@ -2,7 +2,8 @@ from typing import List
 from PyQt6.QtCore import QObject
 
 from model import Command, Place, Object, Flag
-from model.operation import CDMOperation, CDMProp, CDMType, FlagOperation, MessageOperation, OperationType, RelocateOperation, Requirements
+from model.operation import CDMOperation, CDMProp, CDMType, FlagOperation,\
+     MessageOperation, OperationType, RelocateOperation, Requirements
 
 
 class CommandController(QObject):
