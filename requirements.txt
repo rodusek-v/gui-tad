@@ -1,3 +1,8 @@
 Arpeggio==1.10.2
 click==7.1.2
+Jinja2==3.0.1
+MarkupSafe==2.0.1
+PyQt6==6.1.1
+PyQt6-Qt6==6.1.2
+PyQt6-sip==13.1.0
 textX==2.3.0
